@@ -25,14 +25,18 @@ class EvalCase:
 
     # ---------- 结果期望 ----------
     expected_intent: str | None = None  # 末轮期望意图（IntentType.value），None=不校验
-    expected_keywords: list[str] = field(default_factory=list)  # 末轮 reply 应命中的关键词
+    expected_keywords: list[str] = field(
+        default_factory=list
+    )  # 末轮 reply 应命中的关键词
     expected_requires_human: bool | None = None  # 是否应转人工，None=不校验
 
     # ---------- 过程期望 ----------
     expected_tools: list[str] = field(default_factory=list)  # 整个会话应调用过的工具
     min_tool_calls: int | None = None  # 理论最少工具调用次数（算效率用），None=不校验
     max_tokens: int | None = None  # token 预算上限，None=不设上限
-    expected_route: str | None = None  # 多 Agent 期望路由（presale/postsale/complaint），可选
+    expected_route: str | None = (
+        None  # 多 Agent 期望路由（presale/postsale/complaint），可选
+    )
 
 
 def load_dataset(path: str | Path) -> list[EvalCase]:

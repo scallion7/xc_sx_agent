@@ -1,5 +1,6 @@
+"""命令行交互入口。"""
+
 import argparse
-from typing import Optional
 
 from app.bootstrap import (
     check_runtime,
@@ -59,7 +60,7 @@ def _print_runtime_checks() -> bool:
     return all(check.ok for check in checks if check.required)
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     if args.check:
         return 0 if _print_runtime_checks() else 1
@@ -73,11 +74,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         event_bus=runtime.event_bus,
         rate_limiter=runtime.model_rate_limiter,
     )
-    mode = (
-        "Multi-Agent 协作模式"
-        if resolved_mode == "multi"
-        else "ReAct + MCP + RAG"
-    )
+    mode = "Multi-Agent 协作模式" if resolved_mode == "multi" else "ReAct + MCP + RAG"
 
     print("=" * 50)
     print(f"  并夕夕 · 智能客服「小夕」({mode})")

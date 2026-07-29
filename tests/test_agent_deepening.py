@@ -58,7 +58,9 @@ class AfterSaleWorkflowTests(unittest.TestCase):
         self.assertFalse(blocked["success"])
         self.assertTrue(blocked["blocked"])
 
-        approved = self.service.review_case(case_id, "approve", "reviewer-01", "材料齐全")
+        approved = self.service.review_case(
+            case_id, "approve", "reviewer-01", "材料齐全"
+        )
         self.assertEqual(approved["case"]["status"], "approved")
         executed = self.service.execute_case(case_id)
         self.assertEqual(executed["case"]["status"], "completed")
@@ -78,7 +80,9 @@ class AfterSaleWorkflowTests(unittest.TestCase):
         self.assertEqual(first["case"]["case_id"], second["case"]["case_id"])
 
     def test_critical_message_forces_human_escalation(self):
-        decision = self.service.risk_router.assess_message("商品爆炸导致受伤，我要向消协投诉")
+        decision = self.service.risk_router.assess_message(
+            "商品爆炸导致受伤，我要向消协投诉"
+        )
         self.assertEqual(decision.level, "critical")
         self.assertEqual(decision.route, "human_escalation")
         self.assertTrue(decision.requires_human)

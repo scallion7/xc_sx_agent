@@ -113,14 +113,21 @@ class ChromaBackend(VectorBackend):
         distances = result.get("distances", [[]])[0]
 
         out: list[RetrievedChunk] = []
-        for cid, doc_text, meta, dist in zip(ids, documents, metadatas, distances):
+        for cid, doc_text, meta, dist in zip(
+            ids,
+            documents,
+            metadatas,
+            distances,
+            strict=True,
+        ):
             chunk = Chunk(
                 chunk_id=meta.get("chunk_id", cid),
                 doc=meta.get("doc", ""),
                 section=meta.get("section", ""),
                 text=doc_text,
                 metadata={
-                    key: value for key, value in meta.items()
+                    key: value
+                    for key, value in meta.items()
                     if key not in {"doc", "section", "chunk_id"}
                 },
             )

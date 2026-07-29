@@ -49,11 +49,7 @@ class AuthService:
         )
         for item in raw.split(","):
             token, separator, user_id = item.strip().partition(":")
-            if (
-                separator
-                and token
-                and _SAFE_USER_ID.fullmatch(user_id)
-            ):
+            if separator and token and _SAFE_USER_ID.fullmatch(user_id):
                 self._tokens[token] = AuthContext(
                     user_id=user_id,
                     role=role,

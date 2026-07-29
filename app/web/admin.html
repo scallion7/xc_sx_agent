@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>小夕客服管理台</title>
+  <style>
+    body{font-family:system-ui;margin:0;background:#f6f7fb;color:#18202a}
+    header{background:#171b26;color:white;padding:20px 5vw}
+    main{padding:24px 5vw;display:grid;gap:20px}
+    section{background:white;border-radius:12px;padding:18px;box-shadow:0 4px 18px #0001}
+    button,input{padding:8px 12px;margin:4px;border:1px solid #ccd2dc;border-radius:7px}
+    table{width:100%;border-collapse:collapse}
+    td,th{padding:9px;border-bottom:1px solid #eee;text-align:left}
+    pre{white-space:pre-wrap}
+  </style>
+</head>
+<body>
+<header><h1>小夕客服管理台</h1><p>审批、运行指标与事件审计</p></header>
+<main>
+  <section>
+    <label>管理员 Token <input id="token" type="password" value="dev-admin-token"></label>
+    <button onclick="refreshAll()">刷新</button>
+    <span id="status"></span>
+  </section>
+  <section><h2>运行指标</h2><pre id="metrics">加载中...</pre></section>
+  <section><h2>离线回归</h2><pre id="regression">加载中...</pre></section>
+  <section><h2>待审批工单</h2><div id="cases">加载中...</div></section>
+</main>
+<script>
+const headers=()=>({'X-API-Key':document.getElementById('token').value,'Content-Type':'application/json'});
+async function api(path, options={}) {
+  const response=await fetch(path,{...options,headers:{...headers(),...(options.headers||{})}});
+  if(!response.ok) throw new Error(await response.text());
+  return response.json();
+}
+async function review(id, decision) {
+  await api(`/v1/admin/after-sales/${id}/review`,{method:'POST',body:JSON.stringify({decision,note:'管理台审批'})});
+  refreshAll();
+}
+async function refreshAll(){
+  try{
+    const metrics=await api('/v1/admin/metrics');
+    document.getElementById('metrics').textContent=JSON.stringify(metrics,null,2);
+    const regression=await api('/v1/admin/regression');
+    document.getElementById('regression').textContent=JSON.stringify(regression,null,2);
+    const data=await api('/v1/admin/after-sales/pending');
+    document.getElementById('cases').innerHTML=data.cases.length
+      ? `<table><tr><th>工单</th><th>订单</th><th>金额</th><th>风险</th><th>操作</th></tr>${data.cases.map(c=>`<tr><td>${c.case_id}</td><td>${c.order_id}</td><td>${c.amount}</td><td>${c.risk_level}</td><td><button onclick="review('${c.case_id}','approve')">批准</button><button onclick="review('${c.case_id}','reject')">拒绝</button></td></tr>`).join('')}</table>`
+      : '暂无待审批工单';
+    document.getElementById('status').textContent='已更新';
+  }catch(error){document.getElementById('status').textContent=error.message}
+}
+refreshAll();
+</script>
+</body>
+</html>

@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from app.config.settings import Settings, settings
 from app.infrastructure.model_gateway import (
@@ -44,7 +44,7 @@ class ApplicationRuntime:
 
 
 def create_runtime(
-    config: Optional[Settings] = None,
+    config: Settings | None = None,
     *,
     console: bool = False,
     persist_events: bool = True,
@@ -60,16 +60,12 @@ def create_runtime(
     if console:
         bus.subscribe(ConsoleEventSubscriber())
     if runtime_config.observability_enabled and persist_events:
-        bus.subscribe(
-            JsonlEventSubscriber(runtime_config.event_log_path)
-        )
+        bus.subscribe(JsonlEventSubscriber(runtime_config.event_log_path))
     return ApplicationRuntime(
         bus,
         buffer,
         metrics,
-        SlidingWindowRateLimiter(
-            runtime_config.model_requests_per_minute
-        ),
+        SlidingWindowRateLimiter(runtime_config.model_requests_per_minute),
     )
 
 
@@ -87,12 +83,12 @@ def resolve_agent_mode(
 def create_agent(
     *,
     mode: AgentMode = "auto",
-    config: Optional[Settings] = None,
-    session_path: Optional[str] = None,
-    client: Optional[Any] = None,
-    model_gateway: Optional[ModelGateway] = None,
-    event_bus: Optional[EventBus] = None,
-    rate_limiter: Optional[SlidingWindowRateLimiter] = None,
+    config: Settings | None = None,
+    session_path: str | None = None,
+    client: Any | None = None,
+    model_gateway: ModelGateway | None = None,
+    event_bus: EventBus | None = None,
+    rate_limiter: SlidingWindowRateLimiter | None = None,
 ):
     """按配置创建 Agent，并允许注入测试或私有部署使用的模型客户端。"""
     runtime_config = config or settings
@@ -123,7 +119,7 @@ def create_agent(
 
 
 def check_runtime(
-    config: Optional[Settings] = None,
+    config: Settings | None = None,
 ) -> list[RuntimeCheck]:
     """执行无副作用的启动前检查。"""
     runtime_config = config or settings

@@ -40,7 +40,9 @@ def _fail(msg: str):
 # ---------- 测试 1：Skill 发现 ----------
 def test_skill_discovery():
     print("\n[1/7] Skill 发现测试")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True
+    )
 
     if sm.skill_count >= 3:
         _ok(f"发现 {sm.skill_count} 个技能")
@@ -58,7 +60,9 @@ def test_skill_discovery():
 # ---------- 测试 2：Catalog 生成 ----------
 def test_catalog_generation():
     print("\n[2/7] Skill catalog 生成测试")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True
+    )
 
     catalog = sm.get_catalog()
     if len(catalog) >= 3:
@@ -82,7 +86,9 @@ def test_catalog_generation():
 # ---------- 测试 3：load_skill 成功 ----------
 def test_load_skill_success():
     print("\n[3/7] load_skill 工具测试（成功）")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True
+    )
     result = load_skill(sm, "process-return")
     if result.get("success"):
         _ok("成功加载 process-return 技能")
@@ -111,7 +117,9 @@ def test_load_skill_success():
 # ---------- 测试 4：load_skill 未知技能 ----------
 def test_load_skill_unknown():
     print("\n[4/7] load_skill 工具测试（未知技能）")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True
+    )
     result = load_skill(sm, "nonexistent-skill")
     if not result.get("success"):
         _ok("正确返回错误")
@@ -127,7 +135,9 @@ def test_load_skill_unknown():
 # ---------- 测试 5：Skills 关闭 ----------
 def test_skills_disabled():
     print("\n[5/7] Skill 关闭开关测试")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=False)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=False
+    )
 
     if sm.skill_count == 0:
         _ok("enabled=False 时不加载技能")
@@ -150,7 +160,9 @@ def test_skills_disabled():
 # ---------- 测试 6：延迟加载 ----------
 def test_lazy_loading():
     print("\n[6/7] SKILL.md body 延迟加载测试")
-    sm = SkillManager(skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True)
+    sm = SkillManager(
+        skills_dir=str(ROOT / "app" / "agent" / "skills" / "definitions"), enabled=True
+    )
 
     skill = sm._skills.get("process-return")
     if skill is None:

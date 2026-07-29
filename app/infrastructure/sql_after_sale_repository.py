@@ -31,11 +31,7 @@ class SqlAfterSaleRepository:
             )
         with self.engine.begin() as connection:
             row = connection.execute(statement).mappings().first()
-        return (
-            AfterSaleCase.from_dict(json.loads(row["payload_json"]))
-            if row
-            else None
-        )
+        return AfterSaleCase.from_dict(json.loads(row["payload_json"])) if row else None
 
     def save(self, case: AfterSaleCase) -> None:
         payload = {
@@ -64,9 +60,7 @@ class SqlAfterSaleRepository:
                     .values(**payload)
                 )
             else:
-                connection.execute(
-                    after_sale_cases_table.insert().values(**payload)
-                )
+                connection.execute(after_sale_cases_table.insert().values(**payload))
 
     def find_active_by_order(
         self,
@@ -84,19 +78,14 @@ class SqlAfterSaleRepository:
         )
         with self.engine.begin() as connection:
             row = connection.execute(statement).mappings().first()
-        return (
-            AfterSaleCase.from_dict(json.loads(row["payload_json"]))
-            if row
-            else None
-        )
+        return AfterSaleCase.from_dict(json.loads(row["payload_json"])) if row else None
 
     def list_pending(
         self,
         user_id: str | None = None,
     ) -> list[AfterSaleCase]:
         statement = select(after_sale_cases_table).where(
-            after_sale_cases_table.c.status
-            == CaseStatus.PENDING_REVIEW.value,
+            after_sale_cases_table.c.status == CaseStatus.PENDING_REVIEW.value,
         )
         if user_id is not None:
             statement = statement.where(
@@ -105,6 +94,5 @@ class SqlAfterSaleRepository:
         with self.engine.begin() as connection:
             rows = connection.execute(statement).mappings().all()
         return [
-            AfterSaleCase.from_dict(json.loads(row["payload_json"]))
-            for row in rows
+            AfterSaleCase.from_dict(json.loads(row["payload_json"])) for row in rows
         ]

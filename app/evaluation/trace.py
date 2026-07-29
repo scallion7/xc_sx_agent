@@ -8,7 +8,7 @@ LLM 调用（token / 被请求的工具 / 延迟）和工具返回都记录到 R
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.schemas.response import CustomerServiceResponse
@@ -23,7 +23,9 @@ class LLMCallRecord:
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
-    tool_calls: list[dict] = field(default_factory=list)  # 本次响应请求的工具 [{name, arguments}]
+    tool_calls: list[dict] = field(
+        default_factory=list
+    )  # 本次响应请求的工具 [{name, arguments}]
     latency_ms: float = 0.0
 
 
@@ -42,7 +44,7 @@ class RunTrace:
 
     case_id: str
     turns: list[str]
-    final_response: Optional["CustomerServiceResponse"] = None
+    final_response: CustomerServiceResponse | None = None
     route: str | None = None  # 多 Agent 模式下实际路由到的子 Agent
     llm_calls: list[LLMCallRecord] = field(default_factory=list)
     tool_observations: list[ToolObservation] = field(default_factory=list)

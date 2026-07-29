@@ -104,7 +104,7 @@ def _prepare_sqlite_path(database_url: str) -> None:
     prefix = "sqlite:///"
     if not database_url.startswith(prefix):
         return
-    path = Path(database_url[len(prefix):])
+    path = Path(database_url[len(prefix) :])
     if str(path) != ":memory:":
         path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -113,9 +113,7 @@ def _prepare_sqlite_path(database_url: str) -> None:
 def get_engine(database_url: str) -> Engine:
     _prepare_sqlite_path(database_url)
     connect_args = (
-        {"check_same_thread": False}
-        if database_url.startswith("sqlite")
-        else {}
+        {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     )
     engine = create_engine(
         database_url,

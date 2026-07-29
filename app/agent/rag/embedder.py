@@ -5,7 +5,7 @@
 - 返回原始 list[float]，由调用方决定如何持久化（这里用 json，不引入 numpy 依赖）。
 """
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from openai import OpenAI
 

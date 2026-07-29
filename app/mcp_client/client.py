@@ -73,9 +73,7 @@ class MCPClient:
         try:
             result = future.result(timeout=30)
         except Exception as e:
-            return json.dumps(
-                {"error": f"MCP 工具调用出错: {e}"}, ensure_ascii=False
-            )
+            return json.dumps({"error": f"MCP 工具调用出错: {e}"}, ensure_ascii=False)
 
         if result.isError:
             text = result.content[0].text if result.content else "未知错误"

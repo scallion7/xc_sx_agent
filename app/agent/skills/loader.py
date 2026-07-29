@@ -62,14 +62,16 @@ def _parse_body(content: str) -> str:
     """提取 frontmatter 之后的 Markdown body。"""
     match = re.match(r"^---\s*\n.*?\n---\s*\n?", content, re.DOTALL)
     if match:
-        return content[match.end():].strip()
+        return content[match.end() :].strip()
     return content.strip()
 
 
 class SkillManager:
     """Skill 管理器：发现、注册、加载 Skills。"""
 
-    def __init__(self, skills_dir: str = "app/agent/skills/definitions", enabled: bool = True):
+    def __init__(
+        self, skills_dir: str = "app/agent/skills/definitions", enabled: bool = True
+    ):
         self.skills_dir = Path(skills_dir)
         self.enabled = enabled
         self._skills: dict[str, SkillMeta] = {}
@@ -98,7 +100,9 @@ class SkillManager:
                 continue
 
             self._skills[name] = SkillMeta(
-                name=name, description=description, path=skill_file,
+                name=name,
+                description=description,
+                path=skill_file,
             )
 
     @property

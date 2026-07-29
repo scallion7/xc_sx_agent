@@ -50,8 +50,7 @@ class KnowledgeService:
                 collection_name=self.config.chroma_collection,
             )
         raise ValueError(
-            f"未知的 RAG 后端: {self.config.rag_backend}"
-            "（可选: numpy / chroma）"
+            f"未知的 RAG 后端: {self.config.rag_backend}（可选: numpy / chroma）"
         )
 
     def _get_retriever(self) -> KnowledgeRetriever:
@@ -87,9 +86,7 @@ class KnowledgeService:
                     f"{chunk.doc} {chunk.section} {chunk.text}",
                 ),
             )
-            for chunk in chunk_markdown_dir(
-                Path(self.config.kb_dir)
-            )
+            for chunk in chunk_markdown_dir(Path(self.config.kb_dir))
         ]
         return sorted(
             (hit for hit in hits if hit.score > 0),
@@ -144,25 +141,16 @@ class KnowledgeService:
                 _DOC_POLICY_TYPES.get(hit.chunk.doc, "general"),
             )
             active = self._reranker.is_active(hit)
-            if (
-                self.config.rag_filter_inactive_policies
-                and not active
-            ):
+            if self.config.rag_filter_inactive_policies and not active:
                 continue
-            if (
-                policy_type
-                and metadata.get("policy_type") != policy_type
-            ):
+            if policy_type and metadata.get("policy_type") != policy_type:
                 continue
             enriched.append((hit, metadata, active))
             if len(enriched) >= limit:
                 break
 
         top_score = enriched[0][0].score if enriched else 0.0
-        grounded = (
-            bool(enriched)
-            and top_score >= self.config.policy_rag_min_score
-        )
+        grounded = bool(enriched) and top_score >= self.config.policy_rag_min_score
         return {
             "success": True,
             "backend": backend_name,
@@ -187,17 +175,13 @@ class KnowledgeService:
                         "policy_active": active,
                         "reranked": self.config.rag_rerank_enabled,
                     },
-                    "citation": (
-                        f"《{hit.chunk.doc}》/{hit.chunk.section}"
-                    ),
+                    "citation": (f"《{hit.chunk.doc}》/{hit.chunk.section}"),
                 }
                 for hit, metadata, active in enriched
             ],
             "citations": [
                 {
-                    "citation": (
-                        f"《{hit.chunk.doc}》/{hit.chunk.section}"
-                    ),
+                    "citation": (f"《{hit.chunk.doc}》/{hit.chunk.section}"),
                     "score": round(hit.score, 4),
                     "policy_type": metadata.get(
                         "policy_type",

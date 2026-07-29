@@ -5,8 +5,8 @@
 """
 
 import json
+from collections.abc import Callable
 from time import perf_counter
-from typing import Optional
 
 from app.agent.tools.registry import (
     ToolExecutionContext,
@@ -37,13 +37,13 @@ class ToolManager:
         self,
         use_mcp: bool = False,
         mcp_server_url: str = "",
-        allowed_tools: Optional[set] = None,
-        after_sale_enabled: Optional[bool] = None,
+        allowed_tools: set[str] | None = None,
+        after_sale_enabled: bool | None = None,
         registry: ToolRegistry | None = None,
         execution_context: ToolExecutionContext | None = None,
         event_bus: EventBus | None = None,
-        redactor=None,
-    ):
+        redactor: Callable[[str], str] | None = None,
+    ) -> None:
         self._mcp_client = None
         self._tool_source: dict[str, str] = {}
         self._tool_defs: list[dict] = []
@@ -98,20 +98,14 @@ class ToolManager:
                 },
             )
 
-            definitions = {
-                item["function"]["name"]: item
-                for item in mcp_tools
-            }
+            definitions = {item["function"]["name"]: item for item in mcp_tools}
             for td in mcp_tools:
                 name = td["function"]["name"]
                 self._tool_source[name] = "mcp"
 
             for td in self._registry.definitions:
                 name = td["function"]["name"]
-                if (
-                    name not in definitions
-                    or name in self.CONTEXT_BOUND_TOOLS
-                ):
+                if name not in definitions or name in self.CONTEXT_BOUND_TOOLS:
                     definitions[name] = td
                     self._tool_source[name] = "local"
             self._tool_defs = list(definitions.values())
@@ -133,13 +127,9 @@ class ToolManager:
     def _filter_tools(self, allowed: set):
         """只保留白名单中的工具，用于子 Agent 工具隔离。"""
         self._tool_defs = [
-            d for d in self._tool_defs
-            if d["function"]["name"] in allowed
+            d for d in self._tool_defs if d["function"]["name"] in allowed
         ]
-        self._tool_source = {
-            k: v for k, v in self._tool_source.items()
-            if k in allowed
-        }
+        self._tool_source = {k: v for k, v in self._tool_source.items() if k in allowed}
 
     @property
     def tool_definitions(self) -> list[dict]:
@@ -160,10 +150,7 @@ class ToolManager:
         )
 
         required = self._registry.required_permission(name)
-        if (
-            required
-            and required not in self._execution_context.permissions
-        ):
+        if required and required not in self._execution_context.permissions:
             result = json.dumps(
                 {
                     "success": False,
@@ -208,10 +195,7 @@ class ToolManager:
         if isinstance(value, str):
             return self.redactor(value)
         if isinstance(value, dict):
-            return {
-                key: self._redact_value(item)
-                for key, item in value.items()
-            }
+            return {key: self._redact_value(item) for key, item in value.items()}
         if isinstance(value, list):
             return [self._redact_value(item) for item in value]
         return value

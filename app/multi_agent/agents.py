@@ -4,27 +4,35 @@ SubAgent 封装了一个轻量级 ReAct 循环，由 Orchestrator 调度执行�
 """
 
 import json
-from typing import Callable
+from collections.abc import Callable
 
-from app.prompts.agents import COMPLAINT_PROMPT, POSTSALE_PROMPT, PRESALE_PROMPT
 from app.agent.tools.manager import ToolManager
 from app.infrastructure.model_gateway import ModelGateway
 from app.observability import EventBus
-
+from app.prompts.agents import COMPLAINT_PROMPT, POSTSALE_PROMPT, PRESALE_PROMPT
 
 AGENT_CONFIGS = {
     "presale": {
         "name": "小夕-售前",
         "prompt": PRESALE_PROMPT,
-        "tools": {"query_product", "search_knowledge", "list_user_orders", "load_skill"},
+        "tools": {
+            "query_product",
+            "search_knowledge",
+            "list_user_orders",
+            "load_skill",
+        },
     },
     "postsale": {
         "name": "小夕-售后",
         "prompt": POSTSALE_PROMPT,
         "tools": {
-            "query_order", "query_logistics",
-            "list_user_orders", "search_knowledge", "load_skill",
-            "create_after_sale_case", "query_after_sale_case",
+            "query_order",
+            "query_logistics",
+            "list_user_orders",
+            "search_knowledge",
+            "load_skill",
+            "create_after_sale_case",
+            "query_after_sale_case",
             "execute_after_sale_case",
         },
     },
@@ -32,8 +40,11 @@ AGENT_CONFIGS = {
         "name": "小夕-投诉",
         "prompt": COMPLAINT_PROMPT,
         "tools": {
-            "query_order", "search_knowledge", "load_skill",
-            "create_after_sale_case", "query_after_sale_case",
+            "query_order",
+            "search_knowledge",
+            "load_skill",
+            "create_after_sale_case",
+            "query_after_sale_case",
         },
     },
 }
@@ -63,7 +74,9 @@ class SubAgent:
         self.redactor = redactor or (lambda value: value)
 
     def handle(
-        self, messages: list[dict], max_steps: int = 5,
+        self,
+        messages: list[dict],
+        max_steps: int = 5,
     ) -> tuple[str, list[dict]]:
         """执行 ReAct 循环，返回 (最终文本, 新增消息列表)。"""
         new_messages: list[dict] = []
@@ -83,18 +96,14 @@ class SubAgent:
                 self._print_thought(assistant_msg.content)
 
             if not assistant_msg.tool_calls:
-                content = self.redactor(
-                    assistant_msg.content or ""
-                )
+                content = self.redactor(assistant_msg.content or "")
                 msg = {"role": "assistant", "content": content}
                 new_messages.append(msg)
                 return content, new_messages
 
             msg_dict: dict = {
                 "role": "assistant",
-                "content": self.redactor(
-                    assistant_msg.content or ""
-                ),
+                "content": self.redactor(assistant_msg.content or ""),
             }
             msg_dict["tool_calls"] = [
                 {
@@ -102,9 +111,7 @@ class SubAgent:
                     "type": "function",
                     "function": {
                         "name": tc.function.name,
-                        "arguments": self.redactor(
-                            tc.function.arguments
-                        ),
+                        "arguments": self.redactor(tc.function.arguments),
                     },
                 }
                 for tc in assistant_msg.tool_calls
@@ -137,9 +144,7 @@ class SubAgent:
             temperature=self.temperature,
             purpose=f"react_final_{self.name}",
         )
-        content = self.redactor(
-            response.choices[0].message.content or ""
-        )
+        content = self.redactor(response.choices[0].message.content or "")
         new_messages.append({"role": "assistant", "content": content})
         return content, new_messages
 

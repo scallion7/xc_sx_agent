@@ -5,7 +5,7 @@ EcomAgent 和 MultiAgentOrchestrator 通过此管理器与记忆系统交互。
 
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from app.agent.memory.long_term import LongTermMemory
 from app.agent.memory.short_term import ShortTermMemory
@@ -50,9 +50,7 @@ class MemoryManager:
             self.model,
             recent_messages,
         )
-        self.stm.facts = [
-            self.redactor(fact) for fact in self.stm.facts
-        ]
+        self.stm.facts = [self.redactor(fact) for fact in self.stm.facts]
 
     def build_memory_prompt_sections(self) -> list[dict]:
         """生成所有记忆相关的 system prompt 消息列表。"""
@@ -69,7 +67,9 @@ class MemoryManager:
         return sections
 
     def consolidate_to_long_term(
-        self, messages: list[dict], summary: Optional[str],
+        self,
+        messages: list[dict],
+        summary: str | None,
     ) -> None:
         """会话结束时，将本次对话的关键事实巩固到长期记忆。"""
         if not self.memory_enabled:

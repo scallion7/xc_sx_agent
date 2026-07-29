@@ -22,14 +22,13 @@ def recall_user_memory(
     }
     if manager.ltm.interaction_summaries:
         result["recent_interactions"] = [
-            item["summary"]
-            for item in manager.ltm.interaction_summaries[-3:]
+            item["summary"] for item in manager.ltm.interaction_summaries[-3:]
         ]
     if query:
         lowered = query.lower()
         result["long_term_facts"] = [
-            fact for fact in result["long_term_facts"]
-            if lowered in fact["content"].lower()
-            or lowered in fact["category"].lower()
+            fact
+            for fact in result["long_term_facts"]
+            if lowered in fact["content"].lower() or lowered in fact["category"].lower()
         ]
     return result

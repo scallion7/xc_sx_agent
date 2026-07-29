@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
-
+from app.agent.after_sale.risk import RiskDecision, RiskRouter
 from app.infrastructure.model_gateway import ModelGateway
 from app.prompts.agents import ROUTER_PROMPT
-from app.agent.after_sale.risk import RiskDecision, RiskRouter
 
 VALID_AGENTS = {"presale", "postsale", "complaint"}
 DEFAULT_AGENT = "postsale"
@@ -20,13 +18,17 @@ class Router:
         model_gateway: ModelGateway,
         model: str,
         risk_router: RiskRouter | None = None,
-    ):
+    ) -> None:
         self.model_gateway = model_gateway
         self.model = model
         self.risk_router = risk_router or RiskRouter()
         self.last_risk_decision = RiskDecision("low", "agent", [])
 
-    def route(self, user_input: str, history: Optional[List[dict]] = None) -> str:
+    def route(
+        self,
+        user_input: str,
+        history: list[dict] | None = None,
+    ) -> str:
         """返回子 Agent 标识: "presale" / "postsale" / "complaint"。"""
         self.last_risk_decision = self.risk_router.assess_message(user_input)
         if self.last_risk_decision.requires_human:
@@ -34,10 +36,7 @@ class Router:
 
         recent_context = ""
         if history:
-            recent = [
-                m for m in history[-4:]
-                if m.get("role") in ("user", "assistant")
-            ]
+            recent = [m for m in history[-4:] if m.get("role") in ("user", "assistant")]
             if recent:
                 lines = []
                 for m in recent:

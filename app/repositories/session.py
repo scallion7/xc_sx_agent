@@ -112,8 +112,7 @@ class SqlSessionRepository:
                 connection.execute(
                     sessions_table.update()
                     .where(
-                        sessions_table.c.session_key
-                        == self.session_key,
+                        sessions_table.c.session_key == self.session_key,
                         sessions_table.c.user_id == self.user_id,
                     )
                     .values(**payload)
@@ -138,10 +137,7 @@ def build_session_repository(
     user_id: str,
 ) -> SessionRepository:
     resolved = session_path or config.session_path
-    if (
-        config.persistence_backend == "json"
-        or resolved.endswith(".json")
-    ):
+    if config.persistence_backend == "json" or resolved.endswith(".json"):
         return JsonSessionRepository(resolved)
     return SqlSessionRepository(
         config.database_url,

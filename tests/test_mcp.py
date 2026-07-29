@@ -23,9 +23,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from app.mcp_client import MCPClient  # noqa: E402
-from app.agent.tools.manager import ToolManager  # noqa: E402
 from app.agent.chat import EcomAgent  # noqa: E402
+from app.agent.tools.manager import ToolManager  # noqa: E402
+from app.mcp_client import MCPClient  # noqa: E402
 from app.schemas.response import CustomerServiceResponse, IntentType  # noqa: E402
 
 MCP_URL = "http://127.0.0.1:9123/mcp"
@@ -50,7 +50,9 @@ def _assert_structured(resp: CustomerServiceResponse, label: str):
         _fail(f"{label}：confidence 超出 [0,1] 范围 → {resp.confidence}")
     if not resp.reply:
         _fail(f"{label}：reply 为空")
-    _ok(f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})")
+    _ok(
+        f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})"
+    )
 
 
 def _clean():
@@ -105,6 +107,7 @@ def test_mcp_tool_call():
         client.connect()
 
         import json
+
         result = client.call_tool("query_order", {"order_id": "ORD-20240115-001"})
         data = json.loads(result)
         if not data.get("success"):
@@ -134,11 +137,14 @@ def test_tool_manager_mcp():
         _ok(f"ToolManager 加载了 {len(defs)} 个工具")
 
         import json
-        result = manager.execute_tool("query_logistics", {"order_id": "ORD-20240115-001"})
+
+        result = manager.execute_tool(
+            "query_logistics", {"order_id": "ORD-20240115-001"}
+        )
         data = json.loads(result)
         if not data.get("success"):
             _fail(f"物流查询失败: {data}")
-        _ok(f"通过 ToolManager 调用 MCP 工具成功")
+        _ok("通过 ToolManager 调用 MCP 工具成功")
     finally:
         manager.close()
 
@@ -154,6 +160,7 @@ def test_tool_manager_local():
         _ok("本地模式加载 4 个工具")
 
         import json
+
         result = manager.execute_tool("query_order", {"order_id": "ORD-20240115-001"})
         data = json.loads(result)
         if not data.get("success"):
@@ -181,7 +188,7 @@ def test_agent_mcp_order():
         if found:
             _ok("回复中包含订单相关信息")
         else:
-            print(f"  ⚠️  回复中未找到预期关键词（可能模型表述不同）")
+            print("  ⚠️  回复中未找到预期关键词（可能模型表述不同）")
         print(f"     回复：{resp.reply[:120]}")
     finally:
         agent.close()
@@ -205,7 +212,7 @@ def test_agent_mcp_product():
         if found:
             _ok("回复中包含商品信息")
         else:
-            print(f"  ⚠️  回复中未找到预期商品关键词")
+            print("  ⚠️  回复中未找到预期商品关键词")
         print(f"     回复：{resp.reply[:120]}")
     finally:
         agent.close()

@@ -20,12 +20,12 @@ import json
 
 from openai import OpenAI
 
+from app.evaluation.trace import ToolObservation
 from app.prompts.evaluation import (
     ANSWER_QUALITY_PROMPT,
     HALLUCINATION_PROMPT,
     PROCESS_SOUNDNESS_PROMPT,
 )
-from app.evaluation.trace import ToolObservation
 
 
 # ============================================================

@@ -5,7 +5,8 @@ from __future__ import annotations
 import threading
 import time
 from collections import deque
-from typing import Any, Callable, Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
 
 from openai import OpenAI
 
@@ -100,7 +101,7 @@ class OpenAIModelGateway:
         client: Any | None = None,
         redactor: Callable[[str], str] | None = None,
         rate_limiter: SlidingWindowRateLimiter | None = None,
-    ) -> "OpenAIModelGateway":
+    ) -> OpenAIModelGateway:
         raw_client = client or OpenAI(
             api_key=config.openai_api_key,
             base_url=config.openai_base_url,
@@ -200,20 +201,21 @@ class OpenAIModelGateway:
                             usage,
                             "prompt_tokens",
                             0,
-                        ) or 0,
+                        )
+                        or 0,
                         "completion_tokens": getattr(
                             usage,
                             "completion_tokens",
                             0,
-                        ) or 0,
+                        )
+                        or 0,
                         "total_tokens": getattr(
                             usage,
                             "total_tokens",
                             0,
-                        ) or 0,
-                        "tool_calls": self._redact_value(
-                            self._tool_calls(response)
-                        ),
+                        )
+                        or 0,
+                        "tool_calls": self._redact_value(self._tool_calls(response)),
                     },
                 )
                 return response
@@ -227,12 +229,8 @@ class OpenAIModelGateway:
                             "purpose": purpose,
                             "operation": operation_name,
                             "attempts": attempt + 1,
-                            "latency_ms": (
-                                time.perf_counter() - started
-                            ) * 1000,
-                            "error": self.redactor(
-                                f"{type(exc).__name__}: {exc}"
-                            ),
+                            "latency_ms": (time.perf_counter() - started) * 1000,
+                            "error": self.redactor(f"{type(exc).__name__}: {exc}"),
                         },
                     )
                     raise
@@ -243,9 +241,7 @@ class OpenAIModelGateway:
                         "model": model,
                         "purpose": purpose,
                         "attempt": attempt + 1,
-                        "error": self.redactor(
-                            f"{type(exc).__name__}: {exc}"
-                        ),
+                        "error": self.redactor(f"{type(exc).__name__}: {exc}"),
                     },
                 )
                 self.sleep(self.retry_base_seconds * (2**attempt))
@@ -269,10 +265,7 @@ class OpenAIModelGateway:
         if isinstance(value, str):
             return self.redactor(value)
         if isinstance(value, dict):
-            return {
-                key: self._redact_value(item)
-                for key, item in value.items()
-            }
+            return {key: self._redact_value(item) for key, item in value.items()}
         if isinstance(value, list):
             return [self._redact_value(item) for item in value]
         return value

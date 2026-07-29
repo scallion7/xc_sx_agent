@@ -38,9 +38,7 @@ class SqlCommerceRepository:
         now = _now()
         with self.engine.begin() as connection:
             existing_orders = set(
-                connection.execute(
-                    select(orders_table.c.order_id)
-                ).scalars()
+                connection.execute(select(orders_table.c.order_id)).scalars()
             )
             for order_id, order in ORDERS.items():
                 if order_id in existing_orders:
@@ -60,9 +58,7 @@ class SqlCommerceRepository:
                 )
 
             existing_products = set(
-                connection.execute(
-                    select(products_table.c.product_id)
-                ).scalars()
+                connection.execute(select(products_table.c.product_id)).scalars()
             )
             for product_id, product in PRODUCTS.items():
                 if product_id in existing_products:
@@ -81,9 +77,7 @@ class SqlCommerceRepository:
                 )
 
             existing_tracking = set(
-                connection.execute(
-                    select(logistics_table.c.tracking_number)
-                ).scalars()
+                connection.execute(select(logistics_table.c.tracking_number)).scalars()
             )
             tracking_to_order = {
                 order["tracking_number"]: order_id
@@ -111,11 +105,13 @@ class SqlCommerceRepository:
 
     def get_order(self, order_id: str) -> dict | None:
         with self.engine.connect() as connection:
-            row = connection.execute(
-                select(orders_table).where(
-                    orders_table.c.order_id == order_id
+            row = (
+                connection.execute(
+                    select(orders_table).where(orders_table.c.order_id == order_id)
                 )
-            ).mappings().first()
+                .mappings()
+                .first()
+            )
         if not row:
             return None
         payload = self._decode(row["payload_json"])
@@ -124,13 +120,9 @@ class SqlCommerceRepository:
         return payload
 
     def list_orders(self, user_id: str) -> list[dict]:
-        statement = select(orders_table).order_by(
-            orders_table.c.updated_at.desc()
-        )
+        statement = select(orders_table).order_by(orders_table.c.updated_at.desc())
         if user_id != "default":
-            statement = statement.where(
-                orders_table.c.user_id == user_id
-            )
+            statement = statement.where(orders_table.c.user_id == user_id)
         with self.engine.connect() as connection:
             rows = connection.execute(statement).mappings().all()
         result: list[dict] = []
@@ -144,19 +136,12 @@ class SqlCommerceRepository:
     def search_products(self, keyword: str) -> list[dict]:
         lowered = keyword.strip().lower()
         with self.engine.connect() as connection:
-            rows = connection.execute(
-                select(products_table)
-            ).mappings().all()
-        products = [
-            self._decode(row["payload_json"])
-            for row in rows
-        ]
+            rows = connection.execute(select(products_table)).mappings().all()
+        products = [self._decode(row["payload_json"]) for row in rows]
         if not lowered:
             return []
         exact = [
-            product
-            for product in products
-            if product["product_id"].lower() == lowered
+            product for product in products if product["product_id"].lower() == lowered
         ]
         if exact:
             return exact
@@ -168,10 +153,7 @@ class SqlCommerceRepository:
                     product["name"],
                     product["category"],
                     product.get("description", ""),
-                    " ".join(
-                        str(value)
-                        for value in product.get("specs", {}).values()
-                    ),
+                    " ".join(str(value) for value in product.get("specs", {}).values()),
                 ]
             ).lower()
             score = sum(term in searchable for term in keywords)
@@ -203,15 +185,14 @@ class SqlCommerceRepository:
     ) -> dict:
         now = _now()
         with self.engine.begin() as connection:
-            order = connection.execute(
-                select(orders_table).where(
-                    orders_table.c.order_id == order_id
+            order = (
+                connection.execute(
+                    select(orders_table).where(orders_table.c.order_id == order_id)
                 )
-            ).mappings().first()
-            if not order or (
-                user_id != "default"
-                and order["user_id"] != user_id
-            ):
+                .mappings()
+                .first()
+            )
+            if not order or (user_id != "default" and order["user_id"] != user_id):
                 return {
                     "success": False,
                     "error": f"未找到订单 {order_id}，请核实订单号",
@@ -222,14 +203,18 @@ class SqlCommerceRepository:
                     "idempotent": True,
                     "error": "该订单已有退款申请正在处理中，请耐心等待",
                 }
-            existing = connection.execute(
-                select(refunds_table).where(
-                    refunds_table.c.order_id == order_id,
-                    refunds_table.c.status.in_(
-                        ("submitted", "processing", "completed")
-                    ),
+            existing = (
+                connection.execute(
+                    select(refunds_table).where(
+                        refunds_table.c.order_id == order_id,
+                        refunds_table.c.status.in_(
+                            ("submitted", "processing", "completed")
+                        ),
+                    )
                 )
-            ).mappings().first()
+                .mappings()
+                .first()
+            )
             if existing:
                 return {
                     "success": False,

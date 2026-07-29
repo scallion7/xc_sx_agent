@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,14 +21,10 @@ class CustomerServiceResponse(BaseModel):
     """客服回复的结构化输出"""
 
     intent: IntentType = Field(description="识别到的用户意图类型")
-    confidence: float = Field(
-        description="意图识别的置信度，0.0-1.0", ge=0.0, le=1.0
-    )
+    confidence: float = Field(description="意图识别的置信度，0.0-1.0", ge=0.0, le=1.0)
     reply: str = Field(description="给用户的回复内容")
-    requires_human: bool = Field(
-        description="是否需要转接人工客服", default=False
-    )
-    follow_up_question: Optional[str] = Field(
+    requires_human: bool = Field(description="是否需要转接人工客服", default=False)
+    follow_up_question: str | None = Field(
         description="需要向用户进一步确认的问题，如果不需要则为 null",
         default=None,
     )

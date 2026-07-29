@@ -18,8 +18,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.agent.chat import EcomAgent  # noqa: E402
-from app.agent.storage import load_session  # noqa: E402
-
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_session.json")
 
@@ -72,7 +70,7 @@ def test_summary_triggered():
 
     # 验证 summary 里确实保留了订单号这种关键事实
     if "A123456" not in agent.summary:
-        print(f"  ⚠️  summary 中未检索到订单号 A123456（可能模型表述不同）")
+        print("  ⚠️  summary 中未检索到订单号 A123456（可能模型表述不同）")
     else:
         _ok("summary 正确保留了订单号 A123456")
 

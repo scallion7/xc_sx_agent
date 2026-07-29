@@ -9,12 +9,14 @@ def mcp_tools_to_openai(mcp_tools: list) -> list[dict]:
     """
     result = []
     for tool in mcp_tools:
-        result.append({
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description or "",
-                "parameters": tool.inputSchema,
-            },
-        })
+        result.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description or "",
+                    "parameters": tool.inputSchema,
+                },
+            }
+        )
     return result

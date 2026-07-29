@@ -21,8 +21,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.agent.chat import EcomAgent  # noqa: E402
-from app.agent.storage import load_session, save_session  # noqa: E402
-from app.agent.memory import MemoryManager, ShortTermMemory, LongTermMemory  # noqa: E402
+from app.agent.memory import (  # noqa: E402
+    MemoryManager,
+    ShortTermMemory,
+)
+from app.agent.storage import load_session  # noqa: E402
 from app.agent.tools.memory_tool import recall_user_memory  # noqa: E402
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_memory_session.json")
@@ -47,11 +50,13 @@ def _fail(msg: str):
 def _make_agent(threshold: int = 30, keep: int = 6) -> EcomAgent:
     """创建测试用 Agent，使用独立的 session 和 memory 路径。"""
     import os
+
     os.environ["MEMORY_ENABLED"] = "true"
     os.environ["MEMORY_DIR"] = TEST_MEMORY_DIR
     os.environ["MEMORY_USER_ID"] = TEST_USER_ID
 
     from app.config.settings import Settings
+
     settings = Settings()
     settings.memory_enabled = True
     settings.memory_dir = TEST_MEMORY_DIR
@@ -78,7 +83,7 @@ def test_stm_extraction():
     _clean()
     agent = _make_agent()
 
-    resp = agent.chat("你好，我是张三，钻石会员，我想看看你们有什么红色的运动鞋")
+    agent.chat("你好，我是张三，钻石会员，我想看看你们有什么红色的运动鞋")
     stm_facts = agent.memory_manager.stm.facts
 
     if len(stm_facts) > 0:
@@ -111,7 +116,7 @@ def test_stm_prompt_injection():
         if "短期记忆" in all_text or "用户关键信息" in all_text:
             _ok("STM prompt section 格式正确")
         else:
-            print(f"  ⚠️  prompt section 内容未包含预期标题")
+            print("  ⚠️  prompt section 内容未包含预期标题")
         print(f"     注入了 {len(sections)} 个 system 消息")
     else:
         _fail("build_memory_prompt_sections 返回空列表")
@@ -169,7 +174,8 @@ def test_ltm_extraction():
     agent.chat("我这次想看看有没有新款手机，预算三千左右")
 
     agent.memory_manager.consolidate_to_long_term(
-        agent.raw_messages, agent.summary,
+        agent.raw_messages,
+        agent.summary,
     )
 
     memory_path = Path(TEST_MEMORY_DIR) / f"{TEST_USER_ID}.json"
@@ -203,7 +209,8 @@ def test_ltm_cross_session():
     agent1 = _make_agent()
     agent1.chat("我叫赵六，是你们的钻石会员，特别喜欢黑色的数码产品")
     agent1.memory_manager.consolidate_to_long_term(
-        agent1.raw_messages, agent1.summary,
+        agent1.raw_messages,
+        agent1.summary,
     )
 
     Path(TEST_SESSION).unlink(missing_ok=True)
@@ -216,7 +223,9 @@ def test_ltm_cross_session():
         _fail("新 Agent 未加载到 LTM 事实")
 
     sections = agent2.memory_manager.build_memory_prompt_sections()
-    has_ltm = any("历史记忆" in s["content"] or "过往会话" in s["content"] for s in sections)
+    has_ltm = any(
+        "历史记忆" in s["content"] or "过往会话" in s["content"] for s in sections
+    )
     if has_ltm:
         _ok("LTM 事实已注入 prompt sections")
     else:
@@ -231,7 +240,8 @@ def test_memory_tool():
 
     agent.chat("你好，我叫测试用户，最喜欢白色的衣服")
     agent.memory_manager.consolidate_to_long_term(
-        agent.raw_messages, agent.summary,
+        agent.raw_messages,
+        agent.summary,
     )
 
     result = recall_user_memory(agent.memory_manager)

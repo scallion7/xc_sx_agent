@@ -5,12 +5,14 @@ from app.agent.tools.mock_data import PRODUCTS
 
 def _match_score(product: dict, keywords: list[str]) -> int:
     """计算商品与关键词列表的匹配度（命中关键词数量）。"""
-    searchable = " ".join([
-        product["name"],
-        product["category"],
-        product.get("description", ""),
-        " ".join(str(v) for v in product.get("specs", {}).values()),
-    ]).lower()
+    searchable = " ".join(
+        [
+            product["name"],
+            product["category"],
+            product.get("description", ""),
+            " ".join(str(v) for v in product.get("specs", {}).values()),
+        ]
+    ).lower()
     return sum(1 for kw in keywords if kw in searchable)
 
 
@@ -18,7 +20,7 @@ def _generate_mock_product(keyword: str) -> dict:
     """未命中任何商品时，生成一个 mock 商品兜底。"""
     price = round(random.uniform(99, 2999), 2)
     return {
-        "product_id": f"MOCK-{random.randint(1000,9999)}",
+        "product_id": f"MOCK-{random.randint(1000, 9999)}",
         "name": f"{keyword}（热销款）",
         "category": keyword,
         "price": price,

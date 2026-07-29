@@ -25,12 +25,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from openai import OpenAI  # noqa: E402
-
 from app.config.settings import settings  # noqa: E402
 from app.evaluation.dataset import load_dataset  # noqa: E402
 from app.evaluation.evaluator import Evaluator  # noqa: E402
 from app.evaluation.sandbox import Sandbox  # noqa: E402
+from openai import OpenAI  # noqa: E402
 
 
 def _fmt(value) -> str:
@@ -48,7 +47,9 @@ def _print_report(report: dict) -> None:
     print("\n" + "=" * 78)
     print("  过程指标（工具准确率 / 调用效率 / token达标 / 过程合理性）")
     print("=" * 78)
-    print(f"  {'用例':<22}{'工具准确':>8}{'调用效率':>8}{'token':>8}{'token达标':>9}{'过程合理':>8}")
+    print(
+        f"  {'用例':<22}{'工具准确':>8}{'调用效率':>8}{'token':>8}{'token达标':>9}{'过程合理':>8}"
+    )
     for c in cases:
         p = c["process"]
         print(
@@ -60,7 +61,9 @@ def _print_report(report: dict) -> None:
     print("\n" + "=" * 78)
     print("  结果指标（意图 / 关键信息完整性 / 转人工 / 回答质量 / 忠实度无幻觉）")
     print("=" * 78)
-    print(f"  {'用例':<22}{'意图':>8}{'完整性':>8}{'转人工':>8}{'回答质量':>8}{'无幻觉':>8}")
+    print(
+        f"  {'用例':<22}{'意图':>8}{'完整性':>8}{'转人工':>8}{'回答质量':>8}{'无幻觉':>8}"
+    )
     for c in cases:
         r = c["result"]
         flag = "" if c["passed"] else "  ❌"
@@ -78,29 +81,40 @@ def _print_report(report: dict) -> None:
     print("\n" + "=" * 78)
     print("  汇总")
     print("=" * 78)
-    print(f"  通过率        : {s['passed']}/{s['total']}  ({s['pass_rate'] * 100:.0f}%)")
+    print(
+        f"  通过率        : {s['passed']}/{s['total']}  ({s['pass_rate'] * 100:.0f}%)"
+    )
     print(f"  平均过程得分  : {_fmt(s['avg_process_score']).strip()}")
     print(f"  平均结果得分  : {_fmt(s['avg_result_score']).strip()}")
-    print(f"  总 token 消耗 : {s['total_tokens']}（平均每用例 {s['avg_tokens_per_case']:.0f}）")
+    print(
+        f"  总 token 消耗 : {s['total_tokens']}（平均每用例 {s['avg_tokens_per_case']:.0f}）"
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(description="运行 Agent 评估体系")
     parser.add_argument(
-        "--dataset", default=settings.eval_dataset_path,
+        "--dataset",
+        default=settings.eval_dataset_path,
         help=f"测试集 JSON 路径（默认: {settings.eval_dataset_path}）",
     )
     parser.add_argument(
-        "--mode", choices=["single", "multi"],
+        "--mode",
+        choices=["single", "multi"],
         default="multi" if settings.multi_agent_enabled else "single",
         help="被测 Agent 模式（默认据 multi_agent_enabled）",
     )
     parser.add_argument(
-        "--judge", dest="judge", action="store_true", default=settings.eval_use_judge,
+        "--judge",
+        dest="judge",
+        action="store_true",
+        default=settings.eval_use_judge,
         help="启用 LLM-as-judge（默认开）",
     )
     parser.add_argument(
-        "--no-judge", dest="judge", action="store_false",
+        "--no-judge",
+        dest="judge",
+        action="store_false",
         help="只跑代码规则指标，不调 LLM judge（快、便宜）",
     )
     parser.add_argument(
@@ -110,7 +124,11 @@ def main():
     )
     args = parser.parse_args()
 
-    dataset_path = ROOT / args.dataset if not Path(args.dataset).is_absolute() else Path(args.dataset)
+    dataset_path = (
+        ROOT / args.dataset
+        if not Path(args.dataset).is_absolute()
+        else Path(args.dataset)
+    )
 
     print("=" * 78)
     print("  并夕夕 · Agent 评估体系")
@@ -146,7 +164,11 @@ def main():
     _print_report(report)
 
     if args.output:
-        out_path = ROOT / args.output if not Path(args.output).is_absolute() else Path(args.output)
+        out_path = (
+            ROOT / args.output
+            if not Path(args.output).is_absolute()
+            else Path(args.output)
+        )
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"

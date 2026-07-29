@@ -104,16 +104,24 @@ class AfterSaleService:
             risk_level=decision.level,
             route=decision.route,
             risk_reasons=decision.reasons,
-            status=(CaseStatus.PENDING_REVIEW.value if requires_approval
-                    else CaseStatus.APPROVED.value),
-            approval_status=(ApprovalStatus.PENDING.value if requires_approval
-                             else ApprovalStatus.NOT_REQUIRED.value),
+            status=(
+                CaseStatus.PENDING_REVIEW.value
+                if requires_approval
+                else CaseStatus.APPROVED.value
+            ),
+            approval_status=(
+                ApprovalStatus.PENDING.value
+                if requires_approval
+                else ApprovalStatus.NOT_REQUIRED.value
+            ),
             evidence_provided=evidence_provided,
             created_at=now,
             updated_at=now,
             user_id=user_id,
         )
-        case.add_audit("case_created", "agent", f"risk={decision.level}, route={decision.route}")
+        case.add_audit(
+            "case_created", "agent", f"risk={decision.level}, route={decision.route}"
+        )
         if requires_approval:
             case.add_audit("approval_requested", "system", "; ".join(decision.reasons))
         else:
@@ -124,8 +132,8 @@ class AfterSaleService:
             "case": case.to_dict(),
             "next_action": (
                 "等待人工审批，当前不可执行退款"
-                if requires_approval else
-                "工单已通过自动规则，可调用 execute_after_sale_case 执行"
+                if requires_approval
+                else "工单已通过自动规则，可调用 execute_after_sale_case 执行"
             ),
         }
 
@@ -202,8 +210,16 @@ class AfterSaleService:
             case.status = CaseStatus.APPROVED.value
             case.add_audit("execution_failed", "system", result.get("error", ""))
         self.repository.save(case)
-        return {"success": bool(result.get("success")), "case": case.to_dict(), "result": result}
+        return {
+            "success": bool(result.get("success")),
+            "case": case.to_dict(),
+            "result": result,
+        }
 
     def list_pending_approvals(self, user_id: str | None = None) -> dict:
         cases = self.repository.list_pending(user_id)
-        return {"success": True, "count": len(cases), "cases": [case.to_dict() for case in cases]}
+        return {
+            "success": True,
+            "count": len(cases),
+            "cases": [case.to_dict() for case in cases],
+        }

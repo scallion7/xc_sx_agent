@@ -102,12 +102,8 @@ class ToolConfigurationTests(unittest.TestCase):
         legacy = ToolManager(after_sale_enabled=False)
         modern = ToolManager(after_sale_enabled=True)
 
-        legacy_tools = {
-            item["function"]["name"] for item in legacy.tool_definitions
-        }
-        modern_tools = {
-            item["function"]["name"] for item in modern.tool_definitions
-        }
+        legacy_tools = {item["function"]["name"] for item in legacy.tool_definitions}
+        modern_tools = {item["function"]["name"] for item in modern.tool_definitions}
 
         self.assertIn("apply_refund", legacy_tools)
         self.assertNotIn("create_after_sale_case", legacy_tools)

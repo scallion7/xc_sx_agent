@@ -18,7 +18,9 @@ class GuardrailEngine:
     INJECTION_PATTERNS = (
         re.compile(r"忽略.{0,12}(之前|以上|系统).{0,12}(指令|提示)", re.I),
         re.compile(r"ignore.{0,12}(previous|above|system).{0,12}instructions?", re.I),
-        re.compile(r"(显示|泄露|输出).{0,12}(system prompt|系统提示词|开发者消息)", re.I),
+        re.compile(
+            r"(显示|泄露|输出).{0,12}(system prompt|系统提示词|开发者消息)", re.I
+        ),
         re.compile(r"jailbreak|越狱模式|developer mode", re.I),
     )
     SENSITIVE_PATTERNS = (
@@ -53,7 +55,7 @@ class GuardrailEngine:
         self.block_prompt_injection = block_prompt_injection
 
     @classmethod
-    def from_config(cls, config) -> "GuardrailEngine":
+    def from_config(cls, config) -> GuardrailEngine:
         return cls(
             enabled=config.guardrails_enabled,
             max_input_chars=config.max_user_input_chars,
@@ -98,10 +100,7 @@ class GuardrailEngine:
         if isinstance(value, str):
             return self.redact(value)
         if isinstance(value, dict):
-            return {
-                key: self.redact_value(item)
-                for key, item in value.items()
-            }
+            return {key: self.redact_value(item) for key, item in value.items()}
         if isinstance(value, list):
             return [self.redact_value(item) for item in value]
         return value

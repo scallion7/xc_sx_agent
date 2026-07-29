@@ -59,7 +59,9 @@ def _chunk_one_file(md_path: Path) -> list[Chunk]:
             continue
 
         for sub_idx, piece in enumerate(_split_long(text)):
-            out.append(_make_chunk(doc_name, section_title, piece, idx, sub_idx, metadata))
+            out.append(
+                _make_chunk(doc_name, section_title, piece, idx, sub_idx, metadata)
+            )
     return out
 
 
@@ -74,8 +76,8 @@ def _extract_frontmatter(raw: str) -> tuple[str, dict[str, str]]:
     for line in raw[4:end].splitlines():
         key, sep, value = line.partition(":")
         if sep and key.strip() and value.strip():
-            metadata[key.strip()] = value.strip().strip('"\'')
-    return raw[end + 4:].lstrip("\r\n"), metadata
+            metadata[key.strip()] = value.strip().strip("\"'")
+    return raw[end + 4 :].lstrip("\r\n"), metadata
 
 
 def _split_by_h2(raw: str) -> list[tuple[str, str]]:

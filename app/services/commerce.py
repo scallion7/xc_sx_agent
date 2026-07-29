@@ -23,8 +23,7 @@ class CommerceService:
     ) -> dict:
         order = self.repository.get_order(order_id)
         if not order or (
-            user_id != "default"
-            and order.get("owner_id", "default") != user_id
+            user_id != "default" and order.get("owner_id", "default") != user_id
         ):
             return {
                 "success": False,
@@ -41,9 +40,7 @@ class CommerceService:
                     order["status"],
                     order["status"],
                 ),
-                "items_summary": "、".join(
-                    item["name"] for item in order["items"]
-                ),
+                "items_summary": "、".join(item["name"] for item in order["items"]),
                 "total": order["total"],
                 "created_at": order["created_at"],
             }
@@ -82,9 +79,7 @@ class CommerceService:
         if not logistics:
             return {
                 "success": False,
-                "error": (
-                    f"物流单号 {order['tracking_number']} 暂无轨迹信息"
-                ),
+                "error": (f"物流单号 {order['tracking_number']} 暂无轨迹信息"),
             }
         return {"success": True, "logistics": logistics}
 

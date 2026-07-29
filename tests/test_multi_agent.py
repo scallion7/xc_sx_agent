@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.multi_agent.orchestrator import MultiAgentOrchestrator  # noqa: E402
-from app.multi_agent.router import Router  # noqa: E402
 from app.schemas.response import CustomerServiceResponse, IntentType  # noqa: E402
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_multi_agent_session.json")
@@ -52,7 +51,9 @@ def _assert_structured(resp: CustomerServiceResponse, label: str):
         _fail(f"{label}：confidence 超出 [0,1] 范围 → {resp.confidence}")
     if not resp.reply:
         _fail(f"{label}：reply 为空")
-    _ok(f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})")
+    _ok(
+        f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})"
+    )
 
 
 # ---------- 测试 1：路由准确性 ----------
@@ -190,7 +191,10 @@ def test_tool_isolation():
     else:
         _fail("售前 Agent 不应该有 apply_refund 工具")
 
-    if "apply_refund" not in postsale_tools and "create_after_sale_case" in postsale_tools:
+    if (
+        "apply_refund" not in postsale_tools
+        and "create_after_sale_case" in postsale_tools
+    ):
         _ok("售后 Agent 使用售后工单，不能绕过审批直接退款")
     else:
         _fail("售后 Agent 工具隔离不正确")

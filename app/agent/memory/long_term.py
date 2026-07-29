@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
 
 from app.agent.memory.extraction import extract_long_term_facts
 from app.infrastructure.model_gateway import ModelGateway
@@ -20,6 +20,7 @@ from app.infrastructure.model_gateway import ModelGateway
 @dataclass
 class MemoryFact:
     """一条长期记忆事实。"""
+
     content: str
     category: str  # identity / preference / behavior / issue / other
     created_at: str
@@ -58,12 +59,14 @@ class LongTermMemory:
             return
 
         for item in data.get("facts", []):
-            self.facts.append(MemoryFact(
-                content=self.redactor(item["content"]),
-                category=item.get("category", "other"),
-                created_at=item.get("created_at", ""),
-                source_session=item.get("source_session", ""),
-            ))
+            self.facts.append(
+                MemoryFact(
+                    content=self.redactor(item["content"]),
+                    category=item.get("category", "other"),
+                    created_at=item.get("created_at", ""),
+                    source_session=item.get("source_session", ""),
+                )
+            )
         self.interaction_summaries = [
             {
                 **item,
@@ -98,20 +101,22 @@ class LongTermMemory:
                 existing_contents.add(fact.content.lower())
 
         if len(self.facts) > self.max_facts:
-            self.facts = self.facts[-self.max_facts:]
+            self.facts = self.facts[-self.max_facts :]
 
     def add_interaction_summary(self, summary: str) -> None:
-        self.interaction_summaries.append({
-            "summary": summary,
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
-        })
+        self.interaction_summaries.append(
+            {
+                "summary": summary,
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+            }
+        )
 
     def extract_and_save(
         self,
         model_gateway: ModelGateway,
         model: str,
         messages: list[dict],
-        summary: Optional[str],
+        summary: str | None,
     ) -> None:
         """从会话消息中提取长期记忆事实并保存。"""
         if not messages and not summary:
@@ -138,9 +143,7 @@ class LongTermMemory:
                 ]
             )
         if interaction_summary:
-            self.add_interaction_summary(
-                self.redactor(interaction_summary)
-            )
+            self.add_interaction_summary(self.redactor(interaction_summary))
 
         self.save()
 
@@ -151,9 +154,7 @@ class LongTermMemory:
 
         parts = []
         if self.facts:
-            facts_text = "\n".join(
-                f"- [{f.category}] {f.content}" for f in self.facts
-            )
+            facts_text = "\n".join(f"- [{f.category}] {f.content}" for f in self.facts)
             parts.append(f"该用户的历史记忆（来自过往会话）：\n{facts_text}")
 
         if self.interaction_summaries:

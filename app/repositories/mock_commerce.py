@@ -21,8 +21,7 @@ class MockCommerceRepository:
         return [
             dict(order)
             for order in ORDERS.values()
-            if user_id == "default"
-            or order.get("owner_id", "default") == user_id
+            if user_id == "default" or order.get("owner_id", "default") == user_id
         ]
 
     def search_products(self, keyword: str) -> list[dict]:

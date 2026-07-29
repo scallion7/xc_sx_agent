@@ -6,12 +6,12 @@ import json
 import queue
 import threading
 from collections import Counter, deque
+from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
-from typing import Callable
 from uuid import uuid4
 
 _trace_id: ContextVar[str] = ContextVar("trace_id", default="")
@@ -213,9 +213,7 @@ class MetricsCollector:
             "event_counts": counts,
             "average_latency_ms": averages,
             "total_tokens": total_tokens,
-            "tool_success_rate": (
-                tool_completed / tool_total if tool_total else 1.0
-            ),
+            "tool_success_rate": (tool_completed / tool_total if tool_total else 1.0),
         }
 
 
@@ -228,10 +226,7 @@ class ConsoleEventSubscriber:
             label = data.get("agent", "思考")
             print(f"\n💭 [{label}] {data.get('content', '')}")
         elif event.event_type == "tool.started":
-            print(
-                f"🔧 [调用工具] {data.get('name')}"
-                f"({data.get('arguments', {})})"
-            )
+            print(f"🔧 [调用工具] {data.get('name')}({data.get('arguments', {})})")
         elif event.event_type == "tool.completed":
             result = str(data.get("result", ""))
             display = result if len(result) <= 300 else result[:300] + "..."
@@ -250,7 +245,4 @@ class ConsoleEventSubscriber:
                 f"发现 {data.get('tool_count')} 个工具"
             )
         elif event.event_type == "mcp.fallback":
-            print(
-                f"⚠️  [MCP] 连接失败 ({data.get('error')})，"
-                "降级使用本地工具"
-            )
+            print(f"⚠️  [MCP] 连接失败 ({data.get('error')})，降级使用本地工具")

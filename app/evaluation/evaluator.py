@@ -72,7 +72,9 @@ class Evaluator:
 
     def run_case(self, case: EvalCase) -> EvalResult:
         trace = self.sandbox.run(case)
-        res = EvalResult(case_id=case.id, description=case.description, trace=trace.to_dict())
+        res = EvalResult(
+            case_id=case.id, description=case.description, trace=trace.to_dict()
+        )
 
         if trace.error:
             res.error = trace.error
@@ -90,13 +92,19 @@ class Evaluator:
 
             # ---------- 过程指标（代码规则）----------
             res.tool_accuracy = metrics.tool_accuracy(case.expected_tools, called)
-            res.tool_efficiency = metrics.tool_efficiency(case.min_tool_calls, trace.num_tool_calls)
-            res.token_pass = metrics.token_cost_pass(trace.total_tokens, case.max_tokens)
+            res.tool_efficiency = metrics.tool_efficiency(
+                case.min_tool_calls, trace.num_tool_calls
+            )
+            res.token_pass = metrics.token_cost_pass(
+                trace.total_tokens, case.max_tokens
+            )
             res.route_match = metrics.route_match(case.expected_route, trace.route)
 
             # ---------- 结果指标（代码规则）----------
             res.intent_match = metrics.intent_match(case.expected_intent, actual_intent)
-            res.keyword_coverage = metrics.keyword_coverage(case.expected_keywords, reply)
+            res.keyword_coverage = metrics.keyword_coverage(
+                case.expected_keywords, reply
+            )
             res.requires_human_match = metrics.requires_human_match(
                 case.expected_requires_human, actual_human
             )
@@ -122,14 +130,23 @@ class Evaluator:
                 res.judge_reasons["process_soundness"] = p_reason
 
             # ---------- 汇总 ----------
-            res.process_score = _avg([
-                res.tool_accuracy, res.tool_efficiency,
-                res.process_soundness, res.route_match,
-            ])
-            res.result_score = _avg([
-                res.intent_match, res.keyword_coverage,
-                res.requires_human_match, res.answer_quality, res.faithfulness,
-            ])
+            res.process_score = _avg(
+                [
+                    res.tool_accuracy,
+                    res.tool_efficiency,
+                    res.process_soundness,
+                    res.route_match,
+                ]
+            )
+            res.result_score = _avg(
+                [
+                    res.intent_match,
+                    res.keyword_coverage,
+                    res.requires_human_match,
+                    res.answer_quality,
+                    res.faithfulness,
+                ]
+            )
             res.passed = self._decide_pass(res)
 
         except Exception as e:  # noqa: BLE001 —— 评分异常隔离到单条用例
@@ -148,9 +165,15 @@ class Evaluator:
         if res.token_pass is False:
             return False
         dims = [
-            res.tool_accuracy, res.tool_efficiency, res.process_soundness, res.route_match,
-            res.intent_match, res.keyword_coverage, res.requires_human_match,
-            res.answer_quality, res.faithfulness,
+            res.tool_accuracy,
+            res.tool_efficiency,
+            res.process_soundness,
+            res.route_match,
+            res.intent_match,
+            res.keyword_coverage,
+            res.requires_human_match,
+            res.answer_quality,
+            res.faithfulness,
         ]
         present = [d for d in dims if d is not None]
         return all(d >= self.pass_threshold for d in present) if present else True

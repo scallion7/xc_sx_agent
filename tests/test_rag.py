@@ -16,7 +16,6 @@
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -24,13 +23,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from app.agent.chat import EcomAgent  # noqa: E402
-from app.config.settings import settings  # noqa: E402
 from app.agent.rag.backends import create_backend  # noqa: E402
 from app.agent.rag.chunker import chunk_markdown_dir  # noqa: E402
 from app.agent.rag.embedder import Embedder  # noqa: E402
 from app.agent.rag.retriever import KnowledgeRetriever  # noqa: E402
-from app.schemas.response import CustomerServiceResponse, IntentType  # noqa: E402
 from app.agent.tools import knowledge as knowledge_tool  # noqa: E402
+from app.config.settings import settings  # noqa: E402
+from app.schemas.response import CustomerServiceResponse, IntentType  # noqa: E402
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_rag_session.json")
 EXPECTED_DOCS = {"退换货政策", "配送说明", "会员权益", "常见问题FAQ"}
@@ -93,7 +92,10 @@ def test_build_index(backend_name: str):
 
     try:
         backend.load()
-        if backend.expected_embedding_model() == settings.embedding_model and backend.size() > 0:
+        if (
+            backend.expected_embedding_model() == settings.embedding_model
+            and backend.size() > 0
+        ):
             _ok(f"复用已有索引，{backend.size()} 条向量")
             return
     except FileNotFoundError:
@@ -136,7 +138,9 @@ def test_retriever_top_k(backend_name: str):
             if not any(h.chunk.doc == expected_doc for h in hits):
                 _fail(f"Top-3 都未命中预期文档 {expected_doc}")
         else:
-            _ok(f"query={query!r} → {top.chunk.doc} / {top.chunk.section}（{top.score:.3f}）")
+            _ok(
+                f"query={query!r} → {top.chunk.doc} / {top.chunk.section}（{top.score:.3f}）"
+            )
 
 
 # ---------- 测试 4：search_knowledge 工具结构 ----------
@@ -187,8 +191,11 @@ def test_agent_end_to_end(backend_name: str):
             _fail("reply 为空")
 
         triggered = any(
-            m.get("role") == "assistant" and m.get("tool_calls")
-            and any(tc["function"]["name"] == "search_knowledge" for tc in m["tool_calls"])
+            m.get("role") == "assistant"
+            and m.get("tool_calls")
+            and any(
+                tc["function"]["name"] == "search_knowledge" for tc in m["tool_calls"]
+            )
             for m in agent.raw_messages
         )
         if triggered:

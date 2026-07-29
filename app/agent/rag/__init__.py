@@ -19,14 +19,18 @@ __all__ = [
 def __getattr__(name: str):
     if name in {"Chunk", "chunk_markdown_dir"}:
         from app.agent.rag import chunker
+
         return getattr(chunker, name)
     if name == "Embedder":
         from app.agent.rag.embedder import Embedder
+
         return Embedder
     if name == "KnowledgeRetriever":
         from app.agent.rag.retriever import KnowledgeRetriever
+
         return KnowledgeRetriever
     if name in {"NumpyBackend", "RetrievedChunk", "VectorBackend", "create_backend"}:
         from app.agent.rag import backends
+
         return getattr(backends, name)
     raise AttributeError(name)

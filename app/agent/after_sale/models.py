@@ -75,7 +75,7 @@ class AfterSaleCase:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "AfterSaleCase":
+    def from_dict(cls, data: dict) -> AfterSaleCase:
         payload = dict(data)
         payload["audit_log"] = [
             item if isinstance(item, AuditEvent) else AuditEvent(**item)

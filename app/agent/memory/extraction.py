@@ -52,7 +52,9 @@ def extract_short_term_facts(
     if not transcript.strip():
         return existing_facts
 
-    existing_text = "\n".join(f"- {f}" for f in existing_facts) if existing_facts else "（暂无）"
+    existing_text = (
+        "\n".join(f"- {f}" for f in existing_facts) if existing_facts else "（暂无）"
+    )
     prompt = STM_EXTRACTION_PROMPT.format(existing_facts=existing_text)
 
     response = model_gateway.complete(
@@ -132,11 +134,13 @@ def extract_long_term_facts(
         content = item.get("content", "").strip()
         category = item.get("category", "other")
         if content:
-            new_facts.append(MemoryFact(
-                content=content,
-                category=category,
-                created_at=now,
-            ))
+            new_facts.append(
+                MemoryFact(
+                    content=content,
+                    category=category,
+                    created_at=now,
+                )
+            )
 
     interaction_summary = data.get("interaction_summary", "")
     return new_facts, interaction_summary

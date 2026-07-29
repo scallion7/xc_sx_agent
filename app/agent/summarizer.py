@@ -1,6 +1,3 @@
-import json
-from typing import Optional
-
 from app.infrastructure.model_gateway import ModelGateway
 from app.prompts.summarizer import SUMMARY_PROMPT
 
@@ -9,7 +6,7 @@ def summarize(
     model_gateway: ModelGateway,
     model: str,
     old_messages: list[dict],
-    prev_summary: Optional[str],
+    prev_summary: str | None,
 ) -> str:
     """把老对话（可选地带上上一次 summary）压缩成新的 summary 文本。
 

@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+src = ["app", "mcp_server", "tests"]
+extend-exclude = ["app/sessions"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+# FastAPI uses function calls in dependency defaults by design.
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true

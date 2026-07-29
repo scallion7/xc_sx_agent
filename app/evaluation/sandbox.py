@@ -71,7 +71,11 @@ class Sandbox:
         agent_factory=None,
     ):
         self.mode = mode  # "single" / "multi"
-        self.tmp_root = Path(tmp_root) if tmp_root else Path(tempfile.mkdtemp(prefix="eval_sandbox_"))
+        self.tmp_root = (
+            Path(tmp_root)
+            if tmp_root
+            else Path(tempfile.mkdtemp(prefix="eval_sandbox_"))
+        )
         self.tmp_root.mkdir(parents=True, exist_ok=True)
         self.client = client
         self.agent_factory = agent_factory or create_agent
@@ -104,9 +108,7 @@ class Sandbox:
 
         agent = None
         event_bus = EventBus()
-        unsubscribe = event_bus.subscribe(
-            EvaluationEventSubscriber(trace)
-        )
+        unsubscribe = event_bus.subscribe(EvaluationEventSubscriber(trace))
         try:
             agent = self._build_agent(session_path, event_bus)
 
@@ -120,21 +122,7 @@ class Sandbox:
         finally:
             unsubscribe()
             if agent is not None:
-                self._close_tool_managers(agent)
+                agent.release_resources()
             # 注意：刻意不调用 agent.close()，避免长期记忆巩固写入
 
         return trace
-
-    def _tool_managers(self, agent) -> list:
-        if self.mode == "multi" and hasattr(agent, "agents"):
-            return [a.tool_manager for a in agent.agents.values()]
-        if hasattr(agent, "tool_manager"):
-            return [agent.tool_manager]
-        return []
-
-    def _close_tool_managers(self, agent) -> None:
-        for tm in self._tool_managers(agent):
-            try:
-                tm.close()
-            except Exception:  # noqa: BLE001
-                pass

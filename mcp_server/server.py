@@ -4,6 +4,9 @@
 默认监听：http://127.0.0.1:9123/mcp
 """
 
+# 直接执行本文件时需先把仓库根目录加入模块搜索路径。
+# ruff: noqa: E402
+
 import json
 import sys
 from pathlib import Path
@@ -11,13 +14,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from mcp.server.fastmcp import FastMCP
-
+from app.agent.tools.knowledge import search_knowledge as _search_knowledge
+from app.agent.tools.logistics import query_logistics as _query_logistics
 from app.agent.tools.order import query_order as _query_order
 from app.agent.tools.product import query_product as _query_product
-from app.agent.tools.logistics import query_logistics as _query_logistics
 from app.agent.tools.refund import apply_refund as _apply_refund
-from app.agent.tools.knowledge import search_knowledge as _search_knowledge
+from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("ecom-tools", host="127.0.0.1", port=9123)
 

@@ -3,10 +3,10 @@
 流程：Router 分类意图 → 选择子 Agent → ReAct 执行 → 结构化提取 → 持久化。
 """
 
-from typing import Any, Optional
+from typing import Any
 
-from app.agent.base import BaseConversationAgent
 from app.agent.after_sale.risk import RiskRouter
+from app.agent.base import BaseConversationAgent
 from app.agent.tools.manager import ToolManager
 from app.agent.tools.registry import ToolExecutionContext
 from app.config.settings import Settings
@@ -26,15 +26,15 @@ class MultiAgentOrchestrator(BaseConversationAgent):
 
     def __init__(
         self,
-        session_path: Optional[str] = None,
+        session_path: str | None = None,
         *,
-        config: Optional[Settings] = None,
-        client: Optional[Any] = None,
-        model_gateway: Optional[ModelGateway] = None,
-        event_bus: Optional[EventBus] = None,
-        guardrails: Optional[GuardrailEngine] = None,
-        rate_limiter: Optional[SlidingWindowRateLimiter] = None,
-    ):
+        config: Settings | None = None,
+        client: Any | None = None,
+        model_gateway: ModelGateway | None = None,
+        event_bus: EventBus | None = None,
+        guardrails: GuardrailEngine | None = None,
+        rate_limiter: SlidingWindowRateLimiter | None = None,
+    ) -> None:
         super().__init__(
             session_path=session_path,
             config=config,
@@ -85,9 +85,7 @@ class MultiAgentOrchestrator(BaseConversationAgent):
             safe_input, blocked = self._prepare_user_input(user_input)
             if blocked is not None:
                 return blocked
-            self.raw_messages.append(
-                {"role": "user", "content": safe_input}
-            )
+            self.raw_messages.append({"role": "user", "content": safe_input})
 
             agent_key = self.router.route(
                 safe_input,
@@ -109,9 +107,7 @@ class MultiAgentOrchestrator(BaseConversationAgent):
 
             return self._finalize_turn(
                 final_text,
-                requires_human=(
-                    self.router.last_risk_decision.requires_human
-                ),
+                requires_human=(self.router.last_risk_decision.requires_human),
             )
 
     def _close_resources(self) -> None:

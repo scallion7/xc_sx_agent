@@ -1,8 +1,10 @@
-import json
-from typing import Any, Optional
+"""单 Agent 客服实现。"""
 
-from app.agent.base import BaseConversationAgent
+import json
+from typing import Any
+
 from app.agent.after_sale.risk import RiskRouter
+from app.agent.base import BaseConversationAgent
 from app.agent.tools.manager import ToolManager
 from app.agent.tools.registry import ToolExecutionContext
 from app.config.settings import Settings
@@ -17,20 +19,20 @@ from app.security import GuardrailEngine
 
 
 class EcomAgent(BaseConversationAgent):
-    """电商客服 Agent —— 第八期：Skill 可复用能力模块"""
+    """基于 ReAct 循环的电商客服 Agent。"""
 
     def __init__(
         self,
-        session_path: Optional[str] = None,
+        session_path: str | None = None,
         *,
-        config: Optional[Settings] = None,
-        client: Optional[Any] = None,
-        tool_manager: Optional[ToolManager] = None,
-        model_gateway: Optional[ModelGateway] = None,
-        event_bus: Optional[EventBus] = None,
-        guardrails: Optional[GuardrailEngine] = None,
-        rate_limiter: Optional[SlidingWindowRateLimiter] = None,
-    ):
+        config: Settings | None = None,
+        client: Any | None = None,
+        tool_manager: ToolManager | None = None,
+        model_gateway: ModelGateway | None = None,
+        event_bus: EventBus | None = None,
+        guardrails: GuardrailEngine | None = None,
+        rate_limiter: SlidingWindowRateLimiter | None = None,
+    ) -> None:
         super().__init__(
             session_path=session_path,
             config=config,
@@ -67,9 +69,7 @@ class EcomAgent(BaseConversationAgent):
             if blocked is not None:
                 return blocked
             risk_decision = self.risk_router.assess_message(safe_input)
-            self.raw_messages.append(
-                {"role": "user", "content": safe_input}
-            )
+            self.raw_messages.append({"role": "user", "content": safe_input})
             final_text = self._react_loop()
             return self._finalize_turn(
                 final_text,
@@ -78,7 +78,7 @@ class EcomAgent(BaseConversationAgent):
 
     def _react_loop(self) -> str:
         """ReAct 循环：调用 LLM → 执行工具 → 观察结果 → 重复，直到模型给出最终回答。"""
-        for step in range(self.max_react_steps):
+        for _step in range(self.max_react_steps):
             messages = self._build_messages()
 
             response = self.model_gateway.complete(
@@ -95,17 +95,13 @@ class EcomAgent(BaseConversationAgent):
                 self._print_thought(assistant_msg.content)
 
             if not assistant_msg.tool_calls:
-                content = self.guardrails.redact(
-                    assistant_msg.content or ""
-                )
+                content = self.guardrails.redact(assistant_msg.content or "")
                 self.raw_messages.append({"role": "assistant", "content": content})
                 return content
 
             msg_dict = {
                 "role": "assistant",
-                "content": self.guardrails.redact(
-                    assistant_msg.content or ""
-                ),
+                "content": self.guardrails.redact(assistant_msg.content or ""),
             }
             msg_dict["tool_calls"] = [
                 {
@@ -113,9 +109,7 @@ class EcomAgent(BaseConversationAgent):
                     "type": "function",
                     "function": {
                         "name": tc.function.name,
-                        "arguments": self.guardrails.redact(
-                            tc.function.arguments
-                        ),
+                        "arguments": self.guardrails.redact(tc.function.arguments),
                     },
                 }
                 for tc in assistant_msg.tool_calls
@@ -133,11 +127,13 @@ class EcomAgent(BaseConversationAgent):
                     )
                 )
 
-                self.raw_messages.append({
-                    "role": "tool",
-                    "tool_call_id": tc.id,
-                    "content": result_str,
-                })
+                self.raw_messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": result_str,
+                    }
+                )
 
         messages = self._build_messages()
         response = self.model_gateway.complete(
@@ -146,9 +142,7 @@ class EcomAgent(BaseConversationAgent):
             temperature=self.temperature,
             purpose="react_final",
         )
-        content = self.guardrails.redact(
-            response.choices[0].message.content or ""
-        )
+        content = self.guardrails.redact(response.choices[0].message.content or "")
         self.raw_messages.append({"role": "assistant", "content": content})
         return content
 

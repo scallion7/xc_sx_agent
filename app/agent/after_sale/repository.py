@@ -48,7 +48,9 @@ class JsonAfterSaleRepository:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = self.path.with_suffix(self.path.suffix + ".tmp")
         payload = {"version": 1, "cases": [case.to_dict() for case in cases.values()]}
-        tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         os.replace(tmp_path, self.path)
 
     def get(
@@ -73,16 +75,20 @@ class JsonAfterSaleRepository:
     ) -> AfterSaleCase | None:
         terminal = {CaseStatus.COMPLETED.value, CaseStatus.REJECTED.value}
         return next(
-            (case for case in self._load_all().values()
-             if case.order_id == order_id
-             and case.user_id == user_id
-             and case.status not in terminal),
+            (
+                case
+                for case in self._load_all().values()
+                if case.order_id == order_id
+                and case.user_id == user_id
+                and case.status not in terminal
+            ),
             None,
         )
 
     def list_pending(self, user_id: str | None = None) -> list[AfterSaleCase]:
         return [
-            case for case in self._load_all().values()
+            case
+            for case in self._load_all().values()
             if case.status == CaseStatus.PENDING_REVIEW.value
             and (user_id is None or case.user_id == user_id)
         ]

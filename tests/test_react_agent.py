@@ -53,7 +53,9 @@ def _assert_structured(resp: CustomerServiceResponse, label: str):
         _fail(f"{label}：confidence 超出 [0,1] 范围 → {resp.confidence}")
     if not resp.reply:
         _fail(f"{label}：reply 为空")
-    _ok(f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})")
+    _ok(
+        f"{label}：结构化输出完整 (intent={resp.intent.value}, confidence={resp.confidence:.0%})"
+    )
 
 
 # ---------- 测试 1：简单问候 ----------
@@ -79,7 +81,7 @@ def test_order_query():
     if found:
         _ok("回复中包含订单相关信息")
     else:
-        print(f"  ⚠️  回复中未找到预期关键词（可能模型表述不同）")
+        print("  ⚠️  回复中未找到预期关键词（可能模型表述不同）")
     print(f"     回复：{resp.reply[:120]}")
 
 
@@ -96,7 +98,7 @@ def test_logistics_query():
     if found:
         _ok("回复中包含物流轨迹信息")
     else:
-        print(f"  ⚠️  回复中未找到预期物流关键词")
+        print("  ⚠️  回复中未找到预期物流关键词")
     print(f"     回复：{resp.reply[:120]}")
 
 
@@ -113,7 +115,7 @@ def test_product_search():
     if found:
         _ok("回复中包含商品信息")
     else:
-        print(f"  ⚠️  回复中未找到预期商品关键词")
+        print("  ⚠️  回复中未找到预期商品关键词")
     print(f"     回复：{resp.reply[:120]}")
 
 
@@ -140,7 +142,7 @@ def test_unknown_order():
     if found:
         _ok("agent 正确告知用户订单不存在")
     else:
-        print(f"  ⚠️  回复中未提及订单不存在")
+        print("  ⚠️  回复中未提及订单不存在")
     print(f"     回复：{resp.reply[:120]}")
 
 

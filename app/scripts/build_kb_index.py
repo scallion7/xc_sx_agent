@@ -21,10 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from app.config.settings import settings  # noqa: E402
 from app.agent.rag.backends import create_backend  # noqa: E402
 from app.agent.rag.chunker import chunk_markdown_dir  # noqa: E402
 from app.agent.rag.embedder import Embedder  # noqa: E402
+from app.config.settings import settings  # noqa: E402
 
 
 def _build_backend(name: str):
@@ -34,11 +34,14 @@ def _build_backend(name: str):
             index_path=ROOT / settings.kb_index_path,
         ), str(ROOT / settings.kb_index_path)
     if name == "chroma":
-        return create_backend(
-            "chroma",
-            persist_dir=ROOT / settings.chroma_persist_dir,
-            collection_name=settings.chroma_collection,
-        ), f"{ROOT / settings.chroma_persist_dir} (collection={settings.chroma_collection})"
+        return (
+            create_backend(
+                "chroma",
+                persist_dir=ROOT / settings.chroma_persist_dir,
+                collection_name=settings.chroma_collection,
+            ),
+            f"{ROOT / settings.chroma_persist_dir} (collection={settings.chroma_collection})",
+        )
     raise ValueError(f"未知后端: {name}")
 
 

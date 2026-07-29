@@ -40,9 +40,7 @@ def _service(config: Settings = settings) -> AfterSaleService:
             seed_demo_data=config.commerce_seed_demo_data,
         )
     else:
-        case_repository = JsonAfterSaleRepository(
-            ROOT / config.after_sale_case_path
-        )
+        case_repository = JsonAfterSaleRepository(ROOT / config.after_sale_case_path)
         commerce_repository = MockCommerceRepository()
     return AfterSaleService(
         case_repository,

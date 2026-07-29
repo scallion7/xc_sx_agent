@@ -3,7 +3,6 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 SESSION_VERSION = 1
 logger = logging.getLogger(__name__)
@@ -12,8 +11,8 @@ logger = logging.getLogger(__name__)
 def save_session(
     path: str,
     messages: list[dict],
-    summary: Optional[str],
-    short_term_memory: Optional[dict] = None,
+    summary: str | None,
+    short_term_memory: dict | None = None,
 ) -> None:
     """把对话状态原子写入 JSON 文件。
 
@@ -37,7 +36,7 @@ def save_session(
     os.replace(tmp_path, file_path)
 
 
-def load_session(path: str) -> Optional[dict]:
+def load_session(path: str) -> dict | None:
     """读取会话文件。不存在或损坏都返回 None（降级为新会话）。"""
     file_path = Path(path)
     if not file_path.exists():
@@ -46,8 +45,8 @@ def load_session(path: str) -> Optional[dict]:
     try:
         with file_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        logger.warning("会话文件损坏，已忽略（%s）", e)
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.warning("会话文件损坏，已忽略（%s）", exc)
         return None
 
     if not isinstance(data, dict) or "messages" not in data:

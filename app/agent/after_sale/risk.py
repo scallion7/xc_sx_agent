@@ -26,8 +26,18 @@ class RiskDecision:
 
 class RiskRouter:
     CRITICAL_SIGNALS = {
-        "消协", "起诉", "报警", "律师", "人身伤害", "受伤", "触电",
-        "爆炸", "泄露隐私", "盗刷", "媒体曝光", "监管投诉",
+        "消协",
+        "起诉",
+        "报警",
+        "律师",
+        "人身伤害",
+        "受伤",
+        "触电",
+        "爆炸",
+        "泄露隐私",
+        "盗刷",
+        "媒体曝光",
+        "监管投诉",
     }
     COMPLAINT_SIGNALS = {"投诉", "欺骗", "假货", "质量太差", "非常不满", "赔偿"}
 
@@ -65,9 +75,7 @@ class RiskRouter:
             return
         data = json.loads(path.read_text(encoding="utf-8"))
         self.rule_version = str(data.get("version", "unversioned"))
-        self.critical_signals = set(
-            data.get("critical_signals", self.critical_signals)
-        )
+        self.critical_signals = set(data.get("critical_signals", self.critical_signals))
         self.complaint_signals = set(
             data.get("complaint_signals", self.complaint_signals)
         )
@@ -96,9 +104,7 @@ class RiskRouter:
         )
 
     def assess_message(self, text: str) -> RiskDecision:
-        critical = sorted(
-            signal for signal in self.critical_signals if signal in text
-        )
+        critical = sorted(signal for signal in self.critical_signals if signal in text)
         if critical:
             return RiskDecision(
                 level=RiskLevel.CRITICAL.value,

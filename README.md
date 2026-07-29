@@ -298,12 +298,14 @@ ecom-service-agent/
 │   │   │   ├── manager.py               # 本地/MCP 工具聚合和安全过滤
 │   │   │   ├── after_sale.py            # 售后工单 Agent 工具
 │   │   │   ├── knowledge.py             # 实例级 Policy RAG 服务
-│   │   │   └── registry.py              # 实例级 Schema、处理器和权限
+│   │   │   ├── definitions.py            # 无运行时依赖的工具 Schema
+│   │   │   └── registry.py               # 处理器、用户上下文和权限绑定
 │   │   ├── skills/definitions/
 │   │   │   └── process-return/SKILL.md   # 深化后的售后流程 Skill
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
-│   ├── api.py                            # REST、SSE、WebSocket 与管理台
+│   ├── api.py                            # REST 与 WebSocket 路由注册
+│   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
 │   ├── infrastructure/                   # 模型网关、数据库和 SQL 仓储
 │   ├── repositories/                     # 仓储协议与本地适配器
 │   ├── services/                         # 业务应用服务
@@ -516,6 +518,14 @@ python -m unittest \
   tests.test_secondary_development \
   tests.test_architecture \
   tests.test_agent_deepening -v
+```
+
+开发环境可额外安装 Ruff，并在提交前执行格式化与静态检查：
+
+```bash
+python -m pip install -r requirements-dev.txt
+ruff format --check .
+ruff check .
 ```
 
 测试覆盖：

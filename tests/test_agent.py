@@ -66,7 +66,9 @@ def test_structured_output():
             failed += 1
 
         print(f"\n[{status}] 输入: {user_input}")
-        print(f"  意图: {response.intent.value} (期望: {[i.value for i in expected_intents]})")
+        print(
+            f"  意图: {response.intent.value} (期望: {[i.value for i in expected_intents]})"
+        )
         print(f"  置信度: {response.confidence:.0%}")
         print(f"  回复: {response.reply[:80]}...")
 
@@ -84,12 +86,12 @@ def test_multi_turn():
 
     # 第一轮：提出问题
     r1 = agent.chat("我想退掉上周买的那双运动鞋")
-    print(f"\n[轮次1] 输入: 我想退掉上周买的那双运动鞋")
+    print("\n[轮次1] 输入: 我想退掉上周买的那双运动鞋")
     print(f"  回复: {r1.reply[:80]}...")
 
     # 第二轮：基于上下文追问（不再提"运动鞋"，看模型是否记住）
     r2 = agent.chat("穿了一次，鞋底就开胶了")
-    print(f"\n[轮次2] 输入: 穿了一次，鞋底就开胶了")
+    print("\n[轮次2] 输入: 穿了一次，鞋底就开胶了")
     print(f"  回复: {r2.reply[:80]}...")
 
     # 验证对话历史长度（system + 4 条 user/assistant）
