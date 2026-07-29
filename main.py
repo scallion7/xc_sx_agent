@@ -1,4 +1,7 @@
-from app.agent.chat import EcomAgent
+import argparse
+from typing import Optional
+
+from app.bootstrap import check_runtime, create_agent, resolve_agent_mode
 from app.config.settings import settings
 from app.schemas.response import IntentType
 
@@ -16,19 +19,65 @@ INTENT_LABELS = {
 }
 
 
-def main():
-    if settings.multi_agent_enabled:
-        from app.multi_agent.orchestrator import MultiAgentOrchestrator
-        agent = MultiAgentOrchestrator()
-        mode = "Multi-Agent 协作模式"
-    else:
-        agent = EcomAgent()
-        mode = "ReAct + MCP + RAG"
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="并夕夕智能客服 Agent")
+    parser.add_argument(
+        "--mode",
+        choices=("auto", "single", "multi"),
+        default="auto",
+        help="运行模式；auto 跟随 MULTI_AGENT_ENABLED",
+    )
+    parser.add_argument(
+        "--session",
+        default=None,
+        help="覆盖会话文件路径",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="检查本地运行环境后退出",
+    )
+    return parser
+
+
+def _print_runtime_checks() -> bool:
+    checks = check_runtime(settings)
+    print("运行环境检查：")
+    for check in checks:
+        if check.ok:
+            marker = "✓"
+        elif check.required:
+            marker = "✗"
+        else:
+            marker = "!"
+        print(f"  [{marker}] {check.message}")
+    return all(check.ok for check in checks if check.required)
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    args = _build_parser().parse_args(argv)
+    if args.check:
+        return 0 if _print_runtime_checks() else 1
+
+    resolved_mode = resolve_agent_mode(args.mode, settings)
+    agent = create_agent(
+        mode=args.mode,
+        config=settings,
+        session_path=args.session,
+    )
+    mode = (
+        "Multi-Agent 协作模式"
+        if resolved_mode == "multi"
+        else "ReAct + MCP + RAG"
+    )
 
     print("=" * 50)
     print(f"  并夕夕 · 智能客服「小夕」({mode})")
     print("  支持工具调用 + 政策检索 + 用户记忆 + 技能编排")
-    print("  输入 quit/exit 退出, reset 重置, memory 查看记忆, skills 查看技能")
+    print(
+        "  输入 quit/exit 退出, reset 重置, memory 查看记忆, "
+        "skills 查看技能, doctor 检查环境"
+    )
     print("=" * 50)
     print()
 
@@ -94,6 +143,12 @@ def main():
                 print("记忆功能未启用\n")
             continue
 
+        if user_input.lower() == "doctor":
+            print()
+            _print_runtime_checks()
+            print()
+            continue
+
         try:
             response = agent.chat(user_input)
 
@@ -116,6 +171,8 @@ def main():
         except Exception as e:
             print(f"\n⚠️  出错了: {e}\n")
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

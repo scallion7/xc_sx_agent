@@ -20,6 +20,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from app.bootstrap import create_agent
 from app.config.settings import settings
 from app.evaluation.dataset import EvalCase
 from app.evaluation.trace import LLMCallRecord, RunTrace, ToolObservation
@@ -38,15 +39,15 @@ class Sandbox:
 
     def _build_agent(self, session_path: str):
         """在隔离配置下构建被测 Agent。"""
-        # 关闭记忆读写与 MCP，保证可复现（agent.__init__ 直接读全局 settings）
-        settings.memory_enabled = False
-        settings.mcp_enabled = False
-
-        if self.mode == "multi":
-            from app.multi_agent.orchestrator import MultiAgentOrchestrator
-            return MultiAgentOrchestrator(session_path=session_path)
-        from app.agent.chat import EcomAgent
-        return EcomAgent(session_path=session_path)
+        # 使用配置副本，避免评估过程污染应用进程中的全局 settings。
+        sandbox_config = settings.model_copy(deep=True)
+        sandbox_config.memory_enabled = False
+        sandbox_config.mcp_enabled = False
+        return create_agent(
+            mode=self.mode,
+            config=sandbox_config,
+            session_path=session_path,
+        )
 
     def run(self, case: EvalCase) -> RunTrace:
         """跑一条用例，返回采集到的运行轨迹。"""

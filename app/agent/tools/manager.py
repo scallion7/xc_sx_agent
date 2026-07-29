@@ -20,6 +20,7 @@ class ToolManager:
         use_mcp: bool = False,
         mcp_server_url: str = "",
         allowed_tools: Optional[set] = None,
+        after_sale_enabled: Optional[bool] = None,
     ):
         self._mcp_client = None
         self._tool_source: dict[str, str] = {}
@@ -31,7 +32,10 @@ class ToolManager:
             self._init_local()
 
         # 新售后模式下不向模型暴露旧的直退工具，避免绕过工单和人工审批。
-        if settings.after_sale_enabled:
+        if after_sale_enabled is None:
+            after_sale_enabled = settings.after_sale_enabled
+
+        if after_sale_enabled:
             visible = set(self._tool_source) - {"apply_refund"}
         else:
             visible = set(self._tool_source) - {

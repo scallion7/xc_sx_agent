@@ -273,10 +273,22 @@ ecom-service-agent/
 
 ### 1. 创建环境并安装依赖
 
+需要 Python 3.10 或更高版本。
+
+macOS / Linux：
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Windows PowerShell：
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
@@ -321,14 +333,30 @@ python app/scripts/build_kb_index.py --backend chroma
 
 ### 4. 启动客服 Agent
 
+启动前可先检查 Python、API Key、Skills 和 RAG 索引：
+
+```bash
+python main.py --check
+```
+
+按 `.env` 自动选择运行模式：
+
 ```powershell
 python main.py
+```
+
+也可以在不修改 `.env` 的情况下显式选择模式：
+
+```bash
+python main.py --mode single
+python main.py --mode multi
 ```
 
 CLI 命令：
 
 - `skills`：查看已发现的 Skills；
 - `memory`：查看短期和长期记忆；
+- `doctor`：检查当前运行环境；
 - `reset`：重置当前对话；
 - `quit` / `exit`：保存并退出。
 
@@ -437,6 +465,18 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 ```
 
 ## 开发历程
+
+### 第 11 期：架构演进与统一应用工厂
+
+- 提取 `BaseConversationAgent`，统一会话、记忆、Skill、结构化输出和历史压缩；
+- 新增 `app.bootstrap.create_agent()`，CLI、评估和未来 API 入口使用同一组装方式；
+- Agent 支持注入配置与模型客户端，便于离线测试、私有模型和多环境部署；
+- ToolManager 的售后模式改为实例配置，减少运行时对全局 settings 的隐式依赖；
+- 评估沙箱使用配置副本，不再污染主进程全局配置；
+- 新增 `python main.py --check` 与交互式 `doctor` 运行诊断。
+
+详细设计与后续替换路线见
+[第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
 | 阶段 | 主题 | 状态 |
 |---|---|---|
