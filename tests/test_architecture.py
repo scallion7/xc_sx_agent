@@ -134,8 +134,12 @@ class SandboxIsolationTests(unittest.TestCase):
         settings.mcp_enabled = True
         try:
             with tempfile.TemporaryDirectory() as tmp:
-                sandbox = Sandbox(mode="single", tmp_root=tmp)
                 with patch("app.evaluation.sandbox.create_agent") as factory:
+                    sandbox = Sandbox(
+                        mode="single",
+                        tmp_root=tmp,
+                        agent_factory=factory,
+                    )
                     sandbox._build_agent(str(Path(tmp) / "session.json"))
 
                 runtime_config = factory.call_args.kwargs["config"]

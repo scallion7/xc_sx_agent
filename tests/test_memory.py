@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 from app.agent.chat import EcomAgent  # noqa: E402
 from app.agent.storage import load_session, save_session  # noqa: E402
 from app.agent.memory import MemoryManager, ShortTermMemory, LongTermMemory  # noqa: E402
-from app.agent.tools.memory_tool import recall_user_memory, set_memory_manager  # noqa: E402
+from app.agent.tools.memory_tool import recall_user_memory  # noqa: E402
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_memory_session.json")
 TEST_MEMORY_DIR = str(ROOT / "app" / "sessions" / "test_memory")
@@ -62,14 +62,13 @@ def _make_agent(threshold: int = 30, keep: int = 6) -> EcomAgent:
     agent.history_keep_recent = keep
 
     agent.memory_manager = MemoryManager(
-        client=agent.client,
+        model_gateway=agent.model_gateway,
         model=agent.model,
         user_id=TEST_USER_ID,
         memory_dir=TEST_MEMORY_DIR,
         memory_enabled=True,
         max_ltm_facts=50,
     )
-    set_memory_manager(agent.memory_manager)
     return agent
 
 
@@ -235,7 +234,7 @@ def test_memory_tool():
         agent.raw_messages, agent.summary,
     )
 
-    result = recall_user_memory()
+    result = recall_user_memory(agent.memory_manager)
     if not result.get("success"):
         _fail(f"工具返回失败: {result}")
 

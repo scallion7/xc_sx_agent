@@ -1,13 +1,12 @@
 import json
 from typing import Optional
 
-from openai import OpenAI
-
+from app.infrastructure.model_gateway import ModelGateway
 from app.prompts.summarizer import SUMMARY_PROMPT
 
 
 def summarize(
-    client: OpenAI,
+    model_gateway: ModelGateway,
     model: str,
     old_messages: list[dict],
     prev_summary: Optional[str],
@@ -45,12 +44,13 @@ def summarize(
 
     user_content = "\n\n".join(parts)
 
-    response = client.chat.completions.create(
+    response = model_gateway.complete(
         model=model,
         temperature=0.3,
         messages=[
             {"role": "system", "content": SUMMARY_PROMPT},
             {"role": "user", "content": user_content},
         ],
+        purpose="summarize",
     )
     return response.choices[0].message.content.strip()

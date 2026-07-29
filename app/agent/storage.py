@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 SESSION_VERSION = 1
+logger = logging.getLogger(__name__)
 
 
 def save_session(
@@ -45,11 +47,11 @@ def load_session(path: str) -> Optional[dict]:
         with file_path.open("r", encoding="utf-8") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError) as e:
-        print(f"⚠️  会话文件损坏，已忽略（{e}）")
+        logger.warning("会话文件损坏，已忽略（%s）", e)
         return None
 
     if not isinstance(data, dict) or "messages" not in data:
-        print("⚠️  会话文件格式不识别，已忽略")
+        logger.warning("会话文件格式不识别，已忽略")
         return None
 
     return {

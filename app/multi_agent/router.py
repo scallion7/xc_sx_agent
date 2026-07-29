@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from openai import OpenAI
-
+from app.infrastructure.model_gateway import ModelGateway
 from app.prompts.agents import ROUTER_PROMPT
 from app.agent.after_sale.risk import RiskDecision, RiskRouter
 
@@ -16,8 +15,13 @@ DEFAULT_AGENT = "postsale"
 class Router:
     """使用 LLM 对用户意图分类，路由到对应的子 Agent。"""
 
-    def __init__(self, client: OpenAI, model: str, risk_router: RiskRouter | None = None):
-        self.client = client
+    def __init__(
+        self,
+        model_gateway: ModelGateway,
+        model: str,
+        risk_router: RiskRouter | None = None,
+    ):
+        self.model_gateway = model_gateway
         self.model = model
         self.risk_router = risk_router or RiskRouter()
         self.last_risk_decision = RiskDecision("low", "agent", [])
@@ -48,11 +52,12 @@ class Router:
         if recent_context:
             prompt = recent_context + "\n" + prompt
 
-        response = self.client.chat.completions.create(
+        response = self.model_gateway.complete(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
             max_tokens=10,
+            purpose="router",
         )
 
         raw = (response.choices[0].message.content or "").strip().lower()

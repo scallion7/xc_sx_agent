@@ -5,15 +5,33 @@
 """
 
 import json
+from time import perf_counter
 from typing import Optional
 
-from app.agent.tools.registry import TOOL_DEFINITIONS as LOCAL_TOOL_DEFINITIONS
-from app.agent.tools.registry import execute_tool as local_execute_tool
+from app.agent.tools.registry import (
+    ToolExecutionContext,
+    ToolRegistry,
+    create_default_tool_registry,
+)
 from app.config.settings import settings
+from app.observability import EventBus
 
 
 class ToolManager:
     """聚合本地工具和 MCP 工具，提供统一的工具定义和调度接口。"""
+
+    CONTEXT_BOUND_TOOLS = {
+        "query_order",
+        "query_logistics",
+        "list_user_orders",
+        "apply_refund",
+        "recall_user_memory",
+        "load_skill",
+        "search_knowledge",
+        "create_after_sale_case",
+        "query_after_sale_case",
+        "execute_after_sale_case",
+    }
 
     def __init__(
         self,
@@ -21,10 +39,20 @@ class ToolManager:
         mcp_server_url: str = "",
         allowed_tools: Optional[set] = None,
         after_sale_enabled: Optional[bool] = None,
+        registry: ToolRegistry | None = None,
+        execution_context: ToolExecutionContext | None = None,
+        event_bus: EventBus | None = None,
+        redactor=None,
     ):
         self._mcp_client = None
         self._tool_source: dict[str, str] = {}
         self._tool_defs: list[dict] = []
+        self._registry = registry or create_default_tool_registry()
+        self._execution_context = execution_context or ToolExecutionContext(
+            permissions=frozenset({"refund:execute", "after_sale:execute"}),
+        )
+        self.event_bus = event_bus or EventBus()
+        self.redactor = redactor or (lambda value: value)
 
         if use_mcp and mcp_server_url:
             self._init_mcp(mcp_server_url)
@@ -50,7 +78,7 @@ class ToolManager:
 
     def _init_local(self):
         """只加载本地工具。"""
-        self._tool_defs = list(LOCAL_TOOL_DEFINITIONS)
+        self._tool_defs = list(self._registry.definitions)
         for td in self._tool_defs:
             self._tool_source[td["function"]["name"]] = "local"
 
@@ -61,23 +89,42 @@ class ToolManager:
         try:
             self._mcp_client = MCPClient(server_url)
             mcp_tools = self._mcp_client.connect()
-            print(f"🔗 [MCP] 已连接 {server_url}，发现 {len(mcp_tools)} 个工具")
+            self.event_bus.emit(
+                "mcp.connected",
+                source="tool_manager",
+                data={
+                    "url": self.redactor(server_url),
+                    "tool_count": len(mcp_tools),
+                },
+            )
 
-            mcp_names = set()
+            definitions = {
+                item["function"]["name"]: item
+                for item in mcp_tools
+            }
             for td in mcp_tools:
                 name = td["function"]["name"]
-                mcp_names.add(name)
                 self._tool_source[name] = "mcp"
-            self._tool_defs = list(mcp_tools)
 
-            for td in LOCAL_TOOL_DEFINITIONS:
+            for td in self._registry.definitions:
                 name = td["function"]["name"]
-                if name not in mcp_names:
-                    self._tool_defs.append(td)
+                if (
+                    name not in definitions
+                    or name in self.CONTEXT_BOUND_TOOLS
+                ):
+                    definitions[name] = td
                     self._tool_source[name] = "local"
+            self._tool_defs = list(definitions.values())
 
         except Exception as e:
-            print(f"⚠️  [MCP] 连接失败 ({e})，降级使用本地工具")
+            self.event_bus.emit(
+                "mcp.fallback",
+                source="tool_manager",
+                data={
+                    "url": self.redactor(server_url),
+                    "error": self.redactor(str(e)),
+                },
+            )
             if self._mcp_client:
                 self._mcp_client.close()
                 self._mcp_client = None
@@ -100,15 +147,80 @@ class ToolManager:
 
     def execute_tool(self, name: str, arguments: dict) -> str:
         """根据工具来源分发调用。"""
+        started = perf_counter()
         source = self._tool_source.get(name)
+        self.event_bus.emit(
+            "tool.started",
+            source="tool_manager",
+            data={
+                "name": name,
+                "arguments": self._redact_value(arguments),
+                "tool_source": source or "unknown",
+            },
+        )
 
-        if source == "mcp" and self._mcp_client:
-            return self._mcp_client.call_tool(name, arguments)
+        required = self._registry.required_permission(name)
+        if (
+            required
+            and required not in self._execution_context.permissions
+        ):
+            result = json.dumps(
+                {
+                    "success": False,
+                    "error": f"无权执行工具 {name}",
+                    "required_permission": required,
+                },
+                ensure_ascii=False,
+            )
+        elif source == "mcp" and self._mcp_client:
+            result = self._mcp_client.call_tool(name, arguments)
+        elif source == "local":
+            result = self._registry.execute(
+                name,
+                arguments,
+                self._execution_context,
+            )
+        else:
+            result = json.dumps(
+                {"error": f"未知工具: {name}"},
+                ensure_ascii=False,
+            )
 
-        if source == "local":
-            return local_execute_tool(name, arguments)
+        try:
+            payload = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            payload = {}
+        failed = bool(payload.get("error")) or payload.get("success") is False
+        self.event_bus.emit(
+            "tool.failed" if failed else "tool.completed",
+            source="tool_manager",
+            data={
+                "name": name,
+                "arguments": self._redact_value(arguments),
+                "result": self.redactor(result),
+                "tool_source": source or "unknown",
+                "latency_ms": (perf_counter() - started) * 1000,
+            },
+        )
+        return result
 
-        return json.dumps({"error": f"未知工具: {name}"}, ensure_ascii=False)
+    def _redact_value(self, value):
+        if isinstance(value, str):
+            return self.redactor(value)
+        if isinstance(value, dict):
+            return {
+                key: self._redact_value(item)
+                for key, item in value.items()
+            }
+        if isinstance(value, list):
+            return [self._redact_value(item) for item in value]
+        return value
+
+    def set_execution_context(
+        self,
+        context: ToolExecutionContext,
+    ) -> None:
+        self._execution_context = context
 
     def close(self):
         """清理 MCP 连接。"""

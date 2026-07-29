@@ -11,11 +11,10 @@ import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-
-from openai import OpenAI
+from typing import Callable, Optional
 
 from app.agent.memory.extraction import extract_long_term_facts
+from app.infrastructure.model_gateway import ModelGateway
 
 
 @dataclass
@@ -35,10 +34,12 @@ class LongTermMemory:
         user_id: str = "default",
         memory_dir: str = "app/sessions/memory",
         max_facts: int = 50,
+        redactor: Callable[[str], str] | None = None,
     ):
         self.user_id = user_id
         self.memory_dir = Path(memory_dir)
         self.max_facts = max_facts
+        self.redactor = redactor or (lambda value: value)
         self.facts: list[MemoryFact] = []
         self.interaction_summaries: list[dict] = []
 
@@ -58,12 +59,18 @@ class LongTermMemory:
 
         for item in data.get("facts", []):
             self.facts.append(MemoryFact(
-                content=item["content"],
+                content=self.redactor(item["content"]),
                 category=item.get("category", "other"),
                 created_at=item.get("created_at", ""),
                 source_session=item.get("source_session", ""),
             ))
-        self.interaction_summaries = data.get("interaction_summaries", [])
+        self.interaction_summaries = [
+            {
+                **item,
+                "summary": self.redactor(item.get("summary", "")),
+            }
+            for item in data.get("interaction_summaries", [])
+        ]
 
     def save(self) -> None:
         """持久化到 JSON 文件（原子写入）。"""
@@ -101,7 +108,7 @@ class LongTermMemory:
 
     def extract_and_save(
         self,
-        client: OpenAI,
+        model_gateway: ModelGateway,
         model: str,
         messages: list[dict],
         summary: Optional[str],
@@ -111,13 +118,29 @@ class LongTermMemory:
             return
 
         new_facts, interaction_summary = extract_long_term_facts(
-            client, model, messages, summary, self.facts,
+            model_gateway,
+            model,
+            messages,
+            summary,
+            self.facts,
         )
 
         if new_facts:
-            self.add_facts(new_facts)
+            self.add_facts(
+                [
+                    MemoryFact(
+                        content=self.redactor(fact.content),
+                        category=fact.category,
+                        created_at=fact.created_at,
+                        source_session=fact.source_session,
+                    )
+                    for fact in new_facts
+                ]
+            )
         if interaction_summary:
-            self.add_interaction_summary(interaction_summary)
+            self.add_interaction_summary(
+                self.redactor(interaction_summary)
+            )
 
         self.save()
 

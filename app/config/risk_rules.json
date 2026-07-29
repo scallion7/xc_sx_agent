@@ -1,0 +1,42 @@
+{
+  "version": "2026.1",
+  "critical_signals": [
+    "消协",
+    "起诉",
+    "报警",
+    "律师",
+    "人身伤害",
+    "受伤",
+    "触电",
+    "爆炸",
+    "泄露隐私",
+    "盗刷",
+    "媒体曝光",
+    "监管投诉"
+  ],
+  "complaint_signals": [
+    "投诉",
+    "欺骗",
+    "假货",
+    "质量太差",
+    "非常不满",
+    "赔偿"
+  ],
+  "evidence_required_case_types": [
+    "quality_issue",
+    "missing_item",
+    "logistics_damage"
+  ],
+  "score_weights": {
+    "amount_over_auto": 1,
+    "amount_high": 4,
+    "evidence_missing": 2,
+    "other_case": 1,
+    "existing_refund": 3,
+    "complaint": 2
+  },
+  "score_thresholds": {
+    "manual_review": 1,
+    "human_escalation": 4
+  }
+}

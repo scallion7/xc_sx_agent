@@ -6,9 +6,8 @@
 
 from __future__ import annotations
 
-from openai import OpenAI
-
 from app.agent.memory.extraction import extract_short_term_facts
+from app.infrastructure.model_gateway import ModelGateway
 
 
 class ShortTermMemory:
@@ -17,10 +16,18 @@ class ShortTermMemory:
     def __init__(self):
         self.facts: list[str] = []
 
-    def update(self, client: OpenAI, model: str, recent_messages: list[dict]) -> None:
+    def update(
+        self,
+        model_gateway: ModelGateway,
+        model: str,
+        recent_messages: list[dict],
+    ) -> None:
         """从最近的对话消息中提取/更新事实。"""
         self.facts = extract_short_term_facts(
-            client, model, recent_messages, self.facts,
+            model_gateway,
+            model,
+            recent_messages,
+            self.facts,
         )
 
     def build_prompt_section(self) -> str | None:

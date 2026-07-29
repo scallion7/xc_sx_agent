@@ -11,15 +11,24 @@ from app.agent.after_sale.models import (
     CaseStatus,
     CaseType,
 )
-from app.agent.after_sale.repository import JsonAfterSaleRepository
+from app.agent.after_sale.repository import AfterSaleRepository
 from app.agent.after_sale.risk import RiskRouter
-from app.agent.tools.mock_data import ORDERS
+from app.repositories.mock_commerce import MockCommerceRepository
+from app.services.commerce import CommerceService
 
 
 class AfterSaleService:
-    def __init__(self, repository: JsonAfterSaleRepository, risk_router: RiskRouter):
+    def __init__(
+        self,
+        repository: AfterSaleRepository,
+        risk_router: RiskRouter,
+        commerce_service: CommerceService | None = None,
+    ):
         self.repository = repository
         self.risk_router = risk_router
+        self.commerce_service = commerce_service or CommerceService(
+            MockCommerceRepository()
+        )
 
     @staticmethod
     def infer_case_type(reason: str, requested: str = "auto") -> str:
@@ -49,6 +58,7 @@ class AfterSaleService:
         case_type: str = "auto",
         evidence_provided: bool = False,
         user_confirmed: bool = False,
+        user_id: str = "default",
     ) -> dict:
         if not user_confirmed:
             return {
@@ -56,13 +66,17 @@ class AfterSaleService:
                 "confirmation_required": True,
                 "error": "创建售后工单前必须获得用户对订单号和原因的明确确认",
             }
-        order = ORDERS.get(order_id)
-        if not order:
-            return {"success": False, "error": f"未找到订单 {order_id}"}
+        order_result = self.commerce_service.get_order(
+            order_id,
+            user_id,
+        )
+        if not order_result.get("success"):
+            return order_result
+        order = order_result["order"]
         if not reason.strip():
             return {"success": False, "error": "售后原因不能为空"}
 
-        existing = self.repository.find_active_by_order(order_id)
+        existing = self.repository.find_active_by_order(order_id, user_id)
         if existing:
             return {
                 "success": True,
@@ -97,6 +111,7 @@ class AfterSaleService:
             evidence_provided=evidence_provided,
             created_at=now,
             updated_at=now,
+            user_id=user_id,
         )
         case.add_audit("case_created", "agent", f"risk={decision.level}, route={decision.route}")
         if requires_approval:
@@ -114,13 +129,19 @@ class AfterSaleService:
             ),
         }
 
-    def get_case(self, case_id: str) -> dict:
-        case = self.repository.get(case_id)
+    def get_case(self, case_id: str, user_id: str | None = None) -> dict:
+        case = self.repository.get(case_id, user_id)
         if not case:
             return {"success": False, "error": f"未找到售后工单 {case_id}"}
         return {"success": True, "case": case.to_dict()}
 
-    def review_case(self, case_id: str, decision: str, reviewer: str, note: str = "") -> dict:
+    def review_case(
+        self,
+        case_id: str,
+        decision: str,
+        reviewer: str,
+        note: str = "",
+    ) -> dict:
         case = self.repository.get(case_id)
         if not case:
             return {"success": False, "error": f"未找到售后工单 {case_id}"}
@@ -144,8 +165,12 @@ class AfterSaleService:
         self.repository.save(case)
         return {"success": True, "case": case.to_dict()}
 
-    def execute_case(self, case_id: str) -> dict:
-        case = self.repository.get(case_id)
+    def execute_case(
+        self,
+        case_id: str,
+        user_id: str | None = None,
+    ) -> dict:
+        case = self.repository.get(case_id, user_id)
         if not case:
             return {"success": False, "error": f"未找到售后工单 {case_id}"}
         if case.status != CaseStatus.APPROVED.value:
@@ -155,11 +180,20 @@ class AfterSaleService:
                 "error": f"工单当前状态 {case.status}，只有已批准工单可以执行",
             }
 
-        from app.agent.tools.refund import apply_refund
-
         case.status = CaseStatus.PROCESSING.value
         case.add_audit("execution_started", "agent")
-        result = apply_refund(case.order_id, case.reason)
+        self.repository.save(case)
+        try:
+            result = self.commerce_service.apply_refund(
+                case.order_id,
+                case.reason,
+                case.user_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            result = {
+                "success": False,
+                "error": f"售后执行异常: {type(exc).__name__}",
+            }
         case.result = result
         if result.get("success"):
             case.status = CaseStatus.COMPLETED.value
@@ -170,6 +204,6 @@ class AfterSaleService:
         self.repository.save(case)
         return {"success": bool(result.get("success")), "case": case.to_dict(), "result": result}
 
-    def list_pending_approvals(self) -> dict:
-        cases = self.repository.list_pending()
+    def list_pending_approvals(self, user_id: str | None = None) -> dict:
+        cases = self.repository.list_pending(user_id)
         return {"success": True, "count": len(cases), "cases": [case.to_dict() for case in cases]}

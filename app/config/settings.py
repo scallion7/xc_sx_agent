@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     model_name: str = "gpt-4o-mini"
     temperature: float = 0.7
+    model_timeout_seconds: float = 30.0
+    model_max_retries: int = 2
+    model_retry_base_seconds: float = 0.2
+    model_requests_per_minute: int = 60
 
     # ReAct 循环
     max_react_steps: int = 5
@@ -33,6 +37,7 @@ class Settings(BaseSettings):
     after_sale_case_path: str = "app/sessions/after_sale_cases.json"
     after_sale_auto_approve_max_amount: float = 200.0
     after_sale_high_risk_amount: float = 2000.0
+    risk_rules_path: str = "app/config/risk_rules.json"
 
     # Multi-Agent 配置（第6期）
     multi_agent_enabled: bool = False
@@ -49,6 +54,7 @@ class Settings(BaseSettings):
 
     # Evaluation 配置（第9期，离线评估工具，无聊天开关）
     eval_dataset_path: str = "app/evaluation/cases.json"
+    eval_report_path: str = "app/sessions/eval_report.json"
     eval_use_judge: bool = True  # 是否启用 LLM-as-judge（质量/幻觉/过程合理性）
     eval_pass_threshold: float = 0.6  # 单维度通过阈值（judge 归一化到 0-1 后比较）
 
@@ -56,6 +62,31 @@ class Settings(BaseSettings):
     session_path: str = "app/sessions/session.json"
     history_threshold: int = 10  # 消息压缩策略通常为上下文达到一定的token数，例如claude code通常为达到最大上下文窗口的70%左右，此处简略为原始消息条数超过10轮
     history_keep_recent: int = 3  # 压缩时保留最近 3 条原始消息
+
+    # 持久化与服务化
+    persistence_backend: str = "sql"  # sql(SQLite/PostgreSQL) / json
+    database_url: str = "sqlite:///app/sessions/xc_sx_agent.db"
+    commerce_seed_demo_data: bool = True
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    api_user_tokens: str = "dev-user-token:user-1"
+    api_admin_tokens: str = "dev-admin-token:admin"
+    session_dir: str = "app/sessions/users"
+
+    # 安全护栏
+    guardrails_enabled: bool = True
+    max_user_input_chars: int = 4000
+    block_prompt_injection: bool = True
+
+    # 可观测性
+    observability_enabled: bool = True
+    event_log_path: str = "app/sessions/events.jsonl"
+    event_buffer_size: int = 1000
+
+    # Policy RAG
+    rag_rerank_enabled: bool = True
+    rag_filter_inactive_policies: bool = True
+    rag_lexical_fallback_enabled: bool = True
 
     model_config = {"env_file": ".env"}
 

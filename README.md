@@ -2,9 +2,9 @@
 
 一个以电商客服为业务场景的 AI Agent 教学与二次开发项目。
 
-项目的第一阶段已经完成从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现。目前正在进入面向作品展示和工程实践的二次开发阶段，重点不再是继续堆叠概念，而是把已有能力组合成具备确定性业务流程、安全边界和人工协作机制的完整系统。
+项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：已完成“Agent 深化”阶段，包括售后工单 Skill、Policy RAG、Human-in-the-Loop 和风险路由。
+> 当前二次开发进度：原规划中的数据库与业务服务、FastAPI 与实时流式接口、Agent 深化、安全护栏、可观测性、自动化回归和 Docker 演示环境均已完成。
 
 ## 项目定位
 
@@ -17,7 +17,7 @@
 - 如何评估工具调用过程和最终回答；
 - 如何把敏感业务动作收敛到状态机、风险规则和人工审批中。
 
-当前仓库适合作为 Agent 学习样例和作品展示基础，但订单、商品、物流及退款执行仍使用 Mock 数据，不应直接用于生产环境。
+默认 SQL 模式会把演示订单、商品和物流种子写入 SQLite/PostgreSQL，退款状态和售后工单均真实持久化。种子数据可通过 `COMMERCE_SEED_DEMO_DATA=false` 关闭，以接入真实业务数据。仓库仍是教学与作品演示项目，生产使用前应替换演示 Token、密钥管理、数据库迁移和组织级身份系统。
 
 ## 当前核心能力
 
@@ -29,58 +29,64 @@
 | 多轮对话 | 会话 JSON 持久化、历史摘要压缩、上下文恢复与重置 |
 | ReAct 与工具调用 | LLM → 工具调用 → Observation → 最终回答的循环执行 |
 | MCP | Streamable HTTP MCP Server、工具发现、Schema 转换和本地降级 |
-| RAG | Markdown 切分、OpenAI Embedding、Numpy/Chroma 双向量后端 |
+| RAG | Markdown 切分、OpenAI Embedding、Numpy/Chroma 双向量后端与离线词法降级 |
 | Multi-Agent | 售前、售后、投诉三个子 Agent，以及 LLM 意图路由和工具隔离 |
 | Memory | 会话内短期记忆、跨会话长期记忆和记忆查询工具 |
 | Skills | 渐进式发现和加载退货、订单跟踪、商品推荐等标准流程 |
 | Evaluation | 隔离沙箱、Trace 采集、规则指标、LLM-as-Judge 和聚合报告 |
 
-### 正在进行的二次开发
+### 已完成的二次开发
 
 二次开发的目标是把原来的“能够回答和调用工具”升级为“能够安全地推进售后业务流程”。本阶段采用以下原则：
 
 > LLM 负责理解用户、收集信息和解释结果；确定性代码负责状态转换、风险判断、审批权限和敏感操作。
 
-当前已经落地四项 Agent 深化能力：
+当前已落地：
 
-1. 售后工单 Skill；
-2. Policy RAG；
-3. Human-in-the-Loop；
-4. 风险路由。
+1. 售后工单、Policy RAG、Human-in-the-Loop 与版本化风险路由；
+2. 实例级 ToolRegistry 和依赖隔离；
+3. 统一模型网关（超时、重试、限流和指标）；
+4. 统一事件总线、Trace、日志、WebSocket 与评估订阅器；
+5. Repository/Service 分层、SQLite/PostgreSQL 持久化和用户数据隔离；
+6. FastAPI、实时 SSE、管理后台和离线回归看板；
+7. Prompt Injection 防护、敏感信息脱敏、RBAC 和敏感工具权限；
+8. Docker Compose API + PostgreSQL 演示环境。
 
 ## 二次开发架构
 
 ```text
-用户消息
+CLI / REST / SSE / WebSocket
+  │
+  ▼
+Application Factory → TraceContext → Guardrails
   │
   ├─ 单 Agent：EcomAgent
-  │
   └─ Multi-Agent：Router → 售前 / 售后 / 投诉 Agent
                          │
                          ▼
-                  消息级风险路由
+                  ModelGateway
+             （超时/重试/限流/指标）
                          │
                          ▼
-                    ReAct 工具循环
+               ReAct + ToolRegistry
           ┌──────────────┼──────────────┐
           │              │              │
           ▼              ▼              ▼
-      订单/物流工具   Policy RAG    售后工单工具
+   CommerceService   Policy RAG    AfterSaleService
+          │                              │
+          ▼                              ▼
+ CommerceRepository              工单级风险路由
+（SQL / Mock 适配器）        ┌────────────┴────────────┐
+                         low：自动批准        medium/high/critical
                                       │
                                       ▼
-                               工单级风险路由
-                         ┌────────────┴────────────┐
-                         │                         │
-                         ▼                         ▼
-                  low：自动批准          medium/high/critical
-                         │                         │
-                         ▼                         ▼
-                    执行售后操作              人工审批队列
-                                                   │
-                                          approve / reject
-                                                   │
-                                                   ▼
-                                         执行或终止售后流程
+                              SQL 工单 / 人工审批
+
+所有核心路径 ──emit──> EventBus
+                         ├─ JSONL 日志
+                         ├─ 指标聚合
+                         ├─ SSE / WebSocket
+                         └─ 离线评估 Trace
 ```
 
 ## 二次开发内容详解
@@ -142,6 +148,7 @@ policy_type: after_sale
 version: 2026.1
 effective_date: 2026-01-01
 scope: mainland_china
+expires_at: 2026-12-31
 ```
 
 当前政策类型包括：
@@ -160,6 +167,10 @@ scope: mainland_china
 - 相似度分数和适用性说明。
 
 Agent 回答政策问题时必须引用检索结果。当 `grounded=false` 时，不允许继续编造结论，应说明依据不足并转人工确认。
+
+首次启动尚未构建向量索引，或 Embedding 服务暂时不可用时，系统会自动使用本地
+Markdown 的确定性词法检索作为降级路径；重排、政策有效期、可信阈值和引用规则保持
+不变。可通过 `RAG_LEXICAL_FALLBACK_ENABLED=false` 强制要求向量索引。
 
 ### 3. Human-in-the-Loop
 
@@ -236,6 +247,39 @@ python app/scripts/review_after_sale.py reject AS-XXXXXXXXXX `
 
 旧版 `apply_refund` 的底层实现仍用于兼容历史课程和 MCP 服务，但启用 `AFTER_SALE_ENABLED=true` 后，`ToolManager` 不再将其暴露给模型，Agent 无法绕过工单和人工审批直接退款。
 
+### 6. 服务化、持久化与用户隔离
+
+- `SessionRepository`、`AfterSaleRepository` 和 `CommerceRepository` 是业务层依赖的协议；
+- SQLAlchemy 适配器同时支持本地 SQLite 与 PostgreSQL；
+- 订单、商品、物流、退款、会话和售后工单均有 SQL 表；
+- 订单查询、退款、会话和工单查询都按 `user_id` 校验归属；
+- JSON 与 Mock 适配器只保留给旧课程和轻量本地开发；
+- 演示数据初始化是幂等的，生产接入真实库时可关闭。
+
+### 7. 模型网关与实例级工具
+
+业务 Agent 不再直接调用模型 SDK。`ModelGateway` 统一负责超时、指数退避重试、
+应用运行时共享的滑动窗口限流、Token/延迟指标和失败事件，并允许注入离线测试客户端
+或私有兼容接口。
+
+每个 Agent 拥有独立的 `ToolRegistry`、Memory、Skill、KnowledgeService、
+CommerceService 和 AfterSaleService，不再通过模块级 setter 或 Retriever
+单例共享运行时依赖。
+
+### 8. API、安全与可观测性
+
+FastAPI 提供同步聊天、实时 SSE、WebSocket 事件、会话、订单、商品、售后查询、
+人工审批、指标和回归报告接口。静态 Token 映射只用于演示，但权限检查与用户隔离
+位于 API 和业务服务两层。
+
+安全护栏在模型调用前拦截常见 Prompt Injection，限制输入长度，并对 API Key、
+手机号、邮箱、身份证号和银行卡号脱敏。脱敏覆盖模型上下文、会话持久化、
+工具事件和最终输出；退款与售后执行工具还有独立权限校验。
+
+事件总线统一记录 `trace_id`、`session_id`、`user_id`、模型 Token/延迟、
+工具成功/失败和路由事件。CLI、JSONL、内存指标、SSE/WebSocket 和评估沙箱
+使用不同订阅器，不需要修改 Agent 核心代码。
+
 ## 项目结构
 
 ```text
@@ -243,28 +287,38 @@ ecom-service-agent/
 ├── main.py                              # CLI 入口，切换单 Agent / Multi-Agent
 ├── app/
 │   ├── agent/
+│   │   ├── base.py                      # 共享会话与依赖生命周期
 │   │   ├── chat.py                      # 单 Agent ReAct 主循环
 │   │   ├── after_sale/                  # 二次开发：售后工单领域层
 │   │   │   ├── models.py                # 工单、状态、风险和审计模型
-│   │   │   ├── repository.py            # JSON 工单持久化
+│   │   │   ├── repository.py            # 仓储协议与 JSON 适配器
 │   │   │   ├── risk.py                  # 消息级/工单级风险路由
 │   │   │   └── service.py               # 创建、审批和执行状态转换
 │   │   ├── tools/
 │   │   │   ├── manager.py               # 本地/MCP 工具聚合和安全过滤
 │   │   │   ├── after_sale.py            # 售后工单 Agent 工具
-│   │   │   ├── knowledge.py             # Policy RAG 工具
-│   │   │   └── registry.py              # Function Calling Schema 与分发
+│   │   │   ├── knowledge.py             # 实例级 Policy RAG 服务
+│   │   │   └── registry.py              # 实例级 Schema、处理器和权限
 │   │   ├── skills/definitions/
 │   │   │   └── process-return/SKILL.md   # 深化后的售后流程 Skill
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
+│   ├── api.py                            # REST、SSE、WebSocket 与管理台
+│   ├── infrastructure/                   # 模型网关、数据库和 SQL 仓储
+│   ├── repositories/                     # 仓储协议与本地适配器
+│   ├── services/                         # 业务应用服务
+│   ├── observability/                    # EventBus、Trace、日志和指标
+│   ├── security/                         # Token RBAC、注入防护和脱敏
 │   ├── multi_agent/                      # Router、售前/售后/投诉 Agent
 │   ├── evaluation/                       # 沙箱、Trace、指标与 LLM Judge
 │   └── scripts/
 │       ├── build_kb_index.py             # 构建 Policy RAG 索引
 │       ├── review_after_sale.py           # 独立人工审批入口
-│       └── run_eval.py                   # 离线评估
+│       ├── run_eval.py                   # 离线评估
+│       └── run_api.py                    # API 启动入口
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
+├── Dockerfile
+├── docker-compose.yml                    # API + PostgreSQL
 ├── tests/                                # 原有测试和深化回归测试
 └── docs/                                 # 各阶段教学与二次开发文档
 ```
@@ -310,9 +364,14 @@ MODEL_NAME=gpt-4o-mini
 ```dotenv
 POLICY_RAG_MIN_SCORE=0.2
 AFTER_SALE_ENABLED=true
-AFTER_SALE_CASE_PATH=app/sessions/after_sale_cases.json
 AFTER_SALE_AUTO_APPROVE_MAX_AMOUNT=200
 AFTER_SALE_HIGH_RISK_AMOUNT=2000
+RISK_RULES_PATH=app/config/risk_rules.json
+PERSISTENCE_BACKEND=sql
+DATABASE_URL=sqlite:///app/sessions/xc_sx_agent.db
+COMMERCE_SEED_DEMO_DATA=true
+API_USER_TOKENS=dev-user-token:user-1
+API_ADMIN_TOKENS=dev-admin-token:admin
 ```
 
 ### 3. 构建 Policy RAG 索引
@@ -366,7 +425,32 @@ CLI 命令：
 MULTI_AGENT_ENABLED=true
 ```
 
-### 5. 可选：启动 MCP Server
+### 5. 启动 FastAPI
+
+```bash
+python app/scripts/run_api.py
+```
+
+常用入口：
+
+- OpenAPI：`http://127.0.0.1:8000/docs`
+- 管理后台：`http://127.0.0.1:8000/admin`
+- 健康检查：`GET /health`
+- 同步聊天：`POST /v1/chat`
+- 实时事件流：`POST /v1/chat/stream`
+- WebSocket：`/ws/events/{session_id}?token=...`
+
+请求使用 `X-API-Key`。`.env.example` 中的开发 Token 只用于本地演示。
+
+### 6. Docker Compose 演示
+
+```bash
+docker compose up --build
+```
+
+该命令启动 PostgreSQL 17 和非 root API 容器，并配置数据库与 API 健康检查。
+
+### 7. 可选：启动 MCP Server
 
 第一个终端：
 
@@ -391,7 +475,7 @@ python main.py
 
 ### 低风险自动处理
 
-Mock 订单 `ORD-20240125-006` 金额为 29.90 元，低于默认自动审批阈值。
+演示种子订单 `ORD-20240125-006` 金额为 29.90 元，低于默认自动审批阈值。
 
 ```text
 用户：订单 ORD-20240125-006 的保护壳不合适，我想退货。
@@ -403,7 +487,7 @@ Agent：执行已批准工单并返回工单号和处理结果。
 
 ### 高金额人工审批
 
-Mock 订单 `ORD-20240110-003` 金额为 5999 元。
+演示种子订单 `ORD-20240110-003` 金额为 5999 元。
 
 ```text
 用户：订单 ORD-20240110-003 的手机有质量故障，我要退款，已经提供视频。
@@ -427,8 +511,11 @@ Agent：读取 approved 状态后继续执行或告知下一步。
 
 运行本次二次开发的纯业务回归测试，不会调用外部模型：
 
-```powershell
-python -m unittest tests.test_agent_deepening -v
+```bash
+python -m unittest \
+  tests.test_secondary_development \
+  tests.test_architecture \
+  tests.test_agent_deepening -v
 ```
 
 测试覆盖：
@@ -440,9 +527,15 @@ python -m unittest tests.test_agent_deepening -v
 - 人工批准后可以执行；
 - 同一订单的活跃工单幂等；
 - 严重风险信号强制转人工；
-- Policy 元数据正确进入 Chunk。
+- Policy 元数据正确进入 Chunk；
+- ToolRegistry 实例隔离与敏感操作权限；
+- 模型网关超时、重试与事件指标；
+- SQL 会话、订单、退款和工单的用户隔离与持久化；
+- FastAPI 鉴权、SSE、管理后台和回归接口；
+- Prompt Injection 阻断及模型调用前敏感信息脱敏；
+- Docker Compose 结构与离线评估事件采集。
 
-运行原有专项测试：
+运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
 
 ```powershell
 python tests/test_agent.py
@@ -457,7 +550,7 @@ python tests/test_evaluation.py
 运行离线评估：
 
 ```powershell
-# 仅使用确定性规则
+# 不启用 LLM-as-Judge；被测 Agent 本身仍会调用配置的模型
 python app/scripts/run_eval.py --no-judge
 
 # 包含 LLM-as-Judge
@@ -469,13 +562,13 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 ### 第 11 期：架构演进与统一应用工厂
 
 - 提取 `BaseConversationAgent`，统一会话、记忆、Skill、结构化输出和历史压缩；
-- 新增 `app.bootstrap.create_agent()`，CLI、评估和未来 API 入口使用同一组装方式；
+- 新增 `app.bootstrap.create_agent()`，CLI、评估和 API 入口使用同一组装方式；
 - Agent 支持注入配置与模型客户端，便于离线测试、私有模型和多环境部署；
 - ToolManager 的售后模式改为实例配置，减少运行时对全局 settings 的隐式依赖；
 - 评估沙箱使用配置副本，不再污染主进程全局配置；
 - 新增 `python main.py --check` 与交互式 `doctor` 运行诊断。
 
-详细设计与后续替换路线见
+详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
 | 阶段 | 主题 | 状态 |
@@ -489,10 +582,14 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 第 7 期 | 短期与长期 Memory | 已完成 |
 | 第 8 期 | 可复用 Agent Skills | 已完成 |
 | 第 9 期 | Agent 沙箱、Trace 与双层评估 | 已完成 |
-| 二次开发阶段 1 | 数据库、业务服务和真实状态机 | 规划中 |
-| 二次开发阶段 2 | FastAPI、流式响应和管理后台 | 规划中 |
+| 二次开发阶段 1 | 数据库、业务服务和真实状态机 | 已完成 |
+| 二次开发阶段 2 | FastAPI、流式响应和管理后台 | 已完成 |
 | 二次开发阶段 3 | 售后 Skill、Policy RAG、HITL、风险路由 | 已完成 |
-| 二次开发阶段 4 | 可观测性、安全护栏和自动化回归 | 规划中 |
+| 二次开发阶段 4 | 可观测性、安全护栏和自动化回归 | 已完成 |
+| 阶段 12 | 实例级 ToolRegistry 与依赖隔离 | 已完成 |
+| 阶段 13 | ModelGateway、超时、重试与限流 | 已完成 |
+| 阶段 14 | EventBus、Trace、日志、指标与实时订阅 | 已完成 |
+| 阶段 15 | API、Repository/Service 与 SQL 持久化 | 已完成 |
 
 ## 相关文档
 
@@ -506,23 +603,16 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第8期：Skill 可复用能力模块](docs/第8期-Skill可复用能力模块.md)
 - [第9期：Agent 评估体系](docs/第9期-Agent评估体系.md)
 - [二次开发：售后工单、Policy RAG 与人工审批](docs/第10期-Agent深化售后工单PolicyRAG与人工审批.md)
+- [第11期：架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)
+- [阶段12-15：工程化二次开发完成说明](docs/阶段12-15-工程化二次开发完成说明.md)
 
-## 当前边界与后续计划
+## 当前边界
 
-当前二次开发已经完成 Agent 售后流程深化，但仍有以下工程边界：
+原二次开发规划已完成。以下是演示项目与真实生产系统之间仍需由部署方替换的边界，
+不属于本轮规划的未完成功能：
 
-- 订单、商品、物流和退款执行仍为 Mock；
-- 售后工单使用单 JSON 文件持久化，不支持多进程并发写；
-- 尚未实现用户鉴权和订单归属校验；
-- 人工审批目前是独立 CLI，还没有 RBAC 管理后台；
-- 尚未提供 FastAPI、Web 页面和流式交互；
-- 风险规则目前写在代码中，尚未版本化为规则配置；
-- Policy RAG 尚未接入 reranker 和政策失效检测。
-
-后续二次开发将优先推进：
-
-1. PostgreSQL、Repository/Service 分层和用户数据隔离；
-2. FastAPI、SSE/WebSocket 和客服管理后台；
-3. Prompt Injection、敏感信息过滤和操作权限 Guardrails；
-4. Agent Trace、Token/延迟指标、工具成功率和回归看板；
-5. Docker 化部署和完整演示环境。
+- API Token 映射来自环境变量，生产应接入 OAuth2/OIDC、密钥轮换和组织身份；
+- 数据库表由 SQLAlchemy 自动创建，生产应纳入 Alembic 等受控迁移流程；
+- `COMMERCE_SEED_DEMO_DATA=true` 仅用于演示，真实环境应关闭并接入业务主数据；
+- 风险规则和政策文档是示例内容，上线前需要法务、风控和客服运营共同审核；
+- 本次验收只使用 Fake 客户端，不包含真实模型质量、费用、网络和供应商压测。

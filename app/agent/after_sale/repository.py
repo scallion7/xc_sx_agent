@@ -5,8 +5,27 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Protocol
 
 from app.agent.after_sale.models import AfterSaleCase, CaseStatus
+
+
+class AfterSaleRepository(Protocol):
+    def get(
+        self,
+        case_id: str,
+        user_id: str | None = None,
+    ) -> AfterSaleCase | None: ...
+
+    def save(self, case: AfterSaleCase) -> None: ...
+
+    def find_active_by_order(
+        self,
+        order_id: str,
+        user_id: str = "default",
+    ) -> AfterSaleCase | None: ...
+
+    def list_pending(self, user_id: str | None = None) -> list[AfterSaleCase]: ...
 
 
 class JsonAfterSaleRepository:
@@ -32,24 +51,38 @@ class JsonAfterSaleRepository:
         tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(tmp_path, self.path)
 
-    def get(self, case_id: str) -> AfterSaleCase | None:
-        return self._load_all().get(case_id)
+    def get(
+        self,
+        case_id: str,
+        user_id: str | None = None,
+    ) -> AfterSaleCase | None:
+        case = self._load_all().get(case_id)
+        if case and user_id is not None and case.user_id != user_id:
+            return None
+        return case
 
     def save(self, case: AfterSaleCase) -> None:
         cases = self._load_all()
         cases[case.case_id] = case
         self._save_all(cases)
 
-    def find_active_by_order(self, order_id: str) -> AfterSaleCase | None:
+    def find_active_by_order(
+        self,
+        order_id: str,
+        user_id: str = "default",
+    ) -> AfterSaleCase | None:
         terminal = {CaseStatus.COMPLETED.value, CaseStatus.REJECTED.value}
         return next(
             (case for case in self._load_all().values()
-             if case.order_id == order_id and case.status not in terminal),
+             if case.order_id == order_id
+             and case.user_id == user_id
+             and case.status not in terminal),
             None,
         )
 
-    def list_pending(self) -> list[AfterSaleCase]:
+    def list_pending(self, user_id: str | None = None) -> list[AfterSaleCase]:
         return [
             case for case in self._load_all().values()
             if case.status == CaseStatus.PENDING_REVIEW.value
+            and (user_id is None or case.user_id == user_id)
         ]

@@ -7,16 +7,48 @@
 from __future__ import annotations
 
 from abc import ABC
+from contextlib import contextmanager
 from typing import Any, Optional
 
-from openai import OpenAI
-
+from app.agent.after_sale import (
+    AfterSaleService,
+    JsonAfterSaleRepository,
+    RiskRouter,
+)
 from app.agent.memory import MemoryManager
 from app.agent.skills import SkillManager
-from app.agent.storage import delete_session, load_session, save_session
 from app.agent.summarizer import summarize
+from app.agent.tools.registry import (
+    ToolExecutionContext,
+    ToolRegistry,
+    create_default_tool_registry,
+)
+from app.agent.tools.knowledge import KnowledgeService
 from app.config.settings import Settings, settings
+from app.infrastructure.model_gateway import (
+    ModelGateway,
+    OpenAIModelGateway,
+    SlidingWindowRateLimiter,
+)
+from app.infrastructure.sql_after_sale_repository import (
+    SqlAfterSaleRepository,
+)
+from app.infrastructure.sql_commerce_repository import (
+    SqlCommerceRepository,
+)
+from app.observability import (
+    EventBus,
+    TraceContext,
+    current_trace_id,
+)
+from app.repositories.session import (
+    SessionRepository,
+    build_session_repository,
+)
+from app.repositories.mock_commerce import MockCommerceRepository
 from app.schemas.response import CustomerServiceResponse, IntentType
+from app.security import GuardrailEngine
+from app.services.commerce import CommerceService
 
 
 class BaseConversationAgent(ABC):
@@ -30,32 +62,105 @@ class BaseConversationAgent(ABC):
         client: Optional[Any] = None,
         memory_manager: Optional[MemoryManager] = None,
         skill_manager: Optional[SkillManager] = None,
+        tool_registry: Optional[ToolRegistry] = None,
+        after_sale_service: Optional[AfterSaleService] = None,
+        model_gateway: Optional[ModelGateway] = None,
+        event_bus: Optional[EventBus] = None,
+        guardrails: Optional[GuardrailEngine] = None,
+        session_repository: Optional[SessionRepository] = None,
+        commerce_service: Optional[CommerceService] = None,
+        rate_limiter: Optional[SlidingWindowRateLimiter] = None,
     ):
         self.config = config or settings
-        self.client = client or OpenAI(
-            api_key=self.config.openai_api_key,
-            base_url=self.config.openai_base_url,
+        self.event_bus = event_bus or EventBus()
+        self.guardrails = guardrails or GuardrailEngine.from_config(
+            self.config
         )
+        self.model_gateway = model_gateway or OpenAIModelGateway.from_config(
+            self.config,
+            event_bus=self.event_bus,
+            client=client,
+            redactor=self.guardrails.redact,
+            rate_limiter=rate_limiter,
+        )
+        self.client = self.model_gateway.client
         self.model = self.config.model_name
         self.temperature = self.config.temperature
         self.session_path = session_path or self.config.session_path
+        self.session_repository = (
+            session_repository
+            or build_session_repository(
+                self.config,
+                session_path=session_path,
+                user_id=self.config.memory_user_id,
+            )
+        )
         self.history_threshold = self.config.history_threshold
         self.history_keep_recent = self.config.history_keep_recent
         self.max_react_steps = self.config.max_react_steps
 
         self.memory_manager = memory_manager or MemoryManager(
-            client=self.client,
+            model_gateway=self.model_gateway,
             model=self.model,
             user_id=self.config.memory_user_id,
             memory_dir=self.config.memory_dir,
             memory_enabled=self.config.memory_enabled,
             max_ltm_facts=self.config.max_ltm_facts,
+            redactor=self.guardrails.redact,
         )
         self.skill_manager = skill_manager or SkillManager(
             skills_dir=self.config.skills_dir,
             enabled=self.config.skills_enabled,
         )
-        self._register_tool_context()
+        use_sql = (
+            self.config.persistence_backend == "sql"
+            and not (
+                session_path
+                and session_path.endswith(".json")
+            )
+        )
+        self.commerce_service = commerce_service or CommerceService(
+            SqlCommerceRepository(
+                self.config.database_url,
+                seed_demo_data=self.config.commerce_seed_demo_data,
+            )
+            if use_sql
+            else MockCommerceRepository()
+        )
+        self.knowledge_service = KnowledgeService(self.config)
+        if use_sql:
+            after_sale_repository = SqlAfterSaleRepository(
+                self.config.database_url,
+            )
+        else:
+            after_sale_repository = JsonAfterSaleRepository(
+                self.config.after_sale_case_path,
+            )
+        self.after_sale_service = after_sale_service or AfterSaleService(
+            repository=after_sale_repository,
+            risk_router=RiskRouter(
+                self.config.after_sale_auto_approve_max_amount,
+                self.config.after_sale_high_risk_amount,
+                self.config.risk_rules_path,
+            ),
+            commerce_service=self.commerce_service,
+        )
+        self.tool_registry = tool_registry or create_default_tool_registry(
+            config=self.config,
+            memory_manager=self.memory_manager,
+            skill_manager=self.skill_manager,
+            after_sale_service=self.after_sale_service,
+            commerce_service=self.commerce_service,
+            knowledge_service=self.knowledge_service,
+            user_id=self.config.memory_user_id,
+        )
+        self.tool_execution_context = ToolExecutionContext(
+            user_id=self.config.memory_user_id,
+            role="agent",
+            permissions=frozenset(
+                {"refund:execute", "after_sale:execute"}
+            ),
+        )
 
         self.raw_messages: list[dict] = []
         self.summary: Optional[str] = None
@@ -69,14 +174,13 @@ class BaseConversationAgent(ABC):
         self.raw_messages = []
         self.summary = None
         self.memory_manager.reset_short_term()
-        delete_session(self.session_path)
+        self.session_repository.delete()
 
     def save(self) -> None:
-        save_session(
-            self.session_path,
+        self.session_repository.save(
             self.raw_messages,
             self.summary,
-            short_term_memory=self.memory_manager.stm_to_dict(),
+            self.memory_manager.stm_to_dict(),
         )
 
     def close(self) -> None:
@@ -86,28 +190,75 @@ class BaseConversationAgent(ABC):
         )
         self._close_resources()
 
+    @contextmanager
+    def _turn_context(self):
+        with TraceContext(
+            trace_id=current_trace_id(),
+            session_id=self.session_path,
+            user_id=self.config.memory_user_id,
+        ) as trace_id:
+            self.tool_execution_context = ToolExecutionContext(
+                user_id=self.config.memory_user_id,
+                role="agent",
+                permissions=self.tool_execution_context.permissions,
+                trace_id=trace_id,
+            )
+            self._set_tool_execution_context(
+                self.tool_execution_context,
+            )
+            yield trace_id
+
+    def _prepare_user_input(
+        self,
+        user_input: str,
+    ) -> tuple[str, CustomerServiceResponse | None]:
+        decision = self.guardrails.inspect_input(user_input)
+        if decision.allowed:
+            if decision.sanitized_text != user_input.strip():
+                self.event_bus.emit(
+                    "security.redacted",
+                    source="guardrails",
+                    data={"categories": ["sensitive_data"]},
+                )
+            return decision.sanitized_text, None
+        self.event_bus.emit(
+            "security.blocked",
+            source="guardrails",
+            data={
+                "reason": decision.reason,
+                "categories": list(decision.categories),
+                "input": self.guardrails.redact(user_input),
+            },
+        )
+        return (
+            decision.sanitized_text,
+            CustomerServiceResponse(
+                intent=IntentType.OTHER,
+                confidence=1.0,
+                reply=(
+                    "该请求触发了安全保护，无法按当前内容处理。"
+                    f"原因：{decision.reason}。请重新描述正常的客服需求。"
+                ),
+                requires_human=False,
+            ),
+        )
+
     def _restore_session(self) -> None:
-        loaded = load_session(self.session_path)
+        loaded = self.session_repository.load()
         if not loaded:
             return
-        self.summary = loaded["summary"]
-        self.raw_messages = loaded["messages"]
+        self.summary = self.guardrails.redact(
+            loaded["summary"] or ""
+        ) or None
+        self.raw_messages = self.guardrails.redact_value(
+            loaded["messages"]
+        )
         if loaded.get("short_term_memory"):
-            self.memory_manager.restore_stm(loaded["short_term_memory"])
-
-    def _register_tool_context(self) -> None:
-        """向仍使用模块级适配器的旧工具注册当前运行时依赖。
-
-        这是迁移期兼容层。后续可把 memory/skill 工具完全改成实例级依赖。
-        """
-        if self.config.memory_enabled:
-            from app.agent.tools.memory_tool import set_memory_manager
-
-            set_memory_manager(self.memory_manager)
-        if self.config.skills_enabled:
-            from app.agent.tools.skill_tool import set_skill_manager
-
-            set_skill_manager(self.skill_manager)
+            self.memory_manager.restore_stm(
+                self.guardrails.redact_value(
+                    loaded["short_term_memory"]
+                )
+            )
 
     def _build_messages(self, system_prompt: str) -> list[dict]:
         system_content = system_prompt
@@ -129,7 +280,7 @@ class BaseConversationAgent(ABC):
                 }
             )
         messages.extend(self.raw_messages)
-        return messages
+        return self.guardrails.redact_value(messages)
 
     def _finalize_turn(
         self,
@@ -137,7 +288,13 @@ class BaseConversationAgent(ABC):
         *,
         requires_human: bool = False,
     ) -> CustomerServiceResponse:
-        result = self._extract_structured_response(final_text)
+        safe_text = self.guardrails.redact(final_text)
+        result = self._extract_structured_response(safe_text)
+        result.reply = self.guardrails.redact(result.reply)
+        if result.follow_up_question:
+            result.follow_up_question = self.guardrails.redact(
+                result.follow_up_question
+            )
         if requires_human:
             result.requires_human = True
 
@@ -159,7 +316,7 @@ class BaseConversationAgent(ABC):
         text: str,
     ) -> CustomerServiceResponse:
         try:
-            response = self.client.beta.chat.completions.parse(
+            response = self.model_gateway.parse(
                 model=self.model,
                 messages=[
                     {
@@ -173,6 +330,7 @@ class BaseConversationAgent(ABC):
                 ],
                 temperature=0.0,
                 response_format=CustomerServiceResponse,
+                purpose="extract",
             )
             parsed = response.choices[0].message.parsed
             if parsed is None:
@@ -186,7 +344,7 @@ class BaseConversationAgent(ABC):
         text: str,
     ) -> CustomerServiceResponse:
         intent_values = ", ".join(f'"{item.value}"' for item in IntentType)
-        response = self.client.chat.completions.create(
+        response = self.model_gateway.complete(
             model=self.model,
             messages=[
                 {
@@ -207,6 +365,7 @@ class BaseConversationAgent(ABC):
                 {"role": "user", "content": text},
             ],
             temperature=0.0,
+            purpose="extract_fallback",
         )
         raw = (response.choices[0].message.content or "").strip()
         if raw.startswith("```"):
@@ -224,18 +383,27 @@ class BaseConversationAgent(ABC):
         old_messages = self.raw_messages[:split]
         recent = self.raw_messages[split:]
         new_summary = summarize(
-            client=self.client,
+            model_gateway=self.model_gateway,
             model=self.model,
             old_messages=old_messages,
             prev_summary=self.summary,
         )
-        self.summary = new_summary
+        self.summary = self.guardrails.redact(new_summary)
         self.raw_messages = recent
-        print(
-            f"\n💾 [已压缩 {len(old_messages)} 条老消息 → summary "
-            f"({len(new_summary)} 字)]\n"
+        self.event_bus.emit(
+            "history.compressed",
+            source="conversation",
+            data={
+                "message_count": len(old_messages),
+                "summary_chars": len(new_summary),
+            },
         )
 
     def _close_resources(self) -> None:
         """由子类释放其专属资源。"""
 
+    def _set_tool_execution_context(
+        self,
+        context: ToolExecutionContext,
+    ) -> None:
+        """由子类把每轮 trace 上下文传给其 ToolManager。"""

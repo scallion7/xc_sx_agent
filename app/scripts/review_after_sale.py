@@ -16,17 +16,42 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from app.agent.after_sale import AfterSaleService, JsonAfterSaleRepository, RiskRouter  # noqa: E402
-from app.config.settings import settings  # noqa: E402
+from app.agent.after_sale import (  # noqa: E402
+    AfterSaleService,
+    JsonAfterSaleRepository,
+    RiskRouter,
+)
+from app.config.settings import Settings, settings  # noqa: E402
+from app.infrastructure.sql_after_sale_repository import (  # noqa: E402
+    SqlAfterSaleRepository,
+)
+from app.infrastructure.sql_commerce_repository import (  # noqa: E402
+    SqlCommerceRepository,
+)
+from app.repositories.mock_commerce import MockCommerceRepository  # noqa: E402
+from app.services.commerce import CommerceService  # noqa: E402
 
 
-def _service() -> AfterSaleService:
+def _service(config: Settings = settings) -> AfterSaleService:
+    if config.persistence_backend == "sql":
+        case_repository = SqlAfterSaleRepository(config.database_url)
+        commerce_repository = SqlCommerceRepository(
+            config.database_url,
+            seed_demo_data=config.commerce_seed_demo_data,
+        )
+    else:
+        case_repository = JsonAfterSaleRepository(
+            ROOT / config.after_sale_case_path
+        )
+        commerce_repository = MockCommerceRepository()
     return AfterSaleService(
-        JsonAfterSaleRepository(ROOT / settings.after_sale_case_path),
+        case_repository,
         RiskRouter(
-            settings.after_sale_auto_approve_max_amount,
-            settings.after_sale_high_risk_amount,
+            config.after_sale_auto_approve_max_amount,
+            config.after_sale_high_risk_amount,
+            config.risk_rules_path,
         ),
+        CommerceService(commerce_repository),
     )
 
 

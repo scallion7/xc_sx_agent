@@ -1,35 +1,85 @@
-"""工具注册表：OpenAI function calling schema + 分发执行"""
+"""实例级工具注册表：Schema、处理器和权限策略的唯一绑定点。"""
+
+from __future__ import annotations
 
 import json
-from typing import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Callable, Iterable
 
-from app.agent.tools.order import query_order
-from app.agent.tools.product import query_product
-from app.agent.tools.logistics import query_logistics
-from app.agent.tools.refund import apply_refund
-from app.agent.tools.knowledge import search_knowledge
-from app.agent.tools.user_orders import list_user_orders
-from app.agent.tools.memory_tool import recall_user_memory
-from app.agent.tools.skill_tool import load_skill
-from app.agent.tools.after_sale import (
-    create_after_sale_case,
-    execute_after_sale_case,
-    query_after_sale_case,
-)
+if TYPE_CHECKING:
+    from app.agent.after_sale.service import AfterSaleService
+    from app.agent.memory.manager import MemoryManager
+    from app.agent.skills.loader import SkillManager
+    from app.config.settings import Settings
+    from app.services.commerce import CommerceService
+    from app.agent.tools.knowledge import KnowledgeService
 
-_TOOL_MAP: dict[str, Callable] = {
-    "query_order": query_order,
-    "query_product": query_product,
-    "query_logistics": query_logistics,
-    "apply_refund": apply_refund,
-    "search_knowledge": search_knowledge,
-    "list_user_orders": list_user_orders,
-    "recall_user_memory": recall_user_memory,
-    "load_skill": load_skill,
-    "create_after_sale_case": create_after_sale_case,
-    "query_after_sale_case": query_after_sale_case,
-    "execute_after_sale_case": execute_after_sale_case,
-}
+
+@dataclass(frozen=True)
+class ToolExecutionContext:
+    user_id: str = "default"
+    role: str = "agent"
+    permissions: frozenset[str] = frozenset()
+    trace_id: str = ""
+
+
+@dataclass(frozen=True)
+class RegisteredTool:
+    definition: dict
+    handler: Callable[..., dict]
+    required_permission: str = ""
+
+
+class ToolRegistry:
+    """每个 Agent 实例独享的工具集合，避免模块级依赖互相覆盖。"""
+
+    def __init__(self, tools: Iterable[RegisteredTool] = ()):
+        self._tools: dict[str, RegisteredTool] = {}
+        for tool in tools:
+            self.register(tool)
+
+    def register(self, tool: RegisteredTool) -> None:
+        name = tool.definition["function"]["name"]
+        self._tools[name] = tool
+
+    @property
+    def names(self) -> set[str]:
+        return set(self._tools)
+
+    @property
+    def definitions(self) -> list[dict]:
+        return [tool.definition for tool in self._tools.values()]
+
+    def required_permission(self, name: str) -> str:
+        tool = self._tools.get(name)
+        return tool.required_permission if tool else ""
+
+    def execute(
+        self,
+        name: str,
+        arguments: dict,
+        context: ToolExecutionContext | None = None,
+    ) -> str:
+        tool = self._tools.get(name)
+        if not tool:
+            return json.dumps({"error": f"未知工具: {name}"}, ensure_ascii=False)
+
+        execution_context = context or ToolExecutionContext()
+        required = tool.required_permission
+        if required and required not in execution_context.permissions:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": f"无权执行工具 {name}",
+                    "required_permission": required,
+                },
+                ensure_ascii=False,
+            )
+        try:
+            result = tool.handler(**arguments)
+        except Exception as exc:  # noqa: BLE001 - 工具异常统一隔离
+            result = {"error": f"工具执行出错: {exc}"}
+        return json.dumps(result, ensure_ascii=False)
 
 TOOL_DEFINITIONS: list[dict] = [
     {
@@ -262,13 +312,124 @@ TOOL_DEFINITIONS: list[dict] = [
 ]
 
 
+def _definition_map() -> dict[str, dict]:
+    return {
+        item["function"]["name"]: item
+        for item in TOOL_DEFINITIONS
+    }
+
+
+def create_default_tool_registry(
+    *,
+    config: Settings | None = None,
+    memory_manager: MemoryManager | None = None,
+    skill_manager: SkillManager | None = None,
+    after_sale_service: AfterSaleService | None = None,
+    commerce_service: CommerceService | None = None,
+    knowledge_service: KnowledgeService | None = None,
+    user_id: str = "default",
+) -> ToolRegistry:
+    """构造一个完全实例化的本地工具注册表。"""
+    from app.config.settings import settings
+    from app.agent.tools.knowledge import KnowledgeService
+    from app.repositories.mock_commerce import MockCommerceRepository
+    from app.services.commerce import CommerceService
+
+    runtime_config = config or settings
+    definitions = _definition_map()
+    commerce = commerce_service or CommerceService(
+        MockCommerceRepository()
+    )
+    knowledge = knowledge_service or KnowledgeService(runtime_config)
+
+    def recall_user_memory(query: str = "") -> dict:
+        if memory_manager is None or not memory_manager.memory_enabled:
+            return {"success": False, "error": "记忆系统未启用"}
+        result: dict = {
+            "success": True,
+            "short_term_facts": memory_manager.stm.facts,
+            "long_term_facts": [
+                {"content": fact.content, "category": fact.category}
+                for fact in memory_manager.ltm.facts
+            ],
+        }
+        if memory_manager.ltm.interaction_summaries:
+            result["recent_interactions"] = [
+                item["summary"]
+                for item in memory_manager.ltm.interaction_summaries[-3:]
+            ]
+        if query:
+            lowered = query.lower()
+            result["long_term_facts"] = [
+                fact for fact in result["long_term_facts"]
+                if lowered in fact["content"].lower()
+                or lowered in fact["category"].lower()
+            ]
+        return result
+
+    def load_skill(skill_name: str) -> dict:
+        if skill_manager is None:
+            return {"success": False, "error": "技能系统未启用"}
+        return skill_manager.load_skill(skill_name)
+
+    def create_after_sale_case(**kwargs) -> dict:
+        if not runtime_config.after_sale_enabled or after_sale_service is None:
+            return {"success": False, "error": "售后工单系统未启用"}
+        return after_sale_service.create_case(user_id=user_id, **kwargs)
+
+    def query_after_sale_case(case_id: str) -> dict:
+        if not runtime_config.after_sale_enabled or after_sale_service is None:
+            return {"success": False, "error": "售后工单系统未启用"}
+        return after_sale_service.get_case(case_id, user_id=user_id)
+
+    def execute_after_sale_case(case_id: str) -> dict:
+        if not runtime_config.after_sale_enabled or after_sale_service is None:
+            return {"success": False, "error": "售后工单系统未启用"}
+        return after_sale_service.execute_case(case_id, user_id=user_id)
+
+    def query_owned_order(order_id: str) -> dict:
+        return commerce.get_order(order_id, user_id)
+
+    def list_owned_orders() -> dict:
+        return commerce.list_orders(user_id)
+
+    def query_owned_logistics(order_id: str) -> dict:
+        return commerce.get_logistics(order_id, user_id)
+
+    def apply_owned_refund(order_id: str, reason: str) -> dict:
+        return commerce.apply_refund(order_id, reason, user_id)
+
+    handlers: dict[str, Callable[..., dict]] = {
+        "query_order": query_owned_order,
+        "query_product": commerce.search_products,
+        "query_logistics": query_owned_logistics,
+        "apply_refund": apply_owned_refund,
+        "search_knowledge": knowledge.search,
+        "list_user_orders": list_owned_orders,
+        "recall_user_memory": recall_user_memory,
+        "load_skill": load_skill,
+        "create_after_sale_case": create_after_sale_case,
+        "query_after_sale_case": query_after_sale_case,
+        "execute_after_sale_case": execute_after_sale_case,
+    }
+    permissions = {
+        "apply_refund": "refund:execute",
+        "execute_after_sale_case": "after_sale:execute",
+    }
+    return ToolRegistry(
+        RegisteredTool(
+            definition=definitions[name],
+            handler=handler,
+            required_permission=permissions.get(name, ""),
+        )
+        for name, handler in handlers.items()
+    )
+
+
 def execute_tool(name: str, arguments: dict) -> str:
-    """根据工具名称分发执行，返回 JSON 字符串结果。"""
-    func = _TOOL_MAP.get(name)
-    if not func:
-        return json.dumps({"error": f"未知工具: {name}"}, ensure_ascii=False)
-    try:
-        result = func(**arguments)
-    except Exception as e:
-        result = {"error": f"工具执行出错: {e}"}
-    return json.dumps(result, ensure_ascii=False)
+    """旧入口兼容：使用一次性的默认注册表执行本地工具。"""
+    registry = create_default_tool_registry()
+    context = ToolExecutionContext(
+        permissions=frozenset({"refund:execute", "after_sale:execute"}),
+    )
+    return registry.execute(name, arguments, context)

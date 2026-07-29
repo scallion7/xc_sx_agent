@@ -9,8 +9,7 @@ import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from openai import OpenAI
-
+from app.infrastructure.model_gateway import ModelGateway
 from app.prompts.memory import LTM_EXTRACTION_PROMPT, STM_EXTRACTION_PROMPT
 
 if TYPE_CHECKING:
@@ -43,7 +42,7 @@ def _build_transcript(messages: list[dict]) -> str:
 
 
 def extract_short_term_facts(
-    client: OpenAI,
+    model_gateway: ModelGateway,
     model: str,
     recent_messages: list[dict],
     existing_facts: list[str],
@@ -56,13 +55,14 @@ def extract_short_term_facts(
     existing_text = "\n".join(f"- {f}" for f in existing_facts) if existing_facts else "（暂无）"
     prompt = STM_EXTRACTION_PROMPT.format(existing_facts=existing_text)
 
-    response = client.chat.completions.create(
+    response = model_gateway.complete(
         model=model,
         temperature=0.0,
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": transcript},
         ],
+        purpose="memory_short_term",
     )
     raw = response.choices[0].message.content.strip()
 
@@ -83,7 +83,7 @@ def extract_short_term_facts(
 
 
 def extract_long_term_facts(
-    client: OpenAI,
+    model_gateway: ModelGateway,
     model: str,
     messages: list[dict],
     summary: str | None,
@@ -110,13 +110,14 @@ def extract_long_term_facts(
     )
     prompt = LTM_EXTRACTION_PROMPT.format(existing_ltm=existing_text)
 
-    response = client.chat.completions.create(
+    response = model_gateway.complete(
         model=model,
         temperature=0.0,
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": "\n\n".join(parts)},
         ],
+        purpose="memory_long_term",
     )
     raw = response.choices[0].message.content.strip()
 

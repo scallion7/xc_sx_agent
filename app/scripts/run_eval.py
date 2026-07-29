@@ -103,7 +103,11 @@ def main():
         "--no-judge", dest="judge", action="store_false",
         help="只跑代码规则指标，不调 LLM judge（快、便宜）",
     )
-    parser.add_argument("--output", default=None, help="将完整报告写入 JSON 文件")
+    parser.add_argument(
+        "--output",
+        default=settings.eval_report_path,
+        help="完整报告 JSON 路径（默认供管理台回归看板读取）",
+    )
     args = parser.parse_args()
 
     dataset_path = ROOT / args.dataset if not Path(args.dataset).is_absolute() else Path(args.dataset)

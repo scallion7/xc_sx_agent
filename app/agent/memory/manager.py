@@ -5,12 +5,11 @@ EcomAgent 和 MultiAgentOrchestrator 通过此管理器与记忆系统交互。
 
 from __future__ import annotations
 
-from typing import Optional
-
-from openai import OpenAI
+from typing import Callable, Optional
 
 from app.agent.memory.long_term import LongTermMemory
 from app.agent.memory.short_term import ShortTermMemory
+from app.infrastructure.model_gateway import ModelGateway
 
 
 class MemoryManager:
@@ -18,22 +17,25 @@ class MemoryManager:
 
     def __init__(
         self,
-        client: OpenAI,
+        model_gateway: ModelGateway,
         model: str,
         user_id: str = "default",
         memory_dir: str = "app/sessions/memory",
         memory_enabled: bool = True,
         max_ltm_facts: int = 50,
+        redactor: Callable[[str], str] | None = None,
     ):
-        self.client = client
+        self.model_gateway = model_gateway
         self.model = model
         self.memory_enabled = memory_enabled
+        self.redactor = redactor or (lambda value: value)
 
         self.stm = ShortTermMemory()
         self.ltm = LongTermMemory(
             user_id=user_id,
             memory_dir=memory_dir,
             max_facts=max_ltm_facts,
+            redactor=self.redactor,
         )
 
         if self.memory_enabled:
@@ -43,7 +45,14 @@ class MemoryManager:
         """每轮对话后更新短期记忆。"""
         if not self.memory_enabled:
             return
-        self.stm.update(self.client, self.model, recent_messages)
+        self.stm.update(
+            self.model_gateway,
+            self.model,
+            recent_messages,
+        )
+        self.stm.facts = [
+            self.redactor(fact) for fact in self.stm.facts
+        ]
 
     def build_memory_prompt_sections(self) -> list[dict]:
         """生成所有记忆相关的 system prompt 消息列表。"""
@@ -66,7 +75,10 @@ class MemoryManager:
         if not self.memory_enabled:
             return
         self.ltm.extract_and_save(
-            self.client, self.model, messages, summary,
+            self.model_gateway,
+            self.model,
+            messages,
+            summary,
         )
 
     def reset_short_term(self) -> None:

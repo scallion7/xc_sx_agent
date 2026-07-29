@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: xc_sx_agent
+      POSTGRES_USER: xc_agent
+      POSTGRES_PASSWORD: xc_agent_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xc_agent -d xc_sx_agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
+      PERSISTENCE_BACKEND: sql
+      COMMERCE_SEED_DEMO_DATA: "true"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      API_USER_TOKENS: ${API_USER_TOKENS:-dev-user-token:user-1}
+      API_ADMIN_TOKENS: ${API_ADMIN_TOKENS:-dev-admin-token:admin}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:

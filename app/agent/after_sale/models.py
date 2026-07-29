@@ -65,6 +65,7 @@ class AfterSaleCase:
     evidence_provided: bool
     created_at: str
     updated_at: str
+    user_id: str = "default"
     reviewer: str = ""
     review_note: str = ""
     result: dict = field(default_factory=dict)

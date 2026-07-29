@@ -1,7 +1,12 @@
 import argparse
 from typing import Optional
 
-from app.bootstrap import check_runtime, create_agent, resolve_agent_mode
+from app.bootstrap import (
+    check_runtime,
+    create_agent,
+    create_runtime,
+    resolve_agent_mode,
+)
 from app.config.settings import settings
 from app.schemas.response import IntentType
 
@@ -60,10 +65,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0 if _print_runtime_checks() else 1
 
     resolved_mode = resolve_agent_mode(args.mode, settings)
+    runtime = create_runtime(settings, console=True)
     agent = create_agent(
         mode=args.mode,
         config=settings,
         session_path=args.session,
+        event_bus=runtime.event_bus,
+        rate_limiter=runtime.model_rate_limiter,
     )
     mode = (
         "Multi-Agent 协作模式"
