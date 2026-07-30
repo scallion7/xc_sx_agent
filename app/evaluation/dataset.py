@@ -37,6 +37,7 @@ class EvalCase:
     expected_route: str | None = (
         None  # 多 Agent 期望路由（presale/postsale/complaint），可选
     )
+    expected_strategy: str | None = None  # react / plan_execute，可选
 
 
 def load_dataset(path: str | Path) -> list[EvalCase]:

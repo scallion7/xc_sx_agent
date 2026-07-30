@@ -16,6 +16,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     session_id: str = Field(default="default", pattern=SESSION_ID_PATTERN.pattern)
     mode: Literal["auto", "single", "multi"] = "auto"
+    strategy: Literal["react", "plan_execute", "auto"] | None = None
 
 
 class ReviewRequest(BaseModel):

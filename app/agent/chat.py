@@ -5,6 +5,11 @@ from typing import Any
 
 from app.agent.after_sale.risk import RiskRouter
 from app.agent.base import BaseConversationAgent
+from app.agent.strategies import (
+    PlanExecuteStrategy,
+    StrategyName,
+    StrategySelector,
+)
 from app.agent.tools.manager import ToolManager
 from app.agent.tools.registry import ToolExecutionContext
 from app.config.settings import Settings
@@ -19,7 +24,7 @@ from app.security import GuardrailEngine
 
 
 class EcomAgent(BaseConversationAgent):
-    """基于 ReAct 循环的电商客服 Agent。"""
+    """支持 ReAct 与 Plan-and-Execute 的电商客服 Agent。"""
 
     def __init__(
         self,
@@ -32,6 +37,7 @@ class EcomAgent(BaseConversationAgent):
         event_bus: EventBus | None = None,
         guardrails: GuardrailEngine | None = None,
         rate_limiter: SlidingWindowRateLimiter | None = None,
+        strategy: StrategyName | None = None,
     ) -> None:
         super().__init__(
             session_path=session_path,
@@ -56,6 +62,19 @@ class EcomAgent(BaseConversationAgent):
             event_bus=self.event_bus,
             redactor=self.guardrails.redact,
         )
+        self.strategy_selector = StrategySelector(
+            strategy or self.config.agent_strategy
+        )
+        self.plan_execute_strategy = PlanExecuteStrategy(
+            model_gateway=self.model_gateway,
+            model=self.model,
+            temperature=self.temperature,
+            tool_manager=self.tool_manager,
+            event_bus=self.event_bus,
+            max_steps=self.config.max_plan_steps,
+            redactor=self.guardrails.redact,
+        )
+        self.last_strategy = "react"
 
     @property
     def messages(self) -> list[dict]:
@@ -70,11 +89,42 @@ class EcomAgent(BaseConversationAgent):
                 return blocked
             risk_decision = self.risk_router.assess_message(safe_input)
             self.raw_messages.append({"role": "user", "content": safe_input})
-            final_text = self._react_loop()
+            self.last_strategy = self.strategy_selector.select(safe_input)
+            self.event_bus.emit(
+                "strategy.selected",
+                source="ecom_agent",
+                data={"strategy": self.last_strategy},
+            )
+            final_text = (
+                self._plan_execute_loop(safe_input)
+                if self.last_strategy == "plan_execute"
+                else self._react_loop()
+            )
             return self._finalize_turn(
                 final_text,
                 requires_human=risk_decision.requires_human,
             )
+
+    def _plan_execute_loop(self, user_input: str) -> str:
+        try:
+            result = self.plan_execute_strategy.run(
+                user_input,
+                conversation=self.raw_messages,
+            )
+            self.raw_messages.append({"role": "assistant", "content": result.text})
+            return result.text
+        except Exception as exc:  # noqa: BLE001 - 策略失败时保留 ReAct 降级路径
+            self.event_bus.emit(
+                "strategy.fallback",
+                source="ecom_agent",
+                data={
+                    "from": "plan_execute",
+                    "to": "react",
+                    "error": self.guardrails.redact(f"{type(exc).__name__}: {exc}"),
+                },
+            )
+            self.last_strategy = "react"
+            return self._react_loop()
 
     def _react_loop(self) -> str:
         """ReAct 循环：调用 LLM → 执行工具 → 观察结果 → 重复，直到模型给出最终回答。"""

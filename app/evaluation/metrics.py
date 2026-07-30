@@ -67,6 +67,13 @@ def route_match(expected: str | None, actual: str | None) -> float | None:
     return 1.0 if expected == actual else 0.0
 
 
+def strategy_match(expected: str | None, actual: str | None) -> float | None:
+    """执行策略是否命中。expected 为 None 时跳过该维度。"""
+    if expected is None:
+        return None
+    return 1.0 if expected == actual else 0.0
+
+
 # ============================================================
 # 结果指标（代码规则）
 # ============================================================

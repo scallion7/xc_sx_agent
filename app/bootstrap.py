@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from app.agent.strategies.models import StrategyName
 from app.config.settings import Settings, settings
 from app.infrastructure.model_gateway import (
     ModelGateway,
@@ -89,6 +90,7 @@ def create_agent(
     model_gateway: ModelGateway | None = None,
     event_bus: EventBus | None = None,
     rate_limiter: SlidingWindowRateLimiter | None = None,
+    strategy: StrategyName | None = None,
 ):
     """按配置创建 Agent，并允许注入测试或私有部署使用的模型客户端。"""
     runtime_config = config or settings
@@ -115,6 +117,7 @@ def create_agent(
         model_gateway=model_gateway,
         event_bus=event_bus,
         rate_limiter=rate_limiter,
+        strategy=strategy,
     )
 
 

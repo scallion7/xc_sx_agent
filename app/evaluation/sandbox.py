@@ -57,6 +57,22 @@ class EvaluationEventSubscriber:
             )
         elif event.event_type == "agent.routed":
             self.trace.route = data.get("agent_key")
+        elif event.event_type == "strategy.selected":
+            self.trace.strategy = data.get("strategy")
+        elif event.event_type in {
+            "plan.step.completed",
+            "plan.step.failed",
+            "plan.step.blocked",
+            "plan.step.awaiting_confirmation",
+        }:
+            self.trace.plan_steps.append(
+                {
+                    "step_id": data.get("step_id", ""),
+                    "tool_name": data.get("tool_name", ""),
+                    "status": event.event_type.rsplit(".", 1)[-1],
+                    "error": data.get("error", ""),
+                }
+            )
 
 
 class Sandbox:

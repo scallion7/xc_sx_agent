@@ -46,6 +46,8 @@ class RunTrace:
     turns: list[str]
     final_response: CustomerServiceResponse | None = None
     route: str | None = None  # 多 Agent 模式下实际路由到的子 Agent
+    strategy: str | None = None
+    plan_steps: list[dict] = field(default_factory=list)
     llm_calls: list[LLMCallRecord] = field(default_factory=list)
     tool_observations: list[ToolObservation] = field(default_factory=list)
     error: str | None = None  # 运行异常信息，None=正常
@@ -75,6 +77,8 @@ class RunTrace:
             "case_id": self.case_id,
             "turns": self.turns,
             "route": self.route,
+            "strategy": self.strategy,
+            "plan_steps": self.plan_steps,
             "reply": resp.reply if resp else None,
             "intent": resp.intent.value if resp else None,
             "requires_human": resp.requires_human if resp else None,

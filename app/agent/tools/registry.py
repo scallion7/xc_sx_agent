@@ -7,6 +7,8 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from pydantic import ValidationError
+
 from app.agent.tools.after_sale import (
     create_after_sale_case as create_case,
 )
@@ -16,6 +18,7 @@ from app.agent.tools.after_sale import (
 from app.agent.tools.after_sale import (
     query_after_sale_case as query_case,
 )
+from app.agent.tools.contracts import TOOL_ARGUMENT_MODELS, ToolArguments
 from app.agent.tools.definitions import TOOL_DEFINITIONS as TOOL_DEFINITIONS
 from app.agent.tools.definitions import ToolDefinition, definitions_by_name
 from app.agent.tools.memory_tool import recall_user_memory
@@ -54,7 +57,10 @@ class ToolExecutionContext:
 class RegisteredTool:
     definition: ToolDefinition
     handler: ToolHandler
+    arguments_model: type[ToolArguments]
     required_permission: str = ""
+    read_only: bool = True
+    idempotent: bool = True
 
 
 class ToolRegistry:
@@ -81,6 +87,14 @@ class ToolRegistry:
         tool = self._tools.get(name)
         return tool.required_permission if tool else ""
 
+    def is_read_only(self, name: str) -> bool:
+        tool = self._tools.get(name)
+        return bool(tool and tool.read_only)
+
+    def is_idempotent(self, name: str) -> bool:
+        tool = self._tools.get(name)
+        return bool(tool and tool.idempotent)
+
     def execute(
         self,
         name: str,
@@ -103,11 +117,28 @@ class ToolRegistry:
                 ensure_ascii=False,
             )
 
+        try:
+            validated = tool.arguments_model.model_validate(arguments)
+        except ValidationError as exc:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error": "工具参数校验失败",
+                    "error_code": "INVALID_ARGUMENT",
+                    "details": json.loads(exc.json(include_url=False)),
+                },
+                ensure_ascii=False,
+            )
+
         # 工具是模型输入边界，单个实现异常不能终止本轮 Agent 推理。
         try:
-            result = tool.handler(**arguments)
+            result = tool.handler(**validated.model_dump())
         except Exception as exc:  # noqa: BLE001
-            result = {"error": f"工具执行出错: {exc}"}
+            result = {
+                "success": False,
+                "error": f"工具执行出错: {exc}",
+                "error_code": "TOOL_EXECUTION_FAILED",
+            }
         return json.dumps(result, ensure_ascii=False)
 
 
@@ -185,12 +216,19 @@ def create_default_tool_registry(
         "apply_refund": "refund:execute",
         "execute_after_sale_case": "after_sale:execute",
     }
+    mutating_tools = {
+        "apply_refund",
+        "create_after_sale_case",
+        "execute_after_sale_case",
+    }
     definitions = definitions_by_name()
     return ToolRegistry(
         RegisteredTool(
             definition=definitions[name],
             handler=handler,
+            arguments_model=TOOL_ARGUMENT_MODELS[name],
             required_permission=required_permissions.get(name, ""),
+            read_only=name not in mutating_tools,
         )
         for name, handler in handlers.items()
     )

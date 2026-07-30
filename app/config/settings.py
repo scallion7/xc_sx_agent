@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings
 
 
@@ -13,8 +15,10 @@ class Settings(BaseSettings):
     model_retry_base_seconds: float = 0.2
     model_requests_per_minute: int = 60
 
-    # ReAct 循环
+    # Agent 执行策略
     max_react_steps: int = 5
+    agent_strategy: Literal["react", "plan_execute", "auto"] = "react"
+    max_plan_steps: int = 6
 
     # MCP 配置
     mcp_enabled: bool = False

@@ -28,6 +28,7 @@
 | Prompt 与结构化输出 | 电商客服 System Prompt、意图识别、置信度、转人工标记和追问字段 |
 | 多轮对话 | 会话 JSON 持久化、历史摘要压缩、上下文恢复与重置 |
 | ReAct 与工具调用 | LLM → 工具调用 → Observation → 最终回答的循环执行 |
+| Plan-and-Execute | 复杂请求结构化规划、依赖排序、只读执行和副作用确认拦截 |
 | MCP | Streamable HTTP MCP Server、工具发现、Schema 转换和本地降级 |
 | RAG | Markdown 切分、OpenAI Embedding、Numpy/Chroma 双向量后端与离线词法降级 |
 | Multi-Agent | 售前、售后、投诉三个子 Agent，以及 LLM 意图路由和工具隔离 |
@@ -50,7 +51,8 @@
 5. Repository/Service 分层、SQLite/PostgreSQL 持久化和用户数据隔离；
 6. FastAPI、实时 SSE、管理后台和离线回归看板；
 7. Prompt Injection 防护、敏感信息脱敏、RBAC 和敏感工具权限；
-8. Docker Compose API + PostgreSQL 演示环境。
+8. Docker Compose API + PostgreSQL 演示环境；
+9. Pydantic 工具参数契约、Plan-and-Execute 与离线 CI 门禁。
 
 ## 二次开发架构
 
@@ -296,12 +298,14 @@ ecom-service-agent/
 │   │   │   └── service.py               # 创建、审批和执行状态转换
 │   │   ├── tools/
 │   │   │   ├── manager.py               # 本地/MCP 工具聚合和安全过滤
+│   │   │   ├── contracts.py             # Pydantic 工具参数契约
 │   │   │   ├── after_sale.py            # 售后工单 Agent 工具
 │   │   │   ├── knowledge.py             # 实例级 Policy RAG 服务
 │   │   │   ├── definitions.py            # 无运行时依赖的工具 Schema
 │   │   │   └── registry.py               # 处理器、用户上下文和权限绑定
 │   │   ├── skills/definitions/
 │   │   │   └── process-return/SKILL.md   # 深化后的售后流程 Skill
+│   │   ├── strategies/                   # ReAct 选择与 Plan-and-Execute
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
 │   ├── api.py                            # REST 与 WebSocket 路由注册
@@ -365,6 +369,8 @@ MODEL_NAME=gpt-4o-mini
 
 ```dotenv
 POLICY_RAG_MIN_SCORE=0.2
+AGENT_STRATEGY=react
+MAX_PLAN_STEPS=6
 AFTER_SALE_ENABLED=true
 AFTER_SALE_AUTO_APPROVE_MAX_AMOUNT=200
 AFTER_SALE_HIGH_RISK_AMOUNT=2000
@@ -411,7 +417,12 @@ python main.py
 ```bash
 python main.py --mode single
 python main.py --mode multi
+python main.py --mode single --strategy plan_execute
+python main.py --mode single --strategy auto
 ```
+
+`react` 保持原有行为；`plan_execute` 始终先规划；`auto` 仅在检测到“同时、
+顺便、然后”等多诉求表达时启用计划模式。
 
 CLI 命令：
 
@@ -514,10 +525,7 @@ Agent：读取 approved 状态后继续执行或告知下一步。
 运行本次二次开发的纯业务回归测试，不会调用外部模型：
 
 ```bash
-python -m unittest \
-  tests.test_secondary_development \
-  tests.test_architecture \
-  tests.test_agent_deepening -v
+python -m unittest discover -s tests -v
 ```
 
 开发环境可额外安装 Ruff，并在提交前执行格式化与静态检查：
@@ -544,6 +552,10 @@ ruff check .
 - FastAPI 鉴权、SSE、管理后台和回归接口；
 - Prompt Injection 阻断及模型调用前敏感信息脱敏；
 - Docker Compose 结构与离线评估事件采集。
+- Plan 拓扑排序、循环依赖拒绝和未知工具拦截；
+- 只读步骤执行、副作用步骤确认和失败依赖阻断；
+- 工具 Schema 与 Pydantic 参数契约一致性；
+- GitHub Actions Ruff 与完整离线回归。
 
 运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
 
@@ -600,6 +612,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 阶段 13 | ModelGateway、超时、重试与限流 | 已完成 |
 | 阶段 14 | EventBus、Trace、日志、指标与实时订阅 | 已完成 |
 | 阶段 15 | API、Repository/Service 与 SQL 持久化 | 已完成 |
+| 阶段 16 | Plan-and-Execute、强类型工具契约与离线 CI | 已完成 |
 
 ## 相关文档
 
@@ -615,6 +628,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [二次开发：售后工单、Policy RAG 与人工审批](docs/第10期-Agent深化售后工单PolicyRAG与人工审批.md)
 - [第11期：架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)
 - [阶段12-15：工程化二次开发完成说明](docs/阶段12-15-工程化二次开发完成说明.md)
+- [第16期：Plan-and-Execute 与强类型工具契约](docs/第16期-Plan-and-Execute与工具契约.md)
 
 ## 当前边界
 

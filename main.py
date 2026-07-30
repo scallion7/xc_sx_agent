@@ -39,6 +39,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="覆盖会话文件路径",
     )
     parser.add_argument(
+        "--strategy",
+        choices=("react", "plan_execute", "auto"),
+        default=None,
+        help="单 Agent 执行策略；默认跟随 AGENT_STRATEGY",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="检查本地运行环境后退出",
@@ -73,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
         session_path=args.session,
         event_bus=runtime.event_bus,
         rate_limiter=runtime.model_rate_limiter,
+        strategy=args.strategy,
     )
     mode = "Multi-Agent 协作模式" if resolved_mode == "multi" else "ReAct + MCP + RAG"
 

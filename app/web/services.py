@@ -138,6 +138,7 @@ def invoke_chat(
             session_path=session_ref,
             event_bus=services.runtime.event_bus,
             rate_limiter=services.runtime.model_rate_limiter,
+            strategy=request.strategy,
         )
         try:
             return agent.chat(request.message)

@@ -29,6 +29,7 @@ class EvalResult:
     token_pass: bool | None = None
     process_soundness: float | None = None  # judge 1-5 归一化到 0-1
     route_match: float | None = None
+    strategy_match: float | None = None
 
     # ---------- 结果指标 ----------
     intent_match: float | None = None
@@ -99,6 +100,10 @@ class Evaluator:
                 trace.total_tokens, case.max_tokens
             )
             res.route_match = metrics.route_match(case.expected_route, trace.route)
+            res.strategy_match = metrics.strategy_match(
+                case.expected_strategy,
+                trace.strategy,
+            )
 
             # ---------- 结果指标（代码规则）----------
             res.intent_match = metrics.intent_match(case.expected_intent, actual_intent)
@@ -136,6 +141,7 @@ class Evaluator:
                     res.tool_efficiency,
                     res.process_soundness,
                     res.route_match,
+                    res.strategy_match,
                 ]
             )
             res.result_score = _avg(
@@ -169,6 +175,7 @@ class Evaluator:
             res.tool_efficiency,
             res.process_soundness,
             res.route_match,
+            res.strategy_match,
             res.intent_match,
             res.keyword_coverage,
             res.requires_human_match,
@@ -209,6 +216,7 @@ class Evaluator:
                 "token_pass": r.token_pass,
                 "process_soundness": r.process_soundness,
                 "route_match": r.route_match,
+                "strategy_match": r.strategy_match,
                 "process_score": r.process_score,
             },
             "result": {

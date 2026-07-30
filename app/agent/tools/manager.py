@@ -135,6 +135,16 @@ class ToolManager:
     def tool_definitions(self) -> list[dict]:
         return self._tool_defs
 
+    @property
+    def tool_names(self) -> set[str]:
+        return set(self._tool_source)
+
+    def is_read_only(self, name: str) -> bool:
+        """只有显式标记的本地只读工具可由计划执行器自动调用。"""
+        return self._tool_source.get(name) == "local" and self._registry.is_read_only(
+            name
+        )
+
     def execute_tool(self, name: str, arguments: dict) -> str:
         """根据工具来源分发调用。"""
         started = perf_counter()
