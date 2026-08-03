@@ -157,6 +157,7 @@ class BaseConversationAgent(ABC):
 
         self.raw_messages: list[dict] = []
         self.summary: str | None = None
+        self._runtime_state: dict[str, Any] = {}
         self._restore_session()
 
     @property
@@ -166,14 +167,21 @@ class BaseConversationAgent(ABC):
     def reset(self) -> None:
         self.raw_messages = []
         self.summary = None
+        self._runtime_state = {}
+        self._reset_runtime_state()
         self.memory_manager.reset_short_term()
         self.session_repository.delete()
 
     def save(self) -> None:
+        memory_state = self.memory_manager.stm_to_dict()
+        if self._runtime_state:
+            memory_state["runtime_state"] = self.guardrails.redact_value(
+                self._runtime_state
+            )
         self.session_repository.save(
             self.raw_messages,
             self.summary,
-            self.memory_manager.stm_to_dict(),
+            memory_state,
         )
 
     def close(self) -> None:
@@ -248,9 +256,11 @@ class BaseConversationAgent(ABC):
         self.summary = self.guardrails.redact(loaded["summary"] or "") or None
         self.raw_messages = self.guardrails.redact_value(loaded["messages"])
         if loaded.get("short_term_memory"):
-            self.memory_manager.restore_stm(
-                self.guardrails.redact_value(loaded["short_term_memory"])
-            )
+            memory_state = self.guardrails.redact_value(loaded["short_term_memory"])
+            runtime_state = memory_state.get("runtime_state", {})
+            if isinstance(runtime_state, dict):
+                self._runtime_state = runtime_state
+            self.memory_manager.restore_stm(memory_state)
 
     def _build_messages(self, system_prompt: str) -> list[dict]:
         system_content = system_prompt
@@ -399,4 +409,8 @@ class BaseConversationAgent(ABC):
         context: ToolExecutionContext,
     ) -> None:
         """由子类把每轮 trace 上下文传给其 ToolManager。"""
+        return None
+
+    def _reset_runtime_state(self) -> None:
+        """由子类清理需要随会话保存的运行状态。"""
         return None

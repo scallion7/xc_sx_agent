@@ -35,6 +35,7 @@ class AuthService:
                     "after_sale:read",
                     "after_sale:review",
                     "metrics:read",
+                    "plan:cancel",
                 }
             )
             if role == "admin"
@@ -44,6 +45,7 @@ class AuthService:
                     "session:read",
                     "session:delete",
                     "after_sale:read",
+                    "plan:cancel",
                 }
             )
         )

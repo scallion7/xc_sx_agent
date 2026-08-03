@@ -4,14 +4,19 @@ from __future__ import annotations
 
 import json
 import tempfile
+import threading
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
+from app.agent.chat import EcomAgent
 from app.agent.strategies import (
     ExecutionPlan,
     PlanExecutionError,
     PlanExecutor,
+    PlanExpiredError,
+    PlanResumeLimitError,
     PlanStep,
     StrategySelector,
 )
@@ -24,7 +29,13 @@ from app.config.settings import Settings
 from app.evaluation import metrics
 from app.evaluation.sandbox import EvaluationEventSubscriber
 from app.evaluation.trace import RunTrace
-from app.observability import AgentEvent, BufferedEventSubscriber, EventBus
+from app.observability import (
+    AgentEvent,
+    BufferedEventSubscriber,
+    EventBus,
+    TraceContext,
+)
+from app.repositories.session import JsonSessionRepository
 from app.schemas.response import CustomerServiceResponse, IntentType
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -71,6 +82,7 @@ class OfflineStrategyGateway:
                 SimpleNamespace(
                     message=SimpleNamespace(
                         content="订单和物流信息已经查询完成。",
+                        tool_calls=None,
                     )
                 )
             ]
@@ -82,16 +94,64 @@ class StubToolManager:
         self.tool_names = {"read_order", "change_order"}
         self.tool_definitions = []
         self.calls: list[str] = []
+        self.call_arguments: list[dict] = []
 
     def is_read_only(self, name: str) -> bool:
         return name == "read_order"
 
     def execute_tool(self, name: str, arguments: dict) -> str:
         self.calls.append(name)
+        self.call_arguments.append(arguments)
+        if name == "read_order":
+            return json.dumps(
+                {
+                    "success": True,
+                    "order": {
+                        "order_id": arguments.get("order_id", "ORD-1"),
+                        "items": [{"sku": "SKU-1"}],
+                    },
+                },
+                ensure_ascii=False,
+            )
         return json.dumps(
             {"success": True, "arguments": arguments},
             ensure_ascii=False,
         )
+
+    def set_execution_context(self, _context) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
+
+
+class ConcurrentReadToolManager:
+    """用屏障证明两个无依赖只读步骤进入了并发执行。"""
+
+    def __init__(self):
+        self.tool_names = {"read_first", "read_second"}
+        self.tool_definitions = []
+        self.barrier = threading.Barrier(2)
+        self.lock = threading.Lock()
+        self.active = 0
+        self.max_active = 0
+
+    def is_read_only(self, _name: str) -> bool:
+        return True
+
+    def execute_tool(self, name: str, arguments: dict) -> str:
+        with self.lock:
+            self.active += 1
+            self.max_active = max(self.max_active, self.active)
+        try:
+            self.barrier.wait(timeout=1)
+            return json.dumps(
+                {"success": True, "name": name, "arguments": arguments},
+                ensure_ascii=False,
+            )
+        finally:
+            with self.lock:
+                self.active -= 1
 
 
 class PlanModelTests(unittest.TestCase):
@@ -193,6 +253,199 @@ class PlanExecutorTests(unittest.TestCase):
         )
         with self.assertRaises(PlanExecutionError):
             executor.execute(plan)
+
+    def test_executor_resolves_typed_output_references(self):
+        manager = StubToolManager()
+        executor = PlanExecutor(manager, event_bus=EventBus())
+        plan = ExecutionPlan(
+            goal="查询订单后修改",
+            steps=[
+                PlanStep(
+                    step_id="read",
+                    description="查询订单",
+                    tool_name="read_order",
+                    arguments={"order_id": "ORD-9"},
+                ),
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                    arguments={
+                        "order_id": "${steps.read.output.order.order_id}",
+                        "item": "${steps.read.output.order.items.0}",
+                    },
+                    depends_on=["read"],
+                ),
+            ],
+        )
+
+        waiting = executor.execute(plan)
+        resumed = executor.execute(
+            plan,
+            previous_results=waiting.steps,
+            confirmed_step_ids={"change"},
+        )
+
+        self.assertEqual(manager.calls, ["read_order", "change_order"])
+        self.assertEqual(
+            manager.call_arguments[-1],
+            {"order_id": "ORD-9", "item": {"sku": "SKU-1"}},
+        )
+        self.assertTrue(resumed.succeeded)
+
+    def test_executor_requires_explicit_dependency_for_reference(self):
+        executor = PlanExecutor(StubToolManager(), event_bus=EventBus())
+        plan = ExecutionPlan(
+            goal="引用未声明依赖",
+            steps=[
+                PlanStep(
+                    step_id="read",
+                    description="查询订单",
+                    tool_name="read_order",
+                ),
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                    arguments={
+                        "order_id": "${steps.read.output.order.order_id}",
+                    },
+                ),
+            ],
+        )
+
+        with self.assertRaisesRegex(PlanExecutionError, "必须显式依赖"):
+            executor.execute(plan)
+
+    def test_missing_reference_path_fails_without_calling_mutation(self):
+        manager = StubToolManager()
+        executor = PlanExecutor(manager, event_bus=EventBus())
+        plan = ExecutionPlan(
+            goal="引用不存在字段",
+            steps=[
+                PlanStep(
+                    step_id="read",
+                    description="查询订单",
+                    tool_name="read_order",
+                ),
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                    arguments={
+                        "order_id": "${steps.read.output.missing.order_id}",
+                    },
+                    depends_on=["read"],
+                ),
+            ],
+        )
+
+        waiting = executor.execute(plan)
+        resumed = executor.execute(
+            plan,
+            previous_results=waiting.steps,
+            confirmed_step_ids={"change"},
+        )
+
+        self.assertEqual(manager.calls, ["read_order"])
+        self.assertEqual(resumed.steps[-1].status, "failed")
+        self.assertIn("引用路径不存在", resumed.steps[-1].error)
+
+    def test_independent_reads_run_concurrently_with_stable_result_order(self):
+        manager = ConcurrentReadToolManager()
+        bus = EventBus()
+        buffer = BufferedEventSubscriber()
+        bus.subscribe(buffer)
+        executor = PlanExecutor(
+            manager,
+            event_bus=bus,
+            max_concurrency=2,
+        )
+        plan = ExecutionPlan(
+            goal="并行查询",
+            steps=[
+                PlanStep(
+                    step_id="first",
+                    description="查询一",
+                    tool_name="read_first",
+                ),
+                PlanStep(
+                    step_id="second",
+                    description="查询二",
+                    tool_name="read_second",
+                ),
+            ],
+        )
+
+        with TraceContext(
+            "parallel-trace",
+            session_id="parallel-session",
+            user_id="user-1",
+        ):
+            result = executor.execute(plan)
+
+        self.assertEqual(manager.max_active, 2)
+        self.assertEqual(
+            [step.step_id for step in result.steps],
+            ["first", "second"],
+        )
+        self.assertEqual(result.status, "completed")
+        step_events = [
+            event
+            for event in buffer.snapshot()
+            if event["event_type"].startswith("plan.step.")
+        ]
+        self.assertTrue(step_events)
+        self.assertEqual(
+            {event["trace_id"] for event in step_events},
+            {"parallel-trace"},
+        )
+        self.assertEqual(
+            {event["user_id"] for event in step_events},
+            {"user-1"},
+        )
+
+    def test_lifecycle_preserves_identity_expiry_and_resume_count(self):
+        current = datetime(2026, 8, 3, tzinfo=timezone.utc)
+        manager = StubToolManager()
+        executor = PlanExecutor(
+            manager,
+            event_bus=EventBus(),
+            plan_ttl_seconds=60,
+            max_resume_count=2,
+            clock=lambda: current,
+        )
+        plan = ExecutionPlan(
+            goal="生命周期",
+            steps=[
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                )
+            ],
+        )
+
+        waiting = executor.execute(plan)
+        running = waiting.begin_resume(current + timedelta(seconds=10))
+        completed = executor.execute(
+            plan,
+            previous_execution=running,
+            confirmed_step_ids={"change"},
+        )
+
+        self.assertEqual(waiting.status, "awaiting_confirmation")
+        self.assertEqual(waiting.expires_at, current + timedelta(seconds=60))
+        self.assertEqual(running.resume_count, 1)
+        self.assertEqual(completed.plan_id, waiting.plan_id)
+        self.assertEqual(completed.resume_count, 1)
+        self.assertEqual(completed.status, "completed")
+
+        with self.assertRaises(PlanExpiredError):
+            waiting.begin_resume(current + timedelta(seconds=61))
+        exhausted = waiting.model_copy(update={"resume_count": 2})
+        with self.assertRaises(PlanResumeLimitError):
+            exhausted.begin_resume(current + timedelta(seconds=10))
 
 
 class StrategyIntegrationTests(unittest.TestCase):
@@ -304,6 +557,296 @@ class StrategyIntegrationTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(captured["strategy"], "plan_execute")
+
+    def test_pending_plan_survives_session_reload_and_resumes_exact_step(self):
+        plan = ExecutionPlan(
+            goal="查询订单后修改",
+            steps=[
+                PlanStep(
+                    step_id="read",
+                    description="查询订单",
+                    tool_name="read_order",
+                    arguments={"order_id": "ORD-9"},
+                ),
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                    arguments={
+                        "order_id": "${steps.read.output.order.order_id}",
+                    },
+                    depends_on=["read"],
+                ),
+            ],
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Settings(
+                openai_api_key="offline",
+                memory_enabled=False,
+                skills_enabled=False,
+                mcp_enabled=False,
+                persistence_backend="json",
+                session_path=str(Path(tmp) / "session.json"),
+                after_sale_case_path=str(Path(tmp) / "cases.json"),
+            )
+            first_manager = StubToolManager()
+            first_agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=first_manager,
+                strategy="plan_execute",
+            )
+            try:
+                first_agent.chat("查询订单，然后修改订单")
+            finally:
+                first_agent.release_resources()
+
+            self.assertIsNotNone(first_agent.pending_plan_execution)
+            self.assertEqual(first_manager.calls, ["read_order"])
+
+            second_manager = StubToolManager()
+            second_gateway = OfflineStrategyGateway(plan)
+            second_agent = EcomAgent(
+                config=config,
+                model_gateway=second_gateway,
+                tool_manager=second_manager,
+                strategy="plan_execute",
+            )
+            try:
+                second_agent.chat("确认执行")
+            finally:
+                second_agent.release_resources()
+
+        self.assertEqual(second_agent.last_strategy, "plan_execute")
+        self.assertEqual(second_manager.calls, ["change_order"])
+        self.assertIsNone(second_agent.pending_plan_execution)
+        self.assertNotIn("plan", second_gateway.calls)
+        self.assertIn("plan_synthesize", second_gateway.calls)
+
+    def test_new_request_cancels_stale_pending_plan(self):
+        plan = ExecutionPlan(
+            goal="查询后修改",
+            steps=[
+                PlanStep(
+                    step_id="read",
+                    description="查询订单",
+                    tool_name="read_order",
+                ),
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                    depends_on=["read"],
+                ),
+            ],
+        )
+        manager = StubToolManager()
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Settings(
+                openai_api_key="offline",
+                memory_enabled=False,
+                skills_enabled=False,
+                mcp_enabled=False,
+                persistence_backend="json",
+                session_path=str(Path(tmp) / "session.json"),
+                after_sale_case_path=str(Path(tmp) / "cases.json"),
+            )
+            agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=manager,
+                strategy="auto",
+            )
+            try:
+                agent.chat("查询订单，然后修改订单")
+                self.assertIsNotNone(agent.pending_plan_execution)
+                agent.chat("查询另一个订单")
+            finally:
+                agent.release_resources()
+
+        self.assertIsNone(agent.pending_plan_execution)
+        self.assertEqual(manager.calls, ["read_order"])
+
+    def test_expired_plan_does_not_execute_confirmed_mutation(self):
+        plan = ExecutionPlan(
+            goal="过期计划",
+            steps=[
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                )
+            ],
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Settings(
+                openai_api_key="offline",
+                memory_enabled=False,
+                skills_enabled=False,
+                mcp_enabled=False,
+                persistence_backend="json",
+                session_path=str(Path(tmp) / "session.json"),
+                after_sale_case_path=str(Path(tmp) / "cases.json"),
+            )
+            first_agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=StubToolManager(),
+                strategy="plan_execute",
+            )
+            try:
+                first_agent.chat("修改订单")
+                expired = first_agent.pending_plan_execution.model_copy(
+                    update={
+                        "expires_at": datetime.now(timezone.utc) - timedelta(seconds=1)
+                    }
+                )
+                first_agent._record_plan(expired)
+                first_agent.save()
+            finally:
+                first_agent.release_resources()
+
+            second_manager = StubToolManager()
+            second_agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=second_manager,
+                strategy="plan_execute",
+            )
+            try:
+                second_agent.chat("确认执行")
+            finally:
+                second_agent.release_resources()
+
+        self.assertEqual(second_manager.calls, [])
+        self.assertIsNone(second_agent.pending_plan_execution)
+        self.assertEqual(second_agent.latest_plan_execution.status, "expired")
+
+    def test_consumed_confirmation_is_not_replayed_after_reload(self):
+        plan = ExecutionPlan(
+            goal="防止重复确认",
+            steps=[
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                )
+            ],
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Settings(
+                openai_api_key="offline",
+                memory_enabled=False,
+                skills_enabled=False,
+                mcp_enabled=False,
+                persistence_backend="json",
+                session_path=str(Path(tmp) / "session.json"),
+                after_sale_case_path=str(Path(tmp) / "cases.json"),
+            )
+            first_agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=StubToolManager(),
+                strategy="plan_execute",
+            )
+            try:
+                first_agent.chat("修改订单")
+                running = first_agent.pending_plan_execution.begin_resume()
+                first_agent._record_plan(running)
+                first_agent.save()
+            finally:
+                first_agent.release_resources()
+
+            second_manager = StubToolManager()
+            second_agent = EcomAgent(
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                tool_manager=second_manager,
+                strategy="plan_execute",
+            )
+            try:
+                second_agent.chat("确认执行")
+            finally:
+                second_agent.release_resources()
+
+        self.assertEqual(second_manager.calls, [])
+        self.assertEqual(second_agent.last_strategy, "plan_execute")
+        self.assertEqual(second_agent.latest_plan_execution.status, "running")
+
+    def test_api_reads_and_cancels_user_scoped_plan(self):
+        plan = ExecutionPlan(
+            goal="API 取消计划",
+            steps=[
+                PlanStep(
+                    step_id="change",
+                    description="修改订单",
+                    tool_name="change_order",
+                )
+            ],
+        )
+        waiting = PlanExecutor(
+            StubToolManager(),
+            event_bus=EventBus(),
+        ).execute(plan)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            session_dir = Path(tmp) / "sessions"
+            repository = JsonSessionRepository(
+                str(session_dir / "user-1" / "plan-session.json")
+            )
+            payload = waiting.model_dump(mode="json")
+            repository.save(
+                [],
+                None,
+                {
+                    "facts": [],
+                    "runtime_state": {
+                        "latest_plan": payload,
+                        "pending_plan": payload,
+                    },
+                },
+            )
+            config = Settings(
+                openai_api_key="offline",
+                memory_enabled=False,
+                skills_enabled=False,
+                mcp_enabled=False,
+                persistence_backend="json",
+                session_dir=str(session_dir),
+                session_path=str(Path(tmp) / "session.json"),
+                after_sale_case_path=str(Path(tmp) / "cases.json"),
+                api_user_tokens="token:user-1,other:user-2",
+                api_admin_tokens="admin:admin",
+            )
+            runtime = create_runtime(config, persist_events=False)
+            client = TestClient(create_app(config, runtime=runtime))
+
+            read_response = client.get(
+                "/v1/sessions/plan-session/plan",
+                headers={"X-API-Key": "token"},
+            )
+            isolated_response = client.get(
+                "/v1/sessions/plan-session/plan",
+                headers={"X-API-Key": "other"},
+            )
+            cancel_response = client.delete(
+                "/v1/sessions/plan-session/plan",
+                headers={"X-API-Key": "token"},
+            )
+            repeated_cancel = client.delete(
+                "/v1/sessions/plan-session/plan",
+                headers={"X-API-Key": "token"},
+            )
+
+        self.assertEqual(read_response.status_code, 200)
+        self.assertEqual(
+            read_response.json()["plan"]["plan_id"],
+            waiting.plan_id,
+        )
+        self.assertEqual(isolated_response.status_code, 404)
+        self.assertEqual(cancel_response.status_code, 200)
+        self.assertEqual(cancel_response.json()["plan"]["status"], "cancelled")
+        self.assertEqual(repeated_cancel.status_code, 409)
 
 
 class ToolContractTests(unittest.TestCase):

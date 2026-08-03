@@ -19,10 +19,15 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from app.agent.after_sale import AfterSaleService
 from app.bootstrap import ApplicationRuntime
 from app.config.settings import Settings, settings
-from app.observability import QueueEventSubscriber
+from app.observability import QueueEventSubscriber, TraceContext
 from app.repositories.session import build_session_repository
 from app.security import AuthContext
 from app.services.commerce import CommerceService
+from app.services.plans import (
+    PlanNotCancellableError,
+    PlanNotFoundError,
+    PlanSessionService,
+)
 from app.web.admin import render_admin_page
 from app.web.schemas import ChatRequest, ReviewRequest
 from app.web.services import (
@@ -170,6 +175,8 @@ def register_session_routes(
 ) -> None:
     """注册会话状态与事件查询接口。"""
 
+    plan_service = PlanSessionService()
+
     @app.get("/v1/sessions/{session_id}")
     def get_session(
         session_id: str,
@@ -199,6 +206,54 @@ def register_session_routes(
         )
         repository.delete()
         return {"success": True}
+
+    @app.get("/v1/sessions/{session_id}/plan")
+    def get_plan(
+        session_id: str,
+        context: AuthContext = Depends(require("session:read")),
+    ) -> dict:
+        reference = session_reference(services, context, session_id)
+        repository = build_session_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+        )
+        try:
+            execution = plan_service.get_latest(repository)
+        except PlanNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return {"plan": execution.model_dump(mode="json")}
+
+    @app.delete("/v1/sessions/{session_id}/plan")
+    def cancel_plan(
+        session_id: str,
+        context: AuthContext = Depends(require("plan:cancel")),
+    ) -> dict:
+        reference = session_reference(services, context, session_id)
+        repository = build_session_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+        )
+        try:
+            execution = plan_service.cancel(
+                repository,
+                reason=f"用户 {context.user_id} 通过 API 取消计划",
+            )
+        except PlanNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except PlanNotCancellableError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        with TraceContext(session_id=reference, user_id=context.user_id):
+            services.runtime.event_bus.emit(
+                "plan.cancelled",
+                source="api",
+                data={
+                    "plan_id": execution.plan_id,
+                    "reason": execution.status_reason,
+                },
+            )
+        return {"plan": execution.model_dump(mode="json")}
 
     @app.get("/v1/events")
     def events(

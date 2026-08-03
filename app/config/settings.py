@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     max_react_steps: int = 5
     agent_strategy: Literal["react", "plan_execute", "auto"] = "react"
     max_plan_steps: int = 6
+    plan_max_concurrency: int = 3
+    plan_ttl_seconds: int = 900
+    plan_max_resume_count: int = 3
 
     # MCP 配置
     mcp_enabled: bool = False

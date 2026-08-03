@@ -20,7 +20,6 @@ _CONFIRMATION_INPUTS = {
     "确认执行",
     "同意",
     "同意执行",
-    "继续",
     "继续执行",
 }
 
@@ -51,3 +50,9 @@ class StrategySelector:
             if any(marker in user_input for marker in _MULTI_INTENT_MARKERS)
             else "react"
         )
+
+    @staticmethod
+    def is_explicit_confirmation(user_input: str) -> bool:
+        """仅接受语义明确、内容完整匹配的确认短语。"""
+        normalized = user_input.strip().rstrip("。！! ")
+        return normalized in _CONFIRMATION_INPUTS

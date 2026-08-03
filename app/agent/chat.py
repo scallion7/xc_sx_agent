@@ -7,6 +7,11 @@ from app.agent.after_sale.risk import RiskRouter
 from app.agent.base import BaseConversationAgent
 from app.agent.strategies import (
     PlanExecuteStrategy,
+    PlanExecutionError,
+    PlanExecutionResult,
+    PlanExpiredError,
+    PlanLifecycleError,
+    PlanResumeLimitError,
     StrategyName,
     StrategySelector,
 )
@@ -72,7 +77,17 @@ class EcomAgent(BaseConversationAgent):
             tool_manager=self.tool_manager,
             event_bus=self.event_bus,
             max_steps=self.config.max_plan_steps,
+            max_concurrency=self.config.plan_max_concurrency,
+            plan_ttl_seconds=self.config.plan_ttl_seconds,
+            max_resume_count=self.config.plan_max_resume_count,
             redactor=self.guardrails.redact,
+        )
+        self.latest_plan_execution = self._restore_latest_plan()
+        self.pending_plan_execution = (
+            self.latest_plan_execution
+            if self.latest_plan_execution is not None
+            and self.latest_plan_execution.status == "awaiting_confirmation"
+            else None
         )
         self.last_strategy = "react"
 
@@ -89,6 +104,43 @@ class EcomAgent(BaseConversationAgent):
                 return blocked
             risk_decision = self.risk_router.assess_message(safe_input)
             self.raw_messages.append({"role": "user", "content": safe_input})
+            if self.pending_plan_execution is not None:
+                if self.strategy_selector.is_explicit_confirmation(safe_input):
+                    self.last_strategy = "plan_execute"
+                    self.event_bus.emit(
+                        "strategy.selected",
+                        source="ecom_agent",
+                        data={"strategy": self.last_strategy, "resumed": True},
+                    )
+                    final_text = self._resume_pending_plan()
+                    return self._finalize_turn(
+                        final_text,
+                        requires_human=risk_decision.requires_human,
+                    )
+                self._cancel_pending_plan("用户发起了新的非确认请求")
+            elif (
+                self.latest_plan_execution is not None
+                and self.latest_plan_execution.status == "running"
+                and self.strategy_selector.is_explicit_confirmation(safe_input)
+            ):
+                self.last_strategy = "plan_execute"
+                self.event_bus.emit(
+                    "plan.confirmation.ignored",
+                    source="ecom_agent",
+                    data={
+                        "plan_id": self.latest_plan_execution.plan_id,
+                        "reason": "确认状态已经消费",
+                    },
+                )
+                final_text = (
+                    "该计划的确认已经被消费，当前不会重复执行副作用操作。"
+                    "请通过计划查询接口确认最终状态；如需重新处理，请发起新的请求。"
+                )
+                self.raw_messages.append({"role": "assistant", "content": final_text})
+                return self._finalize_turn(
+                    final_text,
+                    requires_human=risk_decision.requires_human,
+                )
             self.last_strategy = self.strategy_selector.select(safe_input)
             self.event_bus.emit(
                 "strategy.selected",
@@ -111,6 +163,7 @@ class EcomAgent(BaseConversationAgent):
                 user_input,
                 conversation=self.raw_messages,
             )
+            self._record_plan(result.execution)
             self.raw_messages.append({"role": "assistant", "content": result.text})
             return result.text
         except Exception as exc:  # noqa: BLE001 - 策略失败时保留 ReAct 降级路径
@@ -125,6 +178,112 @@ class EcomAgent(BaseConversationAgent):
             )
             self.last_strategy = "react"
             return self._react_loop()
+
+    def _resume_pending_plan(self) -> str:
+        pending = self.pending_plan_execution
+        if pending is None:
+            raise RuntimeError("当前没有等待确认的计划")
+        try:
+            running = pending.begin_resume()
+        except PlanExpiredError as exc:
+            return self._finish_invalid_plan(pending, "expired", str(exc))
+        except PlanResumeLimitError as exc:
+            return self._finish_invalid_plan(pending, "failed", str(exc))
+        except PlanLifecycleError as exc:
+            return self._finish_invalid_plan(pending, "failed", str(exc))
+
+        # 先消费并持久化恢复次数，再执行副作用，避免进程退出后重复确认。
+        self._record_plan(running)
+        self.save()
+        try:
+            result = self.plan_execute_strategy.resume(running)
+        except PlanExecutionError as exc:
+            failed = running.transition("failed", reason=str(exc))
+            self._record_plan(failed)
+            self.save()
+            self.event_bus.emit(
+                "plan.resume.failed",
+                source="ecom_agent",
+                data={
+                    "plan_id": running.plan_id,
+                    "error": self.guardrails.redact(str(exc)),
+                },
+            )
+            text = "原计划已经失效，未执行待确认操作，请重新发起请求。"
+            self.raw_messages.append({"role": "assistant", "content": text})
+            return text
+        self._record_plan(result.execution)
+        self.raw_messages.append({"role": "assistant", "content": result.text})
+        return result.text
+
+    def _finish_invalid_plan(
+        self,
+        execution: PlanExecutionResult,
+        status: str,
+        reason: str,
+    ) -> str:
+        terminal = execution.transition(status, reason=reason)
+        self._record_plan(terminal)
+        self.save()
+        self.event_bus.emit(
+            f"plan.{status}",
+            source="ecom_agent",
+            data={
+                "plan_id": execution.plan_id,
+                "reason": self.guardrails.redact(reason),
+            },
+        )
+        text = f"当前计划无法继续：{reason}。未执行待确认操作，请重新发起请求。"
+        self.raw_messages.append({"role": "assistant", "content": text})
+        return text
+
+    def _restore_latest_plan(self) -> PlanExecutionResult | None:
+        payload = self._runtime_state.get("latest_plan")
+        if not isinstance(payload, dict):
+            payload = self._runtime_state.get("pending_plan")
+        if not isinstance(payload, dict):
+            return None
+        try:
+            execution = PlanExecutionResult.model_validate(payload)
+        except ValueError:
+            self._runtime_state.pop("latest_plan", None)
+            self._runtime_state.pop("pending_plan", None)
+            return None
+        self._runtime_state["latest_plan"] = execution.model_dump(mode="json")
+        if execution.status == "awaiting_confirmation":
+            self._runtime_state["pending_plan"] = execution.model_dump(mode="json")
+        else:
+            self._runtime_state.pop("pending_plan", None)
+        return execution
+
+    def _record_plan(
+        self,
+        execution: PlanExecutionResult,
+    ) -> None:
+        self.latest_plan_execution = execution
+        self._runtime_state["latest_plan"] = execution.model_dump(mode="json")
+        if execution.status != "awaiting_confirmation":
+            self.pending_plan_execution = None
+            self._runtime_state.pop("pending_plan", None)
+            return
+        self.pending_plan_execution = execution
+        self._runtime_state["pending_plan"] = execution.model_dump(mode="json")
+
+    def _cancel_pending_plan(self, reason: str) -> None:
+        pending = self.pending_plan_execution
+        if pending is None:
+            return
+        cancelled = pending.transition("cancelled", reason=reason)
+        self._record_plan(cancelled)
+        self.save()
+        self.event_bus.emit(
+            "plan.cancelled",
+            source="ecom_agent",
+            data={
+                "plan_id": pending.plan_id,
+                "reason": self.guardrails.redact(reason),
+            },
+        )
 
     def _react_loop(self) -> str:
         """ReAct 循环：调用 LLM → 执行工具 → 观察结果 → 重复，直到模型给出最终回答。"""
@@ -218,3 +377,7 @@ class EcomAgent(BaseConversationAgent):
     ) -> None:
         if hasattr(self, "tool_manager"):
             self.tool_manager.set_execution_context(context)
+
+    def _reset_runtime_state(self) -> None:
+        self.latest_plan_execution = None
+        self.pending_plan_execution = None

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -13,6 +15,26 @@ StepStatus = Literal[
     "blocked",
     "awaiting_confirmation",
 ]
+PlanStatus = Literal[
+    "running",
+    "awaiting_confirmation",
+    "completed",
+    "failed",
+    "cancelled",
+    "expired",
+]
+
+
+class PlanLifecycleError(ValueError):
+    """计划当前生命周期状态不允许请求的操作。"""
+
+
+class PlanExpiredError(PlanLifecycleError):
+    """计划已经超过确认有效期。"""
+
+
+class PlanResumeLimitError(PlanLifecycleError):
+    """计划恢复次数达到上限。"""
 
 
 class PlanStep(BaseModel):
@@ -89,8 +111,19 @@ class PlanStepResult(BaseModel):
 class PlanExecutionResult(BaseModel):
     """完整计划的执行快照。"""
 
+    plan_id: str = Field(
+        default_factory=lambda: uuid4().hex,
+        pattern=r"^[a-f0-9]{32}$",
+    )
     plan: ExecutionPlan
     steps: list[PlanStepResult]
+    status: PlanStatus = "awaiting_confirmation"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: datetime | None = None
+    resume_count: int = Field(default=0, ge=0)
+    max_resume_count: int = Field(default=3, ge=1)
+    status_reason: str = Field(default="", max_length=500)
 
     @property
     def succeeded(self) -> bool:
@@ -100,13 +133,60 @@ class PlanExecutionResult(BaseModel):
 
     @property
     def requires_confirmation(self) -> bool:
-        return any(step.status == "awaiting_confirmation" for step in self.steps)
+        return self.status == "awaiting_confirmation" and any(
+            step.status == "awaiting_confirmation" for step in self.steps
+        )
+
+    def begin_resume(
+        self,
+        now: datetime | None = None,
+    ) -> PlanExecutionResult:
+        """消费一次恢复机会，返回可安全持久化的 running 快照。"""
+        current = now or datetime.now(timezone.utc)
+        if self.status != "awaiting_confirmation":
+            raise PlanLifecycleError(f"计划状态 {self.status} 不允许恢复")
+        if self.expires_at is not None and current >= self.expires_at:
+            raise PlanExpiredError("计划已超过确认有效期")
+        if self.resume_count >= self.max_resume_count:
+            raise PlanResumeLimitError("计划恢复次数已达到上限")
+        return self.model_copy(
+            update={
+                "status": "running",
+                "updated_at": current,
+                "resume_count": self.resume_count + 1,
+                "status_reason": "",
+            }
+        )
+
+    def has_expired(self, now: datetime | None = None) -> bool:
+        """判断待确认计划是否已超过有效期。"""
+        current = now or datetime.now(timezone.utc)
+        return self.expires_at is not None and current >= self.expires_at
+
+    def transition(
+        self,
+        status: PlanStatus,
+        *,
+        reason: str = "",
+        now: datetime | None = None,
+    ) -> PlanExecutionResult:
+        """生成保留计划身份和执行快照的新生命周期状态。"""
+        return self.model_copy(
+            update={
+                "status": status,
+                "updated_at": now or datetime.now(timezone.utc),
+                "status_reason": reason[:500],
+            }
+        )
 
     def prompt_payload(self) -> dict[str, Any]:
         return {
+            "plan_id": self.plan_id,
             "goal": self.plan.goal,
+            "status": self.status,
             "succeeded": self.succeeded,
             "requires_confirmation": self.requires_confirmation,
+            "resume_count": self.resume_count,
             "steps": [step.model_dump() for step in self.steps],
         }
 
