@@ -124,6 +124,12 @@ class PlanExecutionResult(BaseModel):
     resume_count: int = Field(default=0, ge=0)
     max_resume_count: int = Field(default=3, ge=1)
     status_reason: str = Field(default="", max_length=500)
+    requires_human: bool = False
+    agent_key: str = Field(
+        default="",
+        max_length=40,
+        pattern=r"^[A-Za-z0-9_-]*$",
+    )
 
     @property
     def succeeded(self) -> bool:
@@ -186,7 +192,9 @@ class PlanExecutionResult(BaseModel):
             "status": self.status,
             "succeeded": self.succeeded,
             "requires_confirmation": self.requires_confirmation,
+            "requires_human": self.requires_human,
             "resume_count": self.resume_count,
+            "agent_key": self.agent_key,
             "steps": [step.model_dump() for step in self.steps],
         }
 

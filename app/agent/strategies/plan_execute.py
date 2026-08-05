@@ -74,9 +74,15 @@ class PlanExecuteStrategy:
         user_input: str,
         *,
         conversation: list[dict[str, Any]] | None = None,
+        agent_key: str = "",
+        requires_human: bool = False,
     ) -> StrategyResult:
         plan = self._create_plan(user_input, conversation or [])
-        execution = self.executor.execute(plan)
+        execution = self.executor.execute(
+            plan,
+            agent_key=agent_key,
+            requires_human=requires_human,
+        )
         text = self._render_result(user_input, execution)
         return StrategyResult(
             text=self.redactor(text),

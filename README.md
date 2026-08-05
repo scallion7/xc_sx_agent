@@ -4,7 +4,9 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：原规划中的数据库与业务服务、FastAPI 与实时流式接口、Agent 深化、安全护栏、可观测性、自动化回归和 Docker 演示环境均已完成。
+> 当前二次开发进度：原工程化规划已经完成，并在阶段 19 将可恢复的
+> Plan-and-Execute 接入 Multi-Agent 路由和子 Agent 工具隔离。当前完整离线回归
+> 共 56 项，不访问真实或本地模型服务。
 
 ## 项目定位
 
@@ -28,10 +30,10 @@
 | Prompt 与结构化输出 | 电商客服 System Prompt、意图识别、置信度、转人工标记和追问字段 |
 | 多轮对话 | 会话 JSON 持久化、历史摘要压缩、上下文恢复与重置 |
 | ReAct 与工具调用 | LLM → 工具调用 → Observation → 最终回答的循环执行 |
-| Plan-and-Execute | 复杂请求结构化规划、依赖排序、只读执行和副作用确认拦截 |
+| Plan-and-Execute | 单/Multi-Agent 复杂请求规划、依赖调度、只读并发和副作用确认恢复 |
 | MCP | Streamable HTTP MCP Server、工具发现、Schema 转换和本地降级 |
 | RAG | Markdown 切分、OpenAI Embedding、Numpy/Chroma 双向量后端与离线词法降级 |
-| Multi-Agent | 售前、售后、投诉三个子 Agent，以及 LLM 意图路由和工具隔离 |
+| Multi-Agent | 售前、售后、投诉路由，ReAct/计划策略切换和子 Agent 工具隔离 |
 | Memory | 会话内短期记忆、跨会话长期记忆和记忆查询工具 |
 | Skills | 渐进式发现和加载退货、订单跟踪、商品推荐等标准流程 |
 | Evaluation | 隔离沙箱、Trace 采集、规则指标、LLM-as-Judge 和聚合报告 |
@@ -52,7 +54,8 @@
 6. FastAPI、实时 SSE、管理后台和离线回归看板；
 7. Prompt Injection 防护、敏感信息脱敏、RBAC 和敏感工具权限；
 8. Docker Compose API + PostgreSQL 演示环境；
-9. Pydantic 工具参数契约、Plan-and-Execute 与离线 CI 门禁。
+9. Pydantic 工具参数契约、单/Multi-Agent Plan-and-Execute 与离线 CI 门禁；
+10. 跨步骤结果引用、有限并发、计划身份、确认恢复、过期/取消和跨模式权限保护。
 
 ## 二次开发架构
 
@@ -62,15 +65,20 @@ CLI / REST / SSE / WebSocket
   ▼
 Application Factory → TraceContext → Guardrails
   │
-  ├─ 单 Agent：EcomAgent
-  └─ Multi-Agent：Router → 售前 / 售后 / 投诉 Agent
-                         │
-                         ▼
-                  ModelGateway
-             （超时/重试/限流/指标）
-                         │
-                         ▼
-               ReAct + ToolRegistry
+  ├─ 单 Agent：EcomAgent ─────────────────────────┐
+  └─ Multi-Agent：RiskRouter → Router → 业务子 Agent ─┤
+                                                  ▼
+                                         StrategySelector
+                                  ┌───────────────┴───────────────┐
+                                  ▼                               ▼
+                                ReAct                    Plan-and-Execute
+                                                   （依赖/并发/确认/恢复）
+                                  └───────────────┬───────────────┘
+                                                  ├──────────────→ ModelGateway
+                                                  │              （超时/重试/限流/指标）
+                                                  ▼
+                                         实例级 ToolRegistry
+                                   （Multi-Agent 使用子 Agent 白名单）
           ┌──────────────┼──────────────┐
           │              │              │
           ▼              ▼              ▼
@@ -282,6 +290,23 @@ FastAPI 提供同步聊天、实时 SSE、WebSocket 事件、会话、订单、�
 工具成功/失败和路由事件。CLI、JSONL、内存指标、SSE/WebSocket 和评估沙箱
 使用不同订阅器，不需要修改 Agent 核心代码。
 
+### 9. 确定性计划执行与生命周期
+
+单 Agent 和 Multi-Agent 均支持 `react`、`plan_execute` 和 `auto` 三种策略。
+Plan-and-Execute 先生成结构化计划，再由本地执行器完成确定性校验和调度：
+
+- 拒绝未知工具、无效参数、未知依赖、自依赖和循环依赖；
+- 通过 `${steps.<step_id>.output.<field_path>}` 在步骤之间传递原始类型结果；
+- 同一依赖层的只读步骤按 `PLAN_MAX_CONCURRENCY` 有限并发；
+- 创建工单、执行工单等副作用步骤保持串行，并等待用户明确确认；
+- 计划持久化 `plan_id`、生命周期、TTL、恢复次数和待确认步骤；
+- 确认轮先写入 `running`，再恢复原计划，不重新规划或重复只读步骤；
+- 计划支持查询、取消、过期和重复确认保护。
+
+Multi-Agent 会先由 Router 选定售前、售后或投诉子 Agent，再使用该子 Agent 的
+`ToolManager` 规划和执行。计划会持久化 `agent_key` 与原风险转人工标记；确认轮恢复
+原子 Agent，不重新路由。Multi-Agent 计划也不能切换到工具范围更大的单 Agent 执行。
+
 ## 项目结构
 
 ```text
@@ -290,7 +315,7 @@ ecom-service-agent/
 ├── app/
 │   ├── agent/
 │   │   ├── base.py                      # 共享会话与依赖生命周期
-│   │   ├── chat.py                      # 单 Agent ReAct 主循环
+│   │   ├── chat.py                      # 单 Agent ReAct/计划执行与恢复入口
 │   │   ├── after_sale/                  # 二次开发：售后工单领域层
 │   │   │   ├── models.py                # 工单、状态、风险和审计模型
 │   │   │   ├── repository.py            # 仓储协议与 JSON 适配器
@@ -305,17 +330,23 @@ ecom-service-agent/
 │   │   │   └── registry.py               # 处理器、用户上下文和权限绑定
 │   │   ├── skills/definitions/
 │   │   │   └── process-return/SKILL.md   # 深化后的售后流程 Skill
-│   │   ├── strategies/                   # ReAct 选择与 Plan-and-Execute
+│   │   ├── strategies/
+│   │   │   ├── selector.py               # 确定性策略选择
+│   │   │   ├── models.py                 # 计划、步骤与生命周期模型
+│   │   │   ├── executor.py               # 依赖、并发、确认与恢复执行器
+│   │   │   └── plan_execute.py           # 规划、持久化与结果合成
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
 │   ├── api.py                            # REST 与 WebSocket 路由注册
 │   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
 │   ├── infrastructure/                   # 模型网关、数据库和 SQL 仓储
 │   ├── repositories/                     # 仓储协议与本地适配器
-│   ├── services/                         # 业务应用服务
+│   ├── services/
+│   │   ├── commerce.py                   # 订单、商品与物流应用服务
+│   │   └── plans.py                      # 无模型参与的计划查询与取消
 │   ├── observability/                    # EventBus、Trace、日志和指标
 │   ├── security/                         # Token RBAC、注入防护和脱敏
-│   ├── multi_agent/                      # Router、售前/售后/投诉 Agent
+│   ├── multi_agent/                      # Router、子 Agent、工具隔离与计划恢复
 │   ├── evaluation/                       # 沙箱、Trace、指标与 LLM Judge
 │   └── scripts/
 │       ├── build_kb_index.py             # 构建 Policy RAG 索引
@@ -326,7 +357,7 @@ ecom-service-agent/
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
 ├── tests/                                # 原有测试和深化回归测试
-└── docs/                                 # 各阶段教学与二次开发文档
+└── docs/                                 # 第 1–19 期教学与二次开发文档
 ```
 
 ## 快速开始
@@ -371,6 +402,10 @@ MODEL_NAME=gpt-4o-mini
 POLICY_RAG_MIN_SCORE=0.2
 AGENT_STRATEGY=react
 MAX_PLAN_STEPS=6
+PLAN_MAX_CONCURRENCY=3
+PLAN_TTL_SECONDS=900
+PLAN_MAX_RESUME_COUNT=3
+MULTI_AGENT_ENABLED=false
 AFTER_SALE_ENABLED=true
 AFTER_SALE_AUTO_APPROVE_MAX_AMOUNT=200
 AFTER_SALE_HIGH_RISK_AMOUNT=2000
@@ -419,10 +454,14 @@ python main.py --mode single
 python main.py --mode multi
 python main.py --mode single --strategy plan_execute
 python main.py --mode single --strategy auto
+python main.py --mode multi --strategy plan_execute
+python main.py --mode multi --strategy auto
 ```
 
 `react` 保持原有行为；`plan_execute` 始终先规划；`auto` 仅在检测到“同时、
-顺便、然后”等多诉求表达时启用计划模式。
+顺便、然后”等多诉求表达时启用计划模式。Multi-Agent 会先路由到售前、售后或
+投诉子 Agent，再在该子 Agent 的工具白名单内规划和执行；确认轮恢复原子 Agent，
+不会重新路由。
 
 CLI 命令：
 
@@ -452,6 +491,13 @@ python app/scripts/run_api.py
 - 同步聊天：`POST /v1/chat`
 - 实时事件流：`POST /v1/chat/stream`
 - WebSocket：`/ws/events/{session_id}?token=...`
+- 会话查询/删除：`GET/DELETE /v1/sessions/{session_id}`
+- 计划查询/取消：`GET/DELETE /v1/sessions/{session_id}/plan`
+- 事件查询：`GET /v1/events`
+- 订单、商品和售后查询：`GET /v1/orders`、`GET /v1/products`、
+  `GET /v1/after-sales/{case_id}`
+- 人工审批与运维：`/v1/admin/after-sales/*`、`/v1/admin/metrics`、
+  `/v1/admin/regression`
 
 请求使用 `X-API-Key`。`.env.example` 中的开发 Token 只用于本地演示。
 
@@ -520,9 +566,25 @@ Agent：读取 approved 状态后继续执行或告知下一步。
 
 该消息会命中确定性高风险规则，路由到投诉处理并强制标记 `requires_human=true`。
 
+### Multi-Agent 复杂计划与确认恢复
+
+使用 `python main.py --mode multi --strategy plan_execute` 启动后，可演示同一子 Agent
+内的查询、规划、确认和精确恢复：
+
+```text
+用户：查询订单 ORD-20240125-006，然后为不合适的保护壳申请退货。
+Router：路由到售后 Agent，并仅开放售后工具白名单。
+Agent：完成只读查询，保存计划，在创建工单前请求确认。
+用户：确认执行。
+Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规划或重复查询。
+```
+
+若确认时改用单 Agent 模式、计划已过期/取消，或恢复次数超过上限，系统会拒绝
+继续执行，避免扩大工具权限或重复触发副作用。
+
 ## 测试与评估
 
-运行本次二次开发的纯业务回归测试，不会调用外部模型：
+当前完整离线回归共 56 项，不会调用外部模型或本地模型服务：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -532,8 +594,8 @@ python -m unittest discover -s tests -v
 
 ```bash
 python -m pip install -r requirements-dev.txt
-ruff format --check .
 ruff check .
+ruff format --check .
 ```
 
 测试覆盖：
@@ -551,11 +613,21 @@ ruff check .
 - SQL 会话、订单、退款和工单的用户隔离与持久化；
 - FastAPI 鉴权、SSE、管理后台和回归接口；
 - Prompt Injection 阻断及模型调用前敏感信息脱敏；
-- Docker Compose 结构与离线评估事件采集。
+- Docker Compose 结构与离线评估事件采集；
 - Plan 拓扑排序、循环依赖拒绝和未知工具拦截；
-- 只读步骤执行、副作用步骤确认和失败依赖阻断；
+- 跨步骤结果引用、原始类型传递和无效引用拒绝；
+- 只读步骤有限并发、稳定调度顺序和 Trace 上下文传播；
+- 副作用步骤确认、失败依赖阻断和已完成步骤不重复执行；
+- 计划身份、TTL、恢复次数、查询/取消 API 和重复确认保护；
+- Multi-Agent 子 Agent 工具隔离、原路由恢复、风险标记持久化与跨模式保护；
 - 工具 Schema 与 Pydantic 参数契约一致性；
 - GitHub Actions Ruff 与完整离线回归。
+
+仅运行计划策略专项回归：
+
+```bash
+python -m unittest tests.test_strategy_development -v
+```
 
 运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
 
@@ -593,6 +665,13 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
+### 第 16–19 期：确定性计划执行演进
+
+- 第 16 期引入强类型工具契约和基础 Plan-and-Execute；
+- 第 17 期补齐跨步骤引用、计划身份和精确确认恢复；
+- 第 18 期增加有限并发、TTL、恢复上限以及查询/取消 API；
+- 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由。
+
 | 阶段 | 主题 | 状态 |
 |---|---|---|
 | 第 1 期 | 项目框架、Prompt 客服、结构化输出 | 已完成 |
@@ -613,6 +692,9 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 阶段 14 | EventBus、Trace、日志、指标与实时订阅 | 已完成 |
 | 阶段 15 | API、Repository/Service 与 SQL 持久化 | 已完成 |
 | 阶段 16 | Plan-and-Execute、强类型工具契约与离线 CI | 已完成 |
+| 阶段 17 | 跨步骤引用、计划持久化与精确确认恢复 | 已完成 |
+| 阶段 18 | 有限并发、计划生命周期与查询取消 API | 已完成 |
+| 阶段 19 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
 
 ## 相关文档
 
@@ -629,6 +711,19 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第11期：架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)
 - [阶段12-15：工程化二次开发完成说明](docs/阶段12-15-工程化二次开发完成说明.md)
 - [第16期：Plan-and-Execute 与强类型工具契约](docs/第16期-Plan-and-Execute与工具契约.md)
+- [第17期：Plan-and-Execute 2.0 与确认恢复](docs/第17期-Plan-and-Execute2.0与确认恢复.md)
+- [第18期：计划调度与生命周期](docs/第18期-计划调度与生命周期.md)
+- [第19期：Multi-Agent 计划执行与工具隔离](docs/第19期-Multi-Agent计划执行与工具隔离.md)
+
+## 后续路线
+
+阶段 19 已完成当前规划；后续可在不改变现有安全边界的前提下继续深化：
+
+1. 增加计划历史、步骤时间线和管理后台可视化；
+2. 为外部副作用工具补充业务幂等键与事务补偿；
+3. 增加步骤级超时、取消传播和资源配额；
+4. 建立固定计划数据集，覆盖并发失败、恢复和路由一致性评估；
+5. 将会话内计划快照演进为独立 Plan Repository，支持审计与历史查询。
 
 ## 当前边界
 

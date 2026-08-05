@@ -106,6 +106,7 @@ class EcomAgent(BaseConversationAgent):
             self.raw_messages.append({"role": "user", "content": safe_input})
             if self.pending_plan_execution is not None:
                 if self.strategy_selector.is_explicit_confirmation(safe_input):
+                    plan_requires_human = self.pending_plan_execution.requires_human
                     self.last_strategy = "plan_execute"
                     self.event_bus.emit(
                         "strategy.selected",
@@ -115,7 +116,9 @@ class EcomAgent(BaseConversationAgent):
                     final_text = self._resume_pending_plan()
                     return self._finalize_turn(
                         final_text,
-                        requires_human=risk_decision.requires_human,
+                        requires_human=(
+                            risk_decision.requires_human or plan_requires_human
+                        ),
                     )
                 self._cancel_pending_plan("用户发起了新的非确认请求")
             elif (
@@ -139,7 +142,10 @@ class EcomAgent(BaseConversationAgent):
                 self.raw_messages.append({"role": "assistant", "content": final_text})
                 return self._finalize_turn(
                     final_text,
-                    requires_human=risk_decision.requires_human,
+                    requires_human=(
+                        risk_decision.requires_human
+                        or self.latest_plan_execution.requires_human
+                    ),
                 )
             self.last_strategy = self.strategy_selector.select(safe_input)
             self.event_bus.emit(
@@ -148,7 +154,10 @@ class EcomAgent(BaseConversationAgent):
                 data={"strategy": self.last_strategy},
             )
             final_text = (
-                self._plan_execute_loop(safe_input)
+                self._plan_execute_loop(
+                    safe_input,
+                    requires_human=risk_decision.requires_human,
+                )
                 if self.last_strategy == "plan_execute"
                 else self._react_loop()
             )
@@ -157,11 +166,17 @@ class EcomAgent(BaseConversationAgent):
                 requires_human=risk_decision.requires_human,
             )
 
-    def _plan_execute_loop(self, user_input: str) -> str:
+    def _plan_execute_loop(
+        self,
+        user_input: str,
+        *,
+        requires_human: bool = False,
+    ) -> str:
         try:
             result = self.plan_execute_strategy.run(
                 user_input,
                 conversation=self.raw_messages,
+                requires_human=requires_human,
             )
             self._record_plan(result.execution)
             self.raw_messages.append({"role": "assistant", "content": result.text})
@@ -183,6 +198,12 @@ class EcomAgent(BaseConversationAgent):
         pending = self.pending_plan_execution
         if pending is None:
             raise RuntimeError("当前没有等待确认的计划")
+        if pending.agent_key:
+            return self._finish_invalid_plan(
+                pending,
+                "failed",
+                "该计划属于 Multi-Agent 子 Agent，不能切换到单 Agent 恢复",
+            )
         try:
             running = pending.begin_resume()
         except PlanExpiredError as exc:

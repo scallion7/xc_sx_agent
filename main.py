@@ -42,7 +42,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--strategy",
         choices=("react", "plan_execute", "auto"),
         default=None,
-        help="单 Agent 执行策略；默认跟随 AGENT_STRATEGY",
+        help="Agent 执行策略；默认跟随 AGENT_STRATEGY",
     )
     parser.add_argument(
         "--check",

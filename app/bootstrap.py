@@ -106,6 +106,7 @@ def create_agent(
             model_gateway=model_gateway,
             event_bus=event_bus,
             rate_limiter=rate_limiter,
+            strategy=strategy,
         )
 
     from app.agent.chat import EcomAgent
