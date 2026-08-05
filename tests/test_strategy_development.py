@@ -54,8 +54,9 @@ def response_with_parsed(parsed):
 class OfflineStrategyGateway:
     """按 purpose 返回固定结果，不访问任何模型服务。"""
 
-    def __init__(self, plan: ExecutionPlan):
+    def __init__(self, plan: ExecutionPlan, *, route: str = "postsale"):
         self.plan = plan
+        self.route = route
         self.calls: list[str] = []
         self._client = SimpleNamespace()
 
@@ -77,11 +78,12 @@ class OfflineStrategyGateway:
 
     def complete(self, *, purpose: str, **kwargs):
         self.calls.append(purpose)
+        content = self.route if purpose == "router" else "订单和物流信息已经查询完成。"
         return SimpleNamespace(
             choices=[
                 SimpleNamespace(
                     message=SimpleNamespace(
-                        content="订单和物流信息已经查询完成。",
+                        content=content,
                         tool_calls=None,
                     )
                 )
@@ -847,6 +849,308 @@ class StrategyIntegrationTests(unittest.TestCase):
         self.assertEqual(cancel_response.status_code, 200)
         self.assertEqual(cancel_response.json()["plan"]["status"], "cancelled")
         self.assertEqual(repeated_cancel.status_code, 409)
+
+
+class MultiAgentStrategyTests(unittest.TestCase):
+    @staticmethod
+    def _config(tmp: str) -> Settings:
+        return Settings(
+            openai_api_key="offline",
+            memory_enabled=False,
+            skills_enabled=False,
+            mcp_enabled=False,
+            persistence_backend="json",
+            session_path=str(Path(tmp) / "session.json"),
+            after_sale_case_path=str(Path(tmp) / "cases.json"),
+        )
+
+    def test_routed_agent_executes_plan_with_its_tool_scope(self):
+        plan = ExecutionPlan(
+            goal="查询订单和物流",
+            steps=[
+                PlanStep(
+                    step_id="order",
+                    description="查询订单",
+                    tool_name="query_order",
+                    arguments={"order_id": "ORD-20240115-001"},
+                ),
+                PlanStep(
+                    step_id="logistics",
+                    description="查询物流",
+                    tool_name="query_logistics",
+                    arguments={"order_id": "ORD-20240115-001"},
+                    depends_on=["order"],
+                ),
+            ],
+        )
+        gateway = OfflineStrategyGateway(plan, route="postsale")
+        bus = EventBus()
+        buffer = BufferedEventSubscriber()
+        bus.subscribe(buffer)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            agent = create_agent(
+                mode="multi",
+                config=self._config(tmp),
+                model_gateway=gateway,
+                event_bus=bus,
+                strategy="plan_execute",
+            )
+            try:
+                response = agent.chat("查询订单，顺便查询物流")
+            finally:
+                agent.release_resources()
+
+        self.assertEqual(response.intent, IntentType.ORDER_QUERY)
+        self.assertEqual(agent.last_strategy, "plan_execute")
+        self.assertEqual(agent.latest_plan_execution.agent_key, "postsale")
+        self.assertEqual(agent.latest_plan_execution.status, "completed")
+        self.assertIn("router", gateway.calls)
+        self.assertIn("plan", gateway.calls)
+        tool_names = [
+            event["data"]["name"]
+            for event in buffer.snapshot()
+            if event["event_type"] == "tool.completed"
+        ]
+        self.assertEqual(tool_names, ["query_order", "query_logistics"])
+
+    def test_plan_cannot_use_tool_outside_routed_agent_scope(self):
+        plan = ExecutionPlan(
+            goal="售前 Agent 越权查询订单",
+            steps=[
+                PlanStep(
+                    step_id="order",
+                    description="查询订单",
+                    tool_name="query_order",
+                    arguments={"order_id": "ORD-20240115-001"},
+                )
+            ],
+        )
+        gateway = OfflineStrategyGateway(plan, route="presale")
+        bus = EventBus()
+        buffer = BufferedEventSubscriber()
+        bus.subscribe(buffer)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            agent = create_agent(
+                mode="multi",
+                config=self._config(tmp),
+                model_gateway=gateway,
+                event_bus=bus,
+                strategy="plan_execute",
+            )
+            try:
+                agent.chat("推荐商品，同时查询订单")
+            finally:
+                agent.release_resources()
+
+        self.assertEqual(agent.last_strategy, "react")
+        self.assertIsNone(agent.latest_plan_execution)
+        tool_events = [
+            event
+            for event in buffer.snapshot()
+            if event["event_type"] in {"tool.completed", "tool.failed"}
+        ]
+        self.assertEqual(tool_events, [])
+        fallback = [
+            event
+            for event in buffer.snapshot()
+            if event["event_type"] == "strategy.fallback"
+        ]
+        self.assertEqual(fallback[0]["data"]["agent_key"], "presale")
+
+    def test_confirmation_resumes_same_agent_without_routing_or_replanning(self):
+        plan = ExecutionPlan(
+            goal="查询订单并创建售后工单",
+            steps=[
+                PlanStep(
+                    step_id="order",
+                    description="查询订单",
+                    tool_name="query_order",
+                    arguments={"order_id": "ORD-20240125-006"},
+                ),
+                PlanStep(
+                    step_id="case",
+                    description="创建售后工单",
+                    tool_name="create_after_sale_case",
+                    arguments={
+                        "order_id": "ORD-20240125-006",
+                        "reason": "保护壳不合适",
+                        "case_type": "return_refund",
+                        "evidence_provided": False,
+                        "user_confirmed": True,
+                    },
+                    depends_on=["order"],
+                ),
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self._config(tmp)
+            first_gateway = OfflineStrategyGateway(plan, route="postsale")
+            first_agent = create_agent(
+                mode="multi",
+                config=config,
+                model_gateway=first_gateway,
+                strategy="plan_execute",
+            )
+            try:
+                first_agent.chat("查询订单，然后创建售后工单")
+                pending_id = first_agent.pending_plan_execution.plan_id
+                self.assertEqual(
+                    first_agent.pending_plan_execution.agent_key,
+                    "postsale",
+                )
+            finally:
+                first_agent.release_resources()
+
+            second_gateway = OfflineStrategyGateway(plan, route="complaint")
+            bus = EventBus()
+            buffer = BufferedEventSubscriber()
+            bus.subscribe(buffer)
+            second_agent = create_agent(
+                mode="multi",
+                config=config,
+                model_gateway=second_gateway,
+                event_bus=bus,
+                strategy="plan_execute",
+            )
+            try:
+                second_agent.chat("确认执行")
+            finally:
+                second_agent.release_resources()
+
+        self.assertEqual(second_agent.latest_plan_execution.plan_id, pending_id)
+        self.assertEqual(second_agent.latest_plan_execution.agent_key, "postsale")
+        self.assertEqual(second_agent.latest_plan_execution.status, "completed")
+        self.assertNotIn("router", second_gateway.calls)
+        self.assertNotIn("plan", second_gateway.calls)
+        self.assertIn("plan_synthesize", second_gateway.calls)
+        tool_names = [
+            event["data"]["name"]
+            for event in buffer.snapshot()
+            if event["event_type"] == "tool.completed"
+        ]
+        self.assertEqual(tool_names, ["create_after_sale_case"])
+        resumed_routes = [
+            event
+            for event in buffer.snapshot()
+            if event["event_type"] == "agent.routed"
+        ]
+        self.assertEqual(resumed_routes[0]["data"]["agent_key"], "postsale")
+        self.assertTrue(resumed_routes[0]["data"]["resumed"])
+
+    def test_single_agent_rejects_multi_agent_scoped_plan(self):
+        plan = ExecutionPlan(
+            goal="创建售后工单",
+            steps=[
+                PlanStep(
+                    step_id="case",
+                    description="创建售后工单",
+                    tool_name="create_after_sale_case",
+                    arguments={
+                        "order_id": "ORD-20240125-006",
+                        "reason": "保护壳不合适",
+                        "case_type": "return_refund",
+                        "evidence_provided": False,
+                        "user_confirmed": True,
+                    },
+                )
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self._config(tmp)
+            multi_agent = create_agent(
+                mode="multi",
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                strategy="plan_execute",
+            )
+            try:
+                multi_agent.chat("创建售后工单")
+                plan_id = multi_agent.pending_plan_execution.plan_id
+            finally:
+                multi_agent.release_resources()
+
+            bus = EventBus()
+            buffer = BufferedEventSubscriber()
+            bus.subscribe(buffer)
+            single_agent = create_agent(
+                mode="single",
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                event_bus=bus,
+                strategy="plan_execute",
+            )
+            try:
+                single_agent.chat("确认执行")
+            finally:
+                single_agent.release_resources()
+
+        self.assertEqual(single_agent.latest_plan_execution.plan_id, plan_id)
+        self.assertEqual(single_agent.latest_plan_execution.status, "failed")
+        tool_events = [
+            event
+            for event in buffer.snapshot()
+            if event["event_type"] in {"tool.completed", "tool.failed"}
+        ]
+        self.assertEqual(tool_events, [])
+
+    def test_confirmed_critical_plan_preserves_human_escalation(self):
+        plan = ExecutionPlan(
+            goal="创建严重风险售后工单",
+            steps=[
+                PlanStep(
+                    step_id="case",
+                    description="创建严重风险售后工单",
+                    tool_name="create_after_sale_case",
+                    arguments={
+                        "order_id": "ORD-20240125-006",
+                        "reason": "商品爆炸导致受伤",
+                        "case_type": "quality_issue",
+                        "evidence_provided": True,
+                        "user_confirmed": True,
+                    },
+                )
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self._config(tmp)
+            first_agent = create_agent(
+                mode="multi",
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                strategy="plan_execute",
+            )
+            try:
+                first_response = first_agent.chat(
+                    "商品爆炸导致受伤，我同时要求创建售后工单"
+                )
+                self.assertTrue(first_agent.pending_plan_execution.requires_human)
+                self.assertEqual(
+                    first_agent.pending_plan_execution.agent_key,
+                    "complaint",
+                )
+            finally:
+                first_agent.release_resources()
+
+            second_agent = create_agent(
+                mode="multi",
+                config=config,
+                model_gateway=OfflineStrategyGateway(plan),
+                strategy="plan_execute",
+            )
+            try:
+                confirmed_response = second_agent.chat("确认执行")
+            finally:
+                second_agent.release_resources()
+
+        self.assertTrue(first_response.requires_human)
+        self.assertTrue(confirmed_response.requires_human)
+        self.assertTrue(second_agent.latest_plan_execution.requires_human)
+        self.assertEqual(second_agent.latest_plan_execution.status, "completed")
 
 
 class ToolContractTests(unittest.TestCase):

@@ -148,6 +148,8 @@ class PlanExecutor:
         previous_execution: PlanExecutionResult | None = None,
         previous_results: list[PlanStepResult] | None = None,
         confirmed_step_ids: set[str] | None = None,
+        agent_key: str = "",
+        requires_human: bool = False,
     ) -> PlanExecutionResult:
         self.validate(plan)
         previous_steps = (
@@ -157,7 +159,11 @@ class PlanExecutor:
         )
         previous_by_id = {result.step_id: result for result in previous_steps}
         confirmed = confirmed_step_ids or set()
-        lifecycle = previous_execution or self._new_execution(plan)
+        lifecycle = previous_execution or self._new_execution(
+            plan,
+            agent_key=agent_key,
+            requires_human=requires_human,
+        )
         self.event_bus.emit(
             "plan.resumed" if previous_steps else "plan.created",
             source="plan_executor",
@@ -167,6 +173,8 @@ class PlanExecutor:
                 "step_count": len(plan.steps),
                 "confirmed_steps": sorted(confirmed),
                 "max_concurrency": self.max_concurrency,
+                "agent_key": lifecycle.agent_key,
+                "requires_human": lifecycle.requires_human,
             },
         )
 
@@ -224,7 +232,13 @@ class PlanExecutor:
             }
         )
 
-    def _new_execution(self, plan: ExecutionPlan) -> PlanExecutionResult:
+    def _new_execution(
+        self,
+        plan: ExecutionPlan,
+        *,
+        agent_key: str = "",
+        requires_human: bool = False,
+    ) -> PlanExecutionResult:
         now = self.clock()
         return PlanExecutionResult(
             plan=plan,
@@ -234,6 +248,8 @@ class PlanExecutor:
             updated_at=now,
             expires_at=now + timedelta(seconds=self.plan_ttl_seconds),
             max_resume_count=self.max_resume_count,
+            agent_key=agent_key,
+            requires_human=requires_human,
         )
 
     def _execute_parallel_reads(

@@ -35,7 +35,7 @@ class StrategySelector:
         user_input: str,
         requested: StrategyName | None = None,
     ) -> Literal["react", "plan_execute"]:
-        # 确认轮必须回到带完整会话历史的 ReAct，由现有业务状态机执行副作用。
+        # 确认轮由 Agent 优先恢复已持久化计划；没有待确认计划时保持 ReAct。
         normalized = user_input.strip().rstrip("。！! ")
         if normalized in _CONFIRMATION_INPUTS:
             return "react"
