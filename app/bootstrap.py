@@ -24,6 +24,7 @@ from app.observability import (
     JsonlEventSubscriber,
     MetricsCollector,
 )
+from app.repositories.plans import PlanRepository
 
 AgentMode = Literal["auto", "single", "multi"]
 
@@ -90,6 +91,7 @@ def create_agent(
     model_gateway: ModelGateway | None = None,
     event_bus: EventBus | None = None,
     rate_limiter: SlidingWindowRateLimiter | None = None,
+    plan_repository: PlanRepository | None = None,
     strategy: StrategyName | None = None,
 ):
     """按配置创建 Agent，并允许注入测试或私有部署使用的模型客户端。"""
@@ -106,6 +108,7 @@ def create_agent(
             model_gateway=model_gateway,
             event_bus=event_bus,
             rate_limiter=rate_limiter,
+            plan_repository=plan_repository,
             strategy=strategy,
         )
 
@@ -118,6 +121,7 @@ def create_agent(
         model_gateway=model_gateway,
         event_bus=event_bus,
         rate_limiter=rate_limiter,
+        plan_repository=plan_repository,
         strategy=strategy,
     )
 

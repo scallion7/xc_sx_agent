@@ -9,6 +9,7 @@ from sqlalchemy import (
     Column,
     Float,
     Index,
+    Integer,
     MetaData,
     String,
     Table,
@@ -30,6 +31,63 @@ sessions_table = Table(
     Column("updated_at", String(64), nullable=False),
 )
 Index("ix_sessions_user_id", sessions_table.c.user_id)
+
+plans_table = Table(
+    "plans",
+    metadata,
+    Column("plan_id", String(64), primary_key=True),
+    Column("session_key", String(255), nullable=False),
+    Column("user_id", String(128), nullable=False),
+    Column("agent_key", String(40), nullable=False),
+    Column("goal", Text, nullable=False),
+    Column("status", String(64), nullable=False),
+    Column("requires_human", Integer, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("payload_json", Text, nullable=False),
+    Column("created_at", String(64), nullable=False),
+    Column("updated_at", String(64), nullable=False),
+    Column("expires_at", String(64), nullable=True),
+)
+Index("ix_plans_user_id", plans_table.c.user_id)
+Index("ix_plans_session_key", plans_table.c.session_key)
+Index("ix_plans_status", plans_table.c.status)
+Index("ix_plans_updated_at", plans_table.c.updated_at)
+
+plan_steps_table = Table(
+    "plan_steps",
+    metadata,
+    Column("plan_id", String(64), primary_key=True),
+    Column("step_id", String(40), primary_key=True),
+    Column("position", Integer, nullable=False),
+    Column("description", Text, nullable=False),
+    Column("tool_name", String(80), nullable=False),
+    Column("arguments_json", Text, nullable=False),
+    Column("depends_on_json", Text, nullable=False),
+    Column("status", String(64), nullable=False),
+    Column("output_json", Text, nullable=False),
+    Column("error", Text, nullable=False),
+    Column("updated_at", String(64), nullable=False),
+)
+Index("ix_plan_steps_plan_id", plan_steps_table.c.plan_id)
+Index("ix_plan_steps_status", plan_steps_table.c.status)
+
+plan_events_table = Table(
+    "plan_events",
+    metadata,
+    Column("event_id", String(64), primary_key=True),
+    Column("plan_id", String(64), nullable=False),
+    Column("session_key", String(255), nullable=False),
+    Column("user_id", String(128), nullable=False),
+    Column("event_type", String(80), nullable=False),
+    Column("from_status", String(64), nullable=True),
+    Column("to_status", String(64), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("detail_json", Text, nullable=False),
+    Column("created_at", String(64), nullable=False),
+)
+Index("ix_plan_events_plan_id", plan_events_table.c.plan_id)
+Index("ix_plan_events_user_id", plan_events_table.c.user_id)
+Index("ix_plan_events_created_at", plan_events_table.c.created_at)
 
 after_sale_cases_table = Table(
     "after_sale_cases",

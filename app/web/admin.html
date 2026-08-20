@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-<header><h1>小夕客服管理台</h1><p>审批、运行指标与事件审计</p></header>
+<header><h1>小夕客服管理台</h1><p>审批、运行指标与计划审计</p></header>
 <main>
   <section>
     <label>管理员 Token <input id="token" type="password" value="dev-admin-token"></label>
@@ -26,6 +26,11 @@
   <section><h2>运行指标</h2><pre id="metrics">加载中...</pre></section>
   <section><h2>离线回归</h2><pre id="regression">加载中...</pre></section>
   <section><h2>待审批工单</h2><div id="cases">加载中...</div></section>
+  <section>
+    <h2>计划历史与步骤时间线</h2>
+    <div id="plans">加载中...</div>
+    <div id="timeline"></div>
+  </section>
 </main>
 <script>
 const headers=()=>({'X-API-Key':document.getElementById('token').value,'Content-Type':'application/json'});
@@ -38,6 +43,16 @@ async function review(id, decision) {
   await api(`/v1/admin/after-sales/${id}/review`,{method:'POST',body:JSON.stringify({decision,note:'管理台审批'})});
   refreshAll();
 }
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+async function showPlan(id) {
+  try {
+    const data=await api(`/v1/admin/plans/${id}`);
+    const plan=data.plan;
+    const steps=plan.steps.map(step=>`<tr><td>${escapeHtml(step.step_id)}</td><td>${escapeHtml(step.description)}</td><td>${escapeHtml(step.tool_name)}</td><td>${escapeHtml(step.status)}</td><td>${escapeHtml(step.error)}</td></tr>`).join('');
+    const events=data.timeline.map(event=>`<tr><td>v${event.version}</td><td>${escapeHtml(event.event_type)}</td><td>${escapeHtml(event.from_status||'-')} → ${escapeHtml(event.to_status)}</td><td>${escapeHtml(event.created_at)}</td></tr>`).join('');
+    document.getElementById('timeline').innerHTML=`<h3>${escapeHtml(plan.plan.goal)}</h3><p>计划 ${escapeHtml(plan.plan_id)} · 版本 ${plan.version}</p><h4>步骤快照</h4><table><tr><th>步骤</th><th>描述</th><th>工具</th><th>状态</th><th>错误</th></tr>${steps}</table><h4>审计时间线</h4><table><tr><th>版本</th><th>事件</th><th>状态迁移</th><th>时间</th></tr>${events}</table>`;
+  } catch(error) { document.getElementById('timeline').textContent=error.message; }
+}
 async function refreshAll(){
   try{
     const metrics=await api('/v1/admin/metrics');
@@ -48,6 +63,10 @@ async function refreshAll(){
     document.getElementById('cases').innerHTML=data.cases.length
       ? `<table><tr><th>工单</th><th>订单</th><th>金额</th><th>风险</th><th>操作</th></tr>${data.cases.map(c=>`<tr><td>${c.case_id}</td><td>${c.order_id}</td><td>${c.amount}</td><td>${c.risk_level}</td><td><button onclick="review('${c.case_id}','approve')">批准</button><button onclick="review('${c.case_id}','reject')">拒绝</button></td></tr>`).join('')}</table>`
       : '暂无待审批工单';
+    const plans=await api('/v1/admin/plans');
+    document.getElementById('plans').innerHTML=plans.count
+      ? `<table><tr><th>计划</th><th>用户</th><th>会话</th><th>目标</th><th>状态</th><th>版本</th></tr>${plans.plans.map(item=>`<tr><td><button onclick="showPlan('${item.plan.plan_id}')">${item.plan.plan_id.slice(0,8)}</button></td><td>${escapeHtml(item.user_id)}</td><td>${escapeHtml(item.session_id)}</td><td>${escapeHtml(item.plan.plan.goal)}</td><td>${escapeHtml(item.plan.status)}</td><td>v${item.plan.version}</td></tr>`).join('')}</table>`
+      : '暂无计划记录';
     document.getElementById('status').textContent='已更新';
   }catch(error){document.getElementById('status').textContent=error.message}
 }

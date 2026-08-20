@@ -117,6 +117,7 @@ class PlanExecutionResult(BaseModel):
     )
     plan: ExecutionPlan
     steps: list[PlanStepResult]
+    version: int = Field(default=0, ge=0)
     status: PlanStatus = "awaiting_confirmation"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -188,6 +189,7 @@ class PlanExecutionResult(BaseModel):
     def prompt_payload(self) -> dict[str, Any]:
         return {
             "plan_id": self.plan_id,
+            "version": self.version,
             "goal": self.plan.goal,
             "status": self.status,
             "succeeded": self.succeeded,

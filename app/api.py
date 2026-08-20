@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import (
@@ -11,15 +12,22 @@ from fastapi import (
     FastAPI,
     Header,
     HTTPException,
+    Query,
     WebSocket,
     WebSocketDisconnect,
 )
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from app.agent.after_sale import AfterSaleService
+from app.agent.strategies.models import PlanStatus
 from app.bootstrap import ApplicationRuntime
 from app.config.settings import Settings, settings
 from app.observability import QueueEventSubscriber, TraceContext
+from app.repositories.plans import (
+    PlanRecord,
+    PlanVersionConflictError,
+    build_plan_repository,
+)
 from app.repositories.session import build_session_repository
 from app.security import AuthContext
 from app.services.commerce import CommerceService
@@ -41,6 +49,20 @@ from app.web.services import (
 from app.web.streaming import stream_chat_events
 
 PermissionDependency = Callable[..., AuthContext]
+
+
+def _plan_record_payload(record: PlanRecord) -> dict:
+    session_key = record.session_key
+    session_id = (
+        Path(session_key).stem
+        if session_key.endswith(".json")
+        else session_key.rsplit(":", 1)[-1]
+    )
+    return {
+        "session_id": session_id,
+        "user_id": record.user_id,
+        "plan": record.execution.model_dump(mode="json"),
+    }
 
 
 def create_app(
@@ -175,8 +197,6 @@ def register_session_routes(
 ) -> None:
     """注册会话状态与事件查询接口。"""
 
-    plan_service = PlanSessionService()
-
     @app.get("/v1/sessions/{session_id}")
     def get_session(
         session_id: str,
@@ -204,6 +224,21 @@ def register_session_routes(
             session_path=reference,
             user_id=context.user_id,
         )
+        plan_repository = build_plan_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+        )
+        try:
+            PlanSessionService(plan_repository, repository).cancel(
+                reason=f"用户 {context.user_id} 删除会话",
+            )
+        except (
+            PlanNotFoundError,
+            PlanNotCancellableError,
+            PlanVersionConflictError,
+        ):
+            pass
         repository.delete()
         return {"success": True}
 
@@ -218,8 +253,14 @@ def register_session_routes(
             session_path=reference,
             user_id=context.user_id,
         )
+        plan_repository = build_plan_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+        )
+        plan_service = PlanSessionService(plan_repository, repository)
         try:
-            execution = plan_service.get_latest(repository)
+            execution = plan_service.get_latest()
         except PlanNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"plan": execution.model_dump(mode="json")}
@@ -235,16 +276,123 @@ def register_session_routes(
             session_path=reference,
             user_id=context.user_id,
         )
+        plan_repository = build_plan_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+        )
+        plan_service = PlanSessionService(plan_repository, repository)
         try:
             execution = plan_service.cancel(
-                repository,
                 reason=f"用户 {context.user_id} 通过 API 取消计划",
             )
         except PlanNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except PlanNotCancellableError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except PlanVersionConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         with TraceContext(session_id=reference, user_id=context.user_id):
+            services.runtime.event_bus.emit(
+                "plan.cancelled",
+                source="api",
+                data={
+                    "plan_id": execution.plan_id,
+                    "reason": execution.status_reason,
+                },
+            )
+        return {"plan": execution.model_dump(mode="json")}
+
+    @app.get("/v1/plans")
+    def list_plans(
+        session_id: str = "",
+        status: PlanStatus | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        context: AuthContext = Depends(require("session:read")),
+    ) -> dict:
+        reference = (
+            session_reference(services, context, session_id) if session_id else None
+        )
+        repository = build_plan_repository(
+            services.config,
+            session_path=reference,
+            user_id=context.user_id,
+            all_sessions=not bool(reference),
+        )
+        session_repository = (
+            build_session_repository(
+                services.config,
+                session_path=reference,
+                user_id=context.user_id,
+            )
+            if reference
+            else None
+        )
+        plan_service = PlanSessionService(repository, session_repository)
+        if reference:
+            try:
+                plan_service.get_latest()
+            except PlanNotFoundError:
+                pass
+        records = plan_service.list(
+            status=status,
+            limit=limit,
+        )
+        plans = [_plan_record_payload(record) for record in records]
+        return {"count": len(plans), "plans": plans}
+
+    @app.get("/v1/plans/{plan_id}")
+    def get_plan_detail(
+        plan_id: str,
+        context: AuthContext = Depends(require("session:read")),
+    ) -> dict:
+        repository = build_plan_repository(
+            services.config,
+            session_path=None,
+            user_id=context.user_id,
+            all_sessions=True,
+        )
+        service = PlanSessionService(repository)
+        record = repository.get(plan_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="计划不存在")
+        try:
+            execution = service.get(plan_id)
+            history = service.history(plan_id)
+        except PlanNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        payload = _plan_record_payload(record)
+        payload["plan"] = execution.model_dump(mode="json")
+        payload["timeline"] = [item.model_dump(mode="json") for item in history]
+        return payload
+
+    @app.delete("/v1/plans/{plan_id}")
+    def cancel_plan_by_id(
+        plan_id: str,
+        context: AuthContext = Depends(require("plan:cancel")),
+    ) -> dict:
+        repository = build_plan_repository(
+            services.config,
+            session_path=None,
+            user_id=context.user_id,
+            all_sessions=True,
+        )
+        record = repository.get(plan_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="计划不存在")
+        try:
+            execution = PlanSessionService(repository).cancel(
+                plan_id=plan_id,
+                reason=f"用户 {context.user_id} 通过 API 取消计划",
+            )
+        except PlanNotCancellableError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except PlanVersionConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        with TraceContext(
+            session_id=record.session_key,
+            user_id=context.user_id,
+        ):
             services.runtime.event_bus.emit(
                 "plan.cancelled",
                 source="api",
@@ -345,6 +493,42 @@ def register_admin_routes(
         _context: AuthContext = Depends(require("metrics:read")),
     ) -> dict:
         return load_regression_summary(services.config.eval_report_path)
+
+    @app.get("/v1/admin/plans")
+    def admin_plans(
+        status: PlanStatus | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        _context: AuthContext = Depends(require("metrics:read")),
+    ) -> dict:
+        repository = build_plan_repository(
+            services.config,
+            session_path=None,
+            user_id=None,
+            all_sessions=True,
+        )
+        records = repository.list(status=status, limit=limit)
+        plans = [_plan_record_payload(record) for record in records]
+        return {"count": len(plans), "plans": plans}
+
+    @app.get("/v1/admin/plans/{plan_id}")
+    def admin_plan_detail(
+        plan_id: str,
+        _context: AuthContext = Depends(require("metrics:read")),
+    ) -> dict:
+        repository = build_plan_repository(
+            services.config,
+            session_path=None,
+            user_id=None,
+            all_sessions=True,
+        )
+        record = repository.get(plan_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="计划不存在")
+        payload = _plan_record_payload(record)
+        payload["timeline"] = [
+            item.model_dump(mode="json") for item in repository.history(plan_id)
+        ]
+        return payload
 
     @app.get("/admin", response_class=HTMLResponse)
     def admin() -> str:

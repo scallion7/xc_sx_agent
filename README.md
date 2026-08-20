@@ -4,9 +4,9 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：原工程化规划已经完成，并在阶段 19 将可恢复的
-> Plan-and-Execute 接入 Multi-Agent 路由和子 Agent 工具隔离。当前完整离线回归
-> 共 56 项，不访问真实或本地模型服务。
+> 当前二次开发进度：阶段 20 已将可恢复的 Plan-and-Execute
+> 升级为独立计划仓储，支持 JSON/SQL 持久化、乐观锁、历史查询、步骤时间线
+> 和管理员审计。当前完整离线回归共 60 项，不访问真实或本地模型服务。
 
 ## 项目定位
 
@@ -56,6 +56,7 @@
 8. Docker Compose API + PostgreSQL 演示环境；
 9. Pydantic 工具参数契约、单/Multi-Agent Plan-and-Execute 与离线 CI 门禁；
 10. 跨步骤结果引用、有限并发、计划身份、确认恢复、过期/取消和跨模式权限保护。
+11. 独立 Plan Repository、计划版本与乐观锁、步骤投影、审计时间线和历史 API。
 
 ## 二次开发架构
 
@@ -76,6 +77,9 @@ Application Factory → TraceContext → Guardrails
                                   └───────────────┬───────────────┘
                                                   ├──────────────→ ModelGateway
                                                   │              （超时/重试/限流/指标）
+                                                  ├──────────────→ PlanLifecycleService
+                                                  │              → PlanRepository
+                                                  │                （JSON / SQL / 审计）
                                                   ▼
                                          实例级 ToolRegistry
                                    （Multi-Agent 使用子 Agent 白名单）
@@ -339,11 +343,11 @@ ecom-service-agent/
 │   │   └── memory/                       # 短期和长期记忆
 │   ├── api.py                            # REST 与 WebSocket 路由注册
 │   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
-│   ├── infrastructure/                   # 模型网关、数据库和 SQL 仓储
-│   ├── repositories/                     # 仓储协议与本地适配器
+│   ├── infrastructure/                   # 模型网关、数据库与计划表结构
+│   ├── repositories/                     # 会话/计划仓储协议与 JSON/SQL 适配器
 │   ├── services/
 │   │   ├── commerce.py                   # 订单、商品与物流应用服务
-│   │   └── plans.py                      # 无模型参与的计划查询与取消
+│   │   └── plans.py                      # 计划生命周期、旧快照迁移与 API 适配
 │   ├── observability/                    # EventBus、Trace、日志和指标
 │   ├── security/                         # Token RBAC、注入防护和脱敏
 │   ├── multi_agent/                      # Router、子 Agent、工具隔离与计划恢复
@@ -357,7 +361,7 @@ ecom-service-agent/
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
 ├── tests/                                # 原有测试和深化回归测试
-└── docs/                                 # 第 1–19 期教学与二次开发文档
+└── docs/                                 # 第 1–20 期教学与二次开发文档
 ```
 
 ## 快速开始
@@ -493,6 +497,8 @@ python app/scripts/run_api.py
 - WebSocket：`/ws/events/{session_id}?token=...`
 - 会话查询/删除：`GET/DELETE /v1/sessions/{session_id}`
 - 计划查询/取消：`GET/DELETE /v1/sessions/{session_id}/plan`
+- 计划历史/详情/取消：`GET /v1/plans`、`GET/DELETE /v1/plans/{plan_id}`
+- 计划审计：`GET /v1/admin/plans`、`GET /v1/admin/plans/{plan_id}`
 - 事件查询：`GET /v1/events`
 - 订单、商品和售后查询：`GET /v1/orders`、`GET /v1/products`、
   `GET /v1/after-sales/{case_id}`
@@ -584,7 +590,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归共 56 项，不会调用外部模型或本地模型服务：
+当前完整离线回归共 60 项，不会调用外部模型或本地模型服务：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -620,6 +626,8 @@ ruff format --check .
 - 副作用步骤确认、失败依赖阻断和已完成步骤不重复执行；
 - 计划身份、TTL、恢复次数、查询/取消 API 和重复确认保护；
 - Multi-Agent 子 Agent 工具隔离、原路由恢复、风险标记持久化与跨模式保护；
+- JSON/SQL 独立计划仓储、旧快照迁移、用户隔离与乐观锁冲突；
+- 计划历史、详情、按身份取消、步骤快照和审计时间线 API；
 - 工具 Schema 与 Pydantic 参数契约一致性；
 - GitHub Actions Ruff 与完整离线回归。
 
@@ -627,6 +635,7 @@ ruff format --check .
 
 ```bash
 python -m unittest tests.test_strategy_development -v
+python -m unittest tests.test_plan_repository -v
 ```
 
 运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
@@ -665,12 +674,13 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
-### 第 16–19 期：确定性计划执行演进
+### 第 16–20 期：确定性计划执行演进
 
 - 第 16 期引入强类型工具契约和基础 Plan-and-Execute；
 - 第 17 期补齐跨步骤引用、计划身份和精确确认恢复；
 - 第 18 期增加有限并发、TTL、恢复上限以及查询/取消 API；
 - 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由。
+- 第 20 期引入独立 Plan Repository、乐观锁、历史 API 和审计时间线。
 
 | 阶段 | 主题 | 状态 |
 |---|---|---|
@@ -695,6 +705,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 阶段 17 | 跨步骤引用、计划持久化与精确确认恢复 | 已完成 |
 | 阶段 18 | 有限并发、计划生命周期与查询取消 API | 已完成 |
 | 阶段 19 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
+| 阶段 20 | 独立计划仓储、乐观锁与审计时间线 | 已完成 |
 
 ## 相关文档
 
@@ -714,16 +725,15 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第17期：Plan-and-Execute 2.0 与确认恢复](docs/第17期-Plan-and-Execute2.0与确认恢复.md)
 - [第18期：计划调度与生命周期](docs/第18期-计划调度与生命周期.md)
 - [第19期：Multi-Agent 计划执行与工具隔离](docs/第19期-Multi-Agent计划执行与工具隔离.md)
+- [第20期：独立计划仓储与审计](docs/第20期-独立计划仓储与审计.md)
 
 ## 后续路线
 
-阶段 19 已完成当前规划；后续可在不改变现有安全边界的前提下继续深化：
+阶段 20 已完成独立计划中心。按当前压缩后的三阶段路线，后续保留两个阶段：
 
-1. 增加计划历史、步骤时间线和管理后台可视化；
-2. 为外部副作用工具补充业务幂等键与事务补偿；
-3. 增加步骤级超时、取消传播和资源配额；
-4. 建立固定计划数据集，覆盖并发失败、恢复和路由一致性评估；
-5. 将会话内计划快照演进为独立 Plan Repository，支持审计与历史查询。
+1. 阶段 21：为售后副作用工具增加持久化幂等键、事务状态与失败补偿；
+2. 阶段 22：增加步骤超时、取消传播和资源配额，并将固定计划数据集纳入
+   调度、恢复与路由一致性质量门禁。
 
 ## 当前边界
 

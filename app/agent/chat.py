@@ -24,6 +24,7 @@ from app.infrastructure.model_gateway import (
 )
 from app.observability import EventBus
 from app.prompts.customer_service import SYSTEM_PROMPT
+from app.repositories.plans import PlanRepository
 from app.schemas.response import CustomerServiceResponse
 from app.security import GuardrailEngine
 
@@ -42,6 +43,7 @@ class EcomAgent(BaseConversationAgent):
         event_bus: EventBus | None = None,
         guardrails: GuardrailEngine | None = None,
         rate_limiter: SlidingWindowRateLimiter | None = None,
+        plan_repository: PlanRepository | None = None,
         strategy: StrategyName | None = None,
     ) -> None:
         super().__init__(
@@ -52,6 +54,7 @@ class EcomAgent(BaseConversationAgent):
             event_bus=event_bus,
             guardrails=guardrails,
             rate_limiter=rate_limiter,
+            plan_repository=plan_repository,
         )
         self.risk_router = RiskRouter(
             self.config.after_sale_auto_approve_max_amount,
@@ -214,7 +217,7 @@ class EcomAgent(BaseConversationAgent):
             return self._finish_invalid_plan(pending, "failed", str(exc))
 
         # 先消费并持久化恢复次数，再执行副作用，避免进程退出后重复确认。
-        self._record_plan(running)
+        running = self._record_plan(running)
         self.save()
         try:
             result = self.plan_execute_strategy.resume(running)
@@ -257,54 +260,6 @@ class EcomAgent(BaseConversationAgent):
         text = f"当前计划无法继续：{reason}。未执行待确认操作，请重新发起请求。"
         self.raw_messages.append({"role": "assistant", "content": text})
         return text
-
-    def _restore_latest_plan(self) -> PlanExecutionResult | None:
-        payload = self._runtime_state.get("latest_plan")
-        if not isinstance(payload, dict):
-            payload = self._runtime_state.get("pending_plan")
-        if not isinstance(payload, dict):
-            return None
-        try:
-            execution = PlanExecutionResult.model_validate(payload)
-        except ValueError:
-            self._runtime_state.pop("latest_plan", None)
-            self._runtime_state.pop("pending_plan", None)
-            return None
-        self._runtime_state["latest_plan"] = execution.model_dump(mode="json")
-        if execution.status == "awaiting_confirmation":
-            self._runtime_state["pending_plan"] = execution.model_dump(mode="json")
-        else:
-            self._runtime_state.pop("pending_plan", None)
-        return execution
-
-    def _record_plan(
-        self,
-        execution: PlanExecutionResult,
-    ) -> None:
-        self.latest_plan_execution = execution
-        self._runtime_state["latest_plan"] = execution.model_dump(mode="json")
-        if execution.status != "awaiting_confirmation":
-            self.pending_plan_execution = None
-            self._runtime_state.pop("pending_plan", None)
-            return
-        self.pending_plan_execution = execution
-        self._runtime_state["pending_plan"] = execution.model_dump(mode="json")
-
-    def _cancel_pending_plan(self, reason: str) -> None:
-        pending = self.pending_plan_execution
-        if pending is None:
-            return
-        cancelled = pending.transition("cancelled", reason=reason)
-        self._record_plan(cancelled)
-        self.save()
-        self.event_bus.emit(
-            "plan.cancelled",
-            source="ecom_agent",
-            data={
-                "plan_id": pending.plan_id,
-                "reason": self.guardrails.redact(reason),
-            },
-        )
 
     def _react_loop(self) -> str:
         """ReAct 循环：调用 LLM → 执行工具 → 观察结果 → 重复，直到模型给出最终回答。"""

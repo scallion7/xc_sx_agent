@@ -17,6 +17,7 @@ from app.agent.after_sale import (
 )
 from app.agent.memory import MemoryManager
 from app.agent.skills import SkillManager
+from app.agent.strategies import PlanExecutionResult
 from app.agent.summarizer import summarize
 from app.agent.tools.knowledge import KnowledgeService
 from app.agent.tools.registry import (
@@ -42,6 +43,7 @@ from app.observability import (
     current_trace_id,
 )
 from app.repositories.mock_commerce import MockCommerceRepository
+from app.repositories.plans import PlanRepository, build_plan_repository
 from app.repositories.session import (
     SessionRepository,
     build_session_repository,
@@ -49,6 +51,7 @@ from app.repositories.session import (
 from app.schemas.response import CustomerServiceResponse, IntentType
 from app.security import GuardrailEngine
 from app.services.commerce import CommerceService
+from app.services.plans import PlanLifecycleService, PlanNotCancellableError
 
 
 class BaseConversationAgent(ABC):
@@ -72,6 +75,7 @@ class BaseConversationAgent(ABC):
         event_bus: EventBus | None = None,
         guardrails: GuardrailEngine | None = None,
         session_repository: SessionRepository | None = None,
+        plan_repository: PlanRepository | None = None,
         commerce_service: CommerceService | None = None,
         rate_limiter: SlidingWindowRateLimiter | None = None,
     ):
@@ -159,15 +163,34 @@ class BaseConversationAgent(ABC):
         self.summary: str | None = None
         self._runtime_state: dict[str, Any] = {}
         self._restore_session()
+        self.plan_repository = plan_repository or build_plan_repository(
+            self.config,
+            session_path=self.session_path,
+            user_id=self.config.memory_user_id,
+        )
+        self.plan_lifecycle = PlanLifecycleService(
+            self.plan_repository,
+            runtime_state=self._runtime_state,
+        )
 
     @property
     def history_size(self) -> int:
         return len(self.raw_messages)
 
     def reset(self) -> None:
+        pending = getattr(self, "pending_plan_execution", None)
+        if pending is not None:
+            try:
+                self.plan_lifecycle.cancel(
+                    plan_id=pending.plan_id,
+                    reason="会话已重置",
+                )
+            except PlanNotCancellableError:
+                pass
         self.raw_messages = []
         self.summary = None
         self._runtime_state = {}
+        self.plan_lifecycle.runtime_state = self._runtime_state
         self._reset_runtime_state()
         self.memory_manager.reset_short_term()
         self.session_repository.delete()
@@ -261,6 +284,49 @@ class BaseConversationAgent(ABC):
             if isinstance(runtime_state, dict):
                 self._runtime_state = runtime_state
             self.memory_manager.restore_stm(memory_state)
+
+    def _restore_latest_plan(self) -> PlanExecutionResult | None:
+        """从独立仓储恢复计划，首次读取时兼容旧会话快照。"""
+        return self.plan_lifecycle.restore_latest()
+
+    def _record_plan(
+        self,
+        execution: PlanExecutionResult,
+    ) -> PlanExecutionResult:
+        """持久化计划新版本并同步会话兼容快照。"""
+        saved = self.plan_lifecycle.record(execution)
+        self.latest_plan_execution = saved
+        if saved.status == "awaiting_confirmation":
+            self.pending_plan_execution = saved
+        else:
+            self.pending_plan_execution = None
+        return saved
+
+    def _cancel_pending_plan(self, reason: str) -> None:
+        pending = self.pending_plan_execution
+        if pending is None:
+            return
+        try:
+            cancelled = self.plan_lifecycle.cancel(
+                plan_id=pending.plan_id,
+                reason=reason,
+            )
+        except PlanNotCancellableError:
+            self.latest_plan_execution = self.plan_lifecycle.get(pending.plan_id)
+            self.pending_plan_execution = None
+            return
+        self.latest_plan_execution = cancelled
+        self.pending_plan_execution = None
+        self.save()
+        self.event_bus.emit(
+            "plan.cancelled",
+            source=type(self).__name__,
+            data={
+                "plan_id": pending.plan_id,
+                "agent_key": pending.agent_key,
+                "reason": self.guardrails.redact(reason),
+            },
+        )
 
     def _build_messages(self, system_prompt: str) -> list[dict]:
         system_content = system_prompt
