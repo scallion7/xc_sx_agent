@@ -3,7 +3,6 @@
 import json
 from typing import Any
 
-from app.agent.after_sale.risk import RiskRouter
 from app.agent.base import BaseConversationAgent
 from app.agent.strategies import (
     PlanExecuteStrategy,
@@ -15,6 +14,7 @@ from app.agent.strategies import (
     StrategyName,
     StrategySelector,
 )
+from app.agent.strategies.policies import CircuitBreakerRegistry
 from app.agent.tools.manager import ToolManager
 from app.agent.tools.registry import ToolExecutionContext
 from app.config.settings import Settings
@@ -45,6 +45,7 @@ class EcomAgent(BaseConversationAgent):
         rate_limiter: SlidingWindowRateLimiter | None = None,
         plan_repository: PlanRepository | None = None,
         strategy: StrategyName | None = None,
+        circuit_breakers: CircuitBreakerRegistry | None = None,
     ) -> None:
         super().__init__(
             session_path=session_path,
@@ -56,11 +57,7 @@ class EcomAgent(BaseConversationAgent):
             rate_limiter=rate_limiter,
             plan_repository=plan_repository,
         )
-        self.risk_router = RiskRouter(
-            self.config.after_sale_auto_approve_max_amount,
-            self.config.after_sale_high_risk_amount,
-            self.config.risk_rules_path,
-        )
+        self.risk_router = self.after_sale_service.risk_router
         self.tool_manager = tool_manager or ToolManager(
             use_mcp=self.config.mcp_enabled,
             mcp_server_url=self.config.mcp_server_url,
@@ -84,6 +81,18 @@ class EcomAgent(BaseConversationAgent):
             plan_ttl_seconds=self.config.plan_ttl_seconds,
             max_resume_count=self.config.plan_max_resume_count,
             redactor=self.guardrails.redact,
+            worker_id=self.config.plan_worker_id,
+            step_timeout_seconds=self.config.plan_step_timeout_seconds,
+            plan_timeout_seconds=self.config.plan_total_timeout_seconds,
+            max_tool_calls=self.config.plan_max_tool_calls,
+            max_retry_attempts=self.config.plan_max_retry_attempts,
+            max_output_bytes=self.config.plan_max_output_bytes,
+            max_queued_steps=self.config.plan_max_queued_steps,
+            read_max_attempts=self.config.plan_read_max_attempts,
+            cancellation_token=self.plan_cancellation_token,
+            checkpoint=self._checkpoint_plan,
+            circuit_breakers=circuit_breakers,
+            heartbeat=self._heartbeat_plan,
         )
         self.latest_plan_execution = self._restore_latest_plan()
         self.pending_plan_execution = (

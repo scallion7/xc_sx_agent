@@ -1,0 +1,368 @@
+{
+  "version": "22.0",
+  "cases": [
+    {
+      "id": "plan-001",
+      "category": "multi_intent",
+      "scenario": "订单与物流多意图",
+      "test": "tests.test_strategy_development.StrategyIntegrationTests.test_selector_keeps_react_default_and_detects_multi_intent",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-002",
+      "category": "dependency",
+      "scenario": "三层依赖图",
+      "test": "tests.test_strategy_development.PlanModelTests.test_plan_uses_stable_topological_order",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-003",
+      "category": "reference",
+      "scenario": "字符串引用",
+      "test": "tests.test_strategy_development.PlanExecutorTests.test_executor_resolves_typed_output_references",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-004",
+      "category": "reference",
+      "scenario": "数字引用",
+      "test": "tests.test_strategy_development.PlanExecutorTests.test_executor_requires_explicit_dependency_for_reference",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-005",
+      "category": "reference",
+      "scenario": "列表引用",
+      "test": "tests.test_strategy_development.PlanExecutorTests.test_missing_reference_path_fails_without_calling_mutation",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-006",
+      "category": "concurrency",
+      "scenario": "同层并发",
+      "test": "tests.test_strategy_development.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-007",
+      "category": "concurrency",
+      "scenario": "稳定结果顺序",
+      "test": "tests.test_strategy_development.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
+      "checks": {
+        "route_stability_rate": true
+      }
+    },
+    {
+      "id": "plan-008",
+      "category": "concurrency",
+      "scenario": "并发组隔离",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_concurrency_group_limit_serializes_calls",
+      "checks": {
+        "route_stability_rate": true
+      }
+    },
+    {
+      "id": "plan-009",
+      "category": "timeout",
+      "scenario": "单步骤超时",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_step_timeout_returns_structured_code",
+      "checks": {
+        "timeout_detection_rate": true
+      }
+    },
+    {
+      "id": "plan-010",
+      "category": "timeout",
+      "scenario": "计划总超时",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_plan_total_timeout_has_distinct_error_code",
+      "checks": {
+        "timeout_detection_rate": true
+      }
+    },
+    {
+      "id": "plan-011",
+      "category": "timeout",
+      "scenario": "超时依赖跳过",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_failed_dependency_is_persisted_as_skipped",
+      "checks": {
+        "timeout_detection_rate": true
+      }
+    },
+    {
+      "id": "plan-012",
+      "category": "cancellation",
+      "scenario": "执行中取消",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_running_tool_observes_cancellation_without_waiting_for_completion",
+      "checks": {
+        "cancellation_propagation_rate": true
+      }
+    },
+    {
+      "id": "plan-013",
+      "category": "cancellation",
+      "scenario": "重复取消",
+      "test": "tests.test_plan_recovery.JsonPlanRunRecoveryTests.test_cancel_request_is_idempotent",
+      "checks": {
+        "cancellation_propagation_rate": true
+      }
+    },
+    {
+      "id": "plan-014",
+      "category": "cancellation",
+      "scenario": "取消后副作用阻断",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_cancelled_token_blocks_side_effect",
+      "checks": {
+        "cancellation_propagation_rate": true,
+        "side_effect_exactly_once_rate": true
+      }
+    },
+    {
+      "id": "plan-015",
+      "category": "retry",
+      "scenario": "只读工具短暂失败",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_read_only_transient_failure_retries",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-016",
+      "category": "retry",
+      "scenario": "副作用禁止通用重试",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_side_effect_never_uses_generic_retry",
+      "checks": {
+        "side_effect_exactly_once_rate": true
+      }
+    },
+    {
+      "id": "plan-017",
+      "category": "budget",
+      "scenario": "工具调用配额",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_tool_call_budget_stops_later_step",
+      "checks": {
+        "budget_compliance_rate": true
+      }
+    },
+    {
+      "id": "plan-018",
+      "category": "budget",
+      "scenario": "重试配额",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_retry_budget_stops_additional_attempt",
+      "checks": {
+        "budget_compliance_rate": true
+      }
+    },
+    {
+      "id": "plan-019",
+      "category": "budget",
+      "scenario": "输出配额",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_step_output_limit_is_enforced",
+      "checks": {
+        "budget_compliance_rate": true
+      }
+    },
+    {
+      "id": "plan-020",
+      "category": "circuit",
+      "scenario": "closed 到 open",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_circuit_breaker_reaches_half_open_after_cooldown",
+      "checks": {
+        "budget_compliance_rate": true
+      }
+    },
+    {
+      "id": "plan-021",
+      "category": "circuit",
+      "scenario": "open 到 half_open",
+      "test": "tests.test_execution_governance.ExecutionGovernanceTests.test_circuit_breaker_reaches_half_open_after_cooldown",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-022",
+      "category": "recovery",
+      "scenario": "租约过期接管",
+      "test": "tests.test_plan_recovery.JsonPlanRunRecoveryTests.test_expired_lease_can_be_recovered_with_higher_fencing",
+      "checks": {
+        "recovery_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-023",
+      "category": "recovery",
+      "scenario": "旧执行者 fencing",
+      "test": "tests.test_plan_recovery.JsonPlanRunRecoveryTests.test_old_worker_is_fenced_after_recovery",
+      "checks": {
+        "recovery_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-024",
+      "category": "recovery",
+      "scenario": "重启复用检查点",
+      "test": "tests.test_strategy_development.StrategyIntegrationTests.test_pending_plan_survives_session_reload_and_resumes_exact_step",
+      "checks": {
+        "checkpoint_reuse_rate": true,
+        "recovery_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-025",
+      "category": "routing",
+      "scenario": "单多 Agent 工具范围",
+      "test": "tests.test_strategy_development.MultiAgentStrategyTests.test_routed_agent_executes_plan_with_its_tool_scope",
+      "checks": {
+        "route_stability_rate": true
+      }
+    },
+    {
+      "id": "plan-026",
+      "category": "exactly_once",
+      "scenario": "售后执行一次",
+      "test": "tests.test_side_effect_reliability.ReliableExecutionTests.test_failed_attempt_retries_once_then_replays_success",
+      "checks": {
+        "side_effect_exactly_once_rate": true
+      }
+    },
+    {
+      "id": "plan-027",
+      "category": "exactly_once",
+      "scenario": "补偿执行一次",
+      "test": "tests.test_provider_and_policy_governance.CompensationExecutionTests.test_compensation_provider_executes_exactly_once",
+      "checks": {
+        "side_effect_exactly_once_rate": true,
+        "provider_idempotency_rate": true
+      }
+    },
+    {
+      "id": "plan-028",
+      "category": "auth",
+      "scenario": "OIDC 权限映射",
+      "test": "tests.test_auth_and_migrations.OidcProviderTests.test_valid_token_maps_identity_and_permissions",
+      "checks": {
+        "auth_scope_accuracy": true
+      }
+    },
+    {
+      "id": "plan-029",
+      "category": "auth",
+      "scenario": "过期 Token",
+      "test": "tests.test_auth_and_migrations.OidcProviderTests.test_expired_token_is_rejected_with_stable_code",
+      "checks": {
+        "auth_scope_accuracy": true
+      }
+    },
+    {
+      "id": "plan-030",
+      "category": "auth",
+      "scenario": "JWKS 刷新",
+      "test": "tests.test_auth_and_migrations.OidcProviderTests.test_unknown_kid_triggers_forced_refresh",
+      "checks": {
+        "auth_scope_accuracy": true
+      }
+    },
+    {
+      "id": "plan-031",
+      "category": "migration",
+      "scenario": "空库升级",
+      "test": "tests.test_auth_and_migrations.MigrationAndConfigurationTests.test_empty_sqlite_upgrade_and_downgrade",
+      "checks": {
+        "migration_success_rate": true
+      }
+    },
+    {
+      "id": "plan-032",
+      "category": "migration",
+      "scenario": "兼容升级",
+      "test": "tests.test_auth_and_migrations.MigrationAndConfigurationTests.test_compatible_upgrade_preserves_existing_table",
+      "checks": {
+        "migration_success_rate": true
+      }
+    },
+    {
+      "id": "plan-033",
+      "category": "migration",
+      "scenario": "受控降级",
+      "test": "tests.test_auth_and_migrations.MigrationAndConfigurationTests.test_empty_sqlite_upgrade_and_downgrade",
+      "checks": {
+        "migration_success_rate": true
+      }
+    },
+    {
+      "id": "plan-034",
+      "category": "rules",
+      "scenario": "规则试运行",
+      "test": "tests.test_provider_and_policy_governance.RiskRuleGovernanceTests.test_diff_and_dry_run_report_impact",
+      "checks": {
+        "policy_version_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-035",
+      "category": "rules",
+      "scenario": "规则激活回滚",
+      "test": "tests.test_provider_and_policy_governance.RiskRuleGovernanceTests.test_draft_activate_and_rollback_lifecycle",
+      "checks": {
+        "policy_version_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-036",
+      "category": "provider",
+      "scenario": "回调签名",
+      "test": "tests.test_provider_and_policy_governance.ProviderContractTests.test_hmac_webhook_verifier_accepts_valid_signature",
+      "checks": {
+        "provider_idempotency_rate": true
+      }
+    },
+    {
+      "id": "plan-037",
+      "category": "provider",
+      "scenario": "回调去重乱序",
+      "test": "tests.test_provider_and_policy_governance.ProviderContractTests.test_webhook_api_verifies_signature_and_replays_duplicate",
+      "checks": {
+        "provider_idempotency_rate": true
+      }
+    },
+    {
+      "id": "plan-038",
+      "category": "maintenance",
+      "scenario": "清理 dry-run",
+      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_event_log_retention_supports_dry_run_and_apply",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    },
+    {
+      "id": "plan-039",
+      "category": "maintenance",
+      "scenario": "活跃数据保护",
+      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_json_cleanup_protects_active_plan_run_sidecar",
+      "checks": {
+        "recovery_consistency_rate": true
+      }
+    },
+    {
+      "id": "plan-040",
+      "category": "maintenance",
+      "scenario": "清理审计记录",
+      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_cleanup_dry_run_protects_active_plan",
+      "checks": {
+        "plan_completion_rate": true
+      }
+    }
+  ]
+}

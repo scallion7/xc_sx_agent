@@ -86,6 +86,7 @@ class AfterSaleCase:
     review_note: str = ""
     result: dict = field(default_factory=dict)
     audit_log: list[AuditEvent] = field(default_factory=list)
+    risk_rule_version: str = "builtin"
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -97,6 +98,7 @@ class AfterSaleCase:
             item if isinstance(item, AuditEvent) else AuditEvent(**item)
             for item in payload.get("audit_log", [])
         ]
+        payload.setdefault("risk_rule_version", "builtin")
         return cls(**payload)
 
     def add_audit(self, action: str, actor: str, note: str = "") -> None:

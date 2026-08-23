@@ -18,6 +18,7 @@ from app.agent.after_sale import (
 )
 from app.bootstrap import ApplicationRuntime, create_agent, create_runtime
 from app.config.settings import Settings
+from app.infrastructure.database import configure_database
 from app.infrastructure.sql_after_sale_operation_repository import (
     SqlAfterSaleOperationRepository,
 )
@@ -25,9 +26,18 @@ from app.infrastructure.sql_after_sale_repository import SqlAfterSaleRepository
 from app.infrastructure.sql_commerce_repository import SqlCommerceRepository
 from app.observability import TraceContext
 from app.repositories.mock_commerce import MockCommerceRepository
+from app.repositories.policies import build_risk_rule_repository
 from app.schemas.response import CustomerServiceResponse
-from app.security import AuthContext, AuthService
+from app.security import AuthContext, AuthService, build_auth_provider
 from app.services.commerce import CommerceService
+from app.services.compensations import (
+    CompensationService,
+    SqlCompensationOperationRepository,
+)
+from app.services.idempotency import (
+    ApiIdempotencyService,
+    build_api_idempotency_service,
+)
 from app.web.schemas import SESSION_ID_PATTERN, ChatRequest
 
 
@@ -52,6 +62,8 @@ class ApiServices:
     commerce: CommerceService
     after_sale: AfterSaleService
     agent_factory: AgentFactory
+    compensation: CompensationService | None
+    idempotency: ApiIdempotencyService
 
 
 def build_api_services(
@@ -63,8 +75,12 @@ def build_api_services(
     commerce_service: CommerceService | None = None,
 ) -> ApiServices:
     """在应用边界集中完成依赖组装，路由只负责协议转换。"""
+    configure_database(
+        config.database_url,
+        auto_create=config.database_auto_create,
+    )
     app_runtime = runtime or create_runtime(config)
-    auth = AuthService(config.api_user_tokens, config.api_admin_tokens)
+    auth = AuthService(provider=build_auth_provider(config))
 
     if commerce_service is None and after_sale_service is not None:
         commerce_service = after_sale_service.commerce_service
@@ -90,12 +106,19 @@ def build_api_services(
                 config.after_sale_operation_path
                 or case_path.with_name("after_sale_operations.json")
             )
+        risk_rule_repository = build_risk_rule_repository(config)
+
+        def active_risk_rules() -> dict | None:
+            active = risk_rule_repository.active()
+            return active.rules.model_dump() if active else None
+
         after_sale_service = AfterSaleService(
             after_sale_repository,
             RiskRouter(
                 config.after_sale_auto_approve_max_amount,
                 config.after_sale_high_risk_amount,
                 config.risk_rules_path,
+                rules_loader=active_risk_rules,
             ),
             commerce_service=commerce_service,
             operation_repository=operation_repository,
@@ -111,6 +134,17 @@ def build_api_services(
         commerce=commerce_service,
         after_sale=after_sale_service,
         agent_factory=agent_factory or create_agent,
+        compensation=(
+            CompensationService(
+                SqlCompensationOperationRepository(config.database_url),
+                app_runtime.compensation_provider,
+                lease_seconds=config.after_sale_operation_lease_seconds,
+                max_attempts=config.after_sale_operation_max_attempts,
+            )
+            if config.persistence_backend == "sql"
+            else None
+        ),
+        idempotency=build_api_idempotency_service(config),
     )
 
 
@@ -152,6 +186,7 @@ def invoke_chat(
             event_bus=services.runtime.event_bus,
             rate_limiter=services.runtime.model_rate_limiter,
             strategy=request.strategy,
+            circuit_breakers=services.runtime.circuit_breakers,
         )
         try:
             return agent.chat(request.message)

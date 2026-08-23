@@ -20,6 +20,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
+      DATABASE_AUTO_CREATE: "false"
       PERSISTENCE_BACKEND: sql
       COMMERCE_SEED_DEMO_DATA: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -34,7 +35,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')",
         ]
       interval: 10s
       timeout: 3s

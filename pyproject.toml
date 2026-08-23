@@ -14,3 +14,11 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 docstring-code-format = true
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/scripts/*"]
+
+[tool.coverage.report]
+fail_under = 65
+show_missing = true

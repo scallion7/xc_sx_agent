@@ -10,10 +10,15 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 StrategyName = Literal["react", "plan_execute", "auto"]
 StepStatus = Literal[
+    "running",
     "completed",
     "failed",
     "blocked",
     "awaiting_confirmation",
+    "timed_out",
+    "cancelled",
+    "skipped",
+    "retrying",
 ]
 PlanStatus = Literal[
     "running",
@@ -106,6 +111,28 @@ class PlanStepResult(BaseModel):
     status: StepStatus
     output: dict[str, Any] = Field(default_factory=dict)
     error: str = ""
+    error_code: str = ""
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: int = Field(default=0, ge=0)
+    attempt_count: int = Field(default=0, ge=0)
+    max_attempts: int = Field(default=1, ge=1)
+    run_id: str = ""
+    worker_id: str = ""
+    termination_reason: str = ""
+    tool_calls: int = Field(default=0, ge=0)
+    retry_attempts: int = Field(default=0, ge=0)
+    output_bytes: int = Field(default=0, ge=0)
+
+
+class PlanResourceUsage(BaseModel):
+    """一次计划运行可审计的资源消耗。"""
+
+    tool_calls: int = Field(default=0, ge=0)
+    retry_attempts: int = Field(default=0, ge=0)
+    output_bytes: int = Field(default=0, ge=0)
+    elapsed_ms: int = Field(default=0, ge=0)
+    queued_steps: int = Field(default=0, ge=0)
 
 
 class PlanExecutionResult(BaseModel):
@@ -131,6 +158,14 @@ class PlanExecutionResult(BaseModel):
         max_length=40,
         pattern=r"^[A-Za-z0-9_-]*$",
     )
+    run_id: str = Field(
+        default_factory=lambda: uuid4().hex,
+        pattern=r"^[a-f0-9]{32}$",
+    )
+    worker_id: str = Field(default="local", min_length=1, max_length=128)
+    fencing_token: int = Field(default=1, ge=1)
+    resource_usage: PlanResourceUsage = Field(default_factory=PlanResourceUsage)
+    cancellation_requested_at: datetime | None = None
 
     @property
     def succeeded(self) -> bool:
@@ -162,6 +197,8 @@ class PlanExecutionResult(BaseModel):
                 "updated_at": current,
                 "resume_count": self.resume_count + 1,
                 "status_reason": "",
+                "run_id": uuid4().hex,
+                "fencing_token": 1,
             }
         )
 
@@ -197,7 +234,11 @@ class PlanExecutionResult(BaseModel):
             "requires_human": self.requires_human,
             "resume_count": self.resume_count,
             "agent_key": self.agent_key,
-            "steps": [step.model_dump() for step in self.steps],
+            "run_id": self.run_id,
+            "worker_id": self.worker_id,
+            "fencing_token": self.fencing_token,
+            "resource_usage": self.resource_usage.model_dump(),
+            "steps": [step.model_dump(mode="json") for step in self.steps],
         }
 
 

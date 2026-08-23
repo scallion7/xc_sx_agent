@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -22,6 +23,15 @@ class Settings(BaseSettings):
     plan_max_concurrency: int = 3
     plan_ttl_seconds: int = 900
     plan_max_resume_count: int = 3
+    plan_worker_id: str = "local"
+    plan_run_lease_seconds: int = Field(default=30, ge=5, le=3600)
+    plan_step_timeout_seconds: float = Field(default=10.0, gt=0, le=300)
+    plan_total_timeout_seconds: float = Field(default=60.0, gt=0, le=3600)
+    plan_max_tool_calls: int = Field(default=20, ge=1, le=200)
+    plan_max_retry_attempts: int = Field(default=5, ge=0, le=50)
+    plan_max_output_bytes: int = Field(default=1_048_576, ge=1024, le=10_485_760)
+    plan_max_queued_steps: int = Field(default=20, ge=1, le=200)
+    plan_read_max_attempts: int = Field(default=2, ge=1, le=5)
 
     # MCP 配置
     mcp_enabled: bool = False
@@ -48,6 +58,7 @@ class Settings(BaseSettings):
     after_sale_operation_lease_seconds: int = 300
     after_sale_operation_max_attempts: int = 3
     risk_rules_path: str = "app/config/risk_rules.json"
+    risk_rule_versions_path: str = "app/sessions/risk_rule_versions.json"
 
     # Multi-Agent 配置（第6期）
     multi_agent_enabled: bool = False
@@ -76,12 +87,28 @@ class Settings(BaseSettings):
     # 持久化与服务化
     persistence_backend: str = "sql"  # sql(SQLite/PostgreSQL) / json
     database_url: str = "sqlite:///app/sessions/xc_sx_agent.db"
+    database_auto_create: bool = True
     commerce_seed_demo_data: bool = True
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_user_tokens: str = "dev-user-token:user-1"
     api_admin_tokens: str = "dev-admin-token:admin"
     session_dir: str = "app/sessions/users"
+    environment: Literal["development", "test", "production"] = "development"
+    auth_mode: Literal["static", "oidc"] = "static"
+    oidc_issuer: str = ""
+    oidc_audience: str = ""
+    oidc_jwks_path: str = ""
+    oidc_required_scopes: str = "chat:use"
+    oidc_algorithms: str = "RS256"
+    oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=86400)
+    provider_mode: Literal["mock", "external"] = "mock"
+    provider_webhook_secret: str = ""
+    provider_webhook_events_path: str = "app/sessions/provider_webhook_events.json"
+    api_idempotency_path: str = "app/sessions/api_idempotency_keys.json"
+    api_user_requests_per_minute: int = Field(default=120, ge=1, le=10000)
+    api_admin_requests_per_minute: int = Field(default=60, ge=1, le=10000)
+    api_expensive_requests_per_minute: int = Field(default=20, ge=1, le=1000)
 
     # 安全护栏
     guardrails_enabled: bool = True
@@ -93,12 +120,69 @@ class Settings(BaseSettings):
     event_log_path: str = "app/sessions/events.jsonl"
     event_buffer_size: int = 1000
 
+    # 数据生命周期（终态数据；活跃记录始终受保护）
+    session_retention_days: int = Field(default=90, ge=1, le=3650)
+    plan_retention_days: int = Field(default=90, ge=1, le=3650)
+    event_retention_days: int = Field(default=30, ge=1, le=3650)
+    operation_retention_days: int = Field(default=365, ge=1, le=3650)
+
     # Policy RAG
     rag_rerank_enabled: bool = True
     rag_filter_inactive_policies: bool = True
     rag_lexical_fallback_enabled: bool = True
 
     model_config = {"env_file": ".env"}
+
+    @model_validator(mode="after")
+    def validate_environment(self) -> "Settings":
+        if self.plan_step_timeout_seconds > self.plan_total_timeout_seconds:
+            raise ValueError("单步骤超时不能大于计划总超时")
+        if self.auth_mode == "oidc" and (
+            not self.oidc_issuer or not self.oidc_audience or not self.oidc_jwks_path
+        ):
+            raise ValueError("OIDC 模式必须配置 issuer、audience 和 JWKS 路径")
+        if not self.oidc_algorithms.split() or any(
+            algorithm not in {"RS256", "RS384", "RS512", "ES256", "ES384"}
+            for algorithm in self.oidc_algorithms.split()
+        ):
+            raise ValueError("OIDC 签名算法不在允许列表")
+        if self.environment == "production":
+            if not self.openai_api_key.strip() or self.openai_api_key in {
+                "sk-xxx",
+                "sk-replace-me",
+            }:
+                raise ValueError("生产环境必须配置非占位模型密钥")
+            if (
+                "dev-user-token" in self.api_user_tokens
+                or "dev-admin-token" in self.api_admin_tokens
+            ):
+                raise ValueError("生产环境禁止使用默认开发 Token")
+            if self.commerce_seed_demo_data:
+                raise ValueError("生产环境禁止写入演示业务数据")
+            if self.database_auto_create:
+                raise ValueError("生产环境必须通过迁移管理数据库结构")
+            if self.provider_mode == "mock":
+                raise ValueError("生产环境禁止使用 Mock Provider")
+            if self.provider_mode == "external" and not self.provider_webhook_secret:
+                raise ValueError("外部 Provider 模式必须配置回调签名密钥")
+        return self
+
+    def safe_summary(self) -> dict[str, object]:
+        """仅返回不含密钥、Token、URL 凭据的诊断摘要。"""
+        return {
+            "environment": self.environment,
+            "persistence_backend": self.persistence_backend,
+            "auth_mode": self.auth_mode,
+            "provider_mode": self.provider_mode,
+            "database_auto_create": self.database_auto_create,
+            "plan_limits": {
+                "max_steps": self.max_plan_steps,
+                "max_concurrency": self.plan_max_concurrency,
+                "step_timeout_seconds": self.plan_step_timeout_seconds,
+                "total_timeout_seconds": self.plan_total_timeout_seconds,
+                "max_tool_calls": self.plan_max_tool_calls,
+            },
+        }
 
 
 settings = Settings()

@@ -12,6 +12,7 @@ from app.agent.strategies.models import (
     PlanExecutionResult,
     StrategyResult,
 )
+from app.agent.strategies.policies import CancellationToken, CircuitBreakerRegistry
 from app.agent.tools.manager import ToolManager
 from app.infrastructure.model_gateway import ModelGateway
 from app.observability import EventBus
@@ -52,6 +53,21 @@ class PlanExecuteStrategy:
         plan_ttl_seconds: int = 900,
         max_resume_count: int = 3,
         redactor: Callable[[str], str] | None = None,
+        worker_id: str = "local",
+        step_timeout_seconds: float = 10.0,
+        plan_timeout_seconds: float = 60.0,
+        max_tool_calls: int = 20,
+        max_retry_attempts: int = 5,
+        max_output_bytes: int = 1_048_576,
+        max_queued_steps: int = 20,
+        read_max_attempts: int = 2,
+        cancellation_token: CancellationToken | None = None,
+        checkpoint: Callable[
+            [PlanExecutionResult, str, dict[str, Any]], PlanExecutionResult
+        ]
+        | None = None,
+        circuit_breakers: CircuitBreakerRegistry | None = None,
+        heartbeat: Callable[[], None] | None = None,
     ) -> None:
         self.model_gateway = model_gateway
         self.model = model
@@ -67,6 +83,18 @@ class PlanExecuteStrategy:
             plan_ttl_seconds=plan_ttl_seconds,
             max_resume_count=max_resume_count,
             redactor=self.redactor,
+            worker_id=worker_id,
+            step_timeout_seconds=step_timeout_seconds,
+            plan_timeout_seconds=plan_timeout_seconds,
+            max_tool_calls=max_tool_calls,
+            max_retry_attempts=max_retry_attempts,
+            max_output_bytes=max_output_bytes,
+            max_queued_steps=max_queued_steps,
+            read_max_attempts=read_max_attempts,
+            cancellation_token=cancellation_token,
+            checkpoint=checkpoint,
+            circuit_breakers=circuit_breakers,
+            heartbeat=heartbeat,
         )
 
     def run(

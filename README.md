@@ -4,9 +4,10 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：阶段 21 已为售后退款副作用增加持久化幂等键、原子抢占、
-> 执行租约、失败重试、崩溃恢复和人工补偿状态。当前完整离线回归共 68 项，
-> 不访问真实或本地模型服务。
+> 当前二次开发进度：阶段 22 已完成计划运行治理、Alembic 迁移、OIDC/JWT 认证
+> 端口、业务 Provider 与回调、独立补偿、规则版本、API/运维治理、数据生命周期和
+> 离线质量门禁。当前完整离线回归共 144 项，不访问真实或本地模型、真实 OIDC 或
+> 真实业务供应商。
 
 ## 项目定位
 
@@ -22,7 +23,7 @@
 默认 SQL 模式会把演示订单、商品和物流种子写入 SQLite/PostgreSQL，退款状态、
 售后工单和副作用操作日志均真实持久化。种子数据可通过
 `COMMERCE_SEED_DEMO_DATA=false` 关闭，以接入真实业务数据。仓库仍是教学与作品
-演示项目，生产使用前应替换演示 Token、密钥管理、数据库迁移和组织级身份系统。
+演示项目，生产使用前应关闭演示数据、执行数据库迁移，并接入密钥管理和组织级身份系统。
 
 ## 当前核心能力
 
@@ -61,6 +62,11 @@
 10. 跨步骤结果引用、有限并发、计划身份、确认恢复、过期/取消和跨模式权限保护；
 11. 独立 Plan Repository、计划版本与乐观锁、步骤投影、审计时间线和历史 API；
 12. 售后副作用事务日志、持久化幂等、原子抢占、租约恢复、重试耗尽和补偿登记。
+13. 计划运行记录、逐步骤检查点、执行租约、fencing、超时、取消、预算、背压与熔断；
+14. Alembic 升降级、静态/OIDC 认证端口、Provider 契约、签名回调去重和独立补偿操作；
+15. 风险规则 draft/active/retired、试运行、激活、回滚和工单规则版本留痕；
+16. 统一错误码、请求追踪、cursor 分页、持久化幂等键、分层限流、就绪诊断、备份清理
+    以及 40 条固定计划案例的确定性 CI 门禁。
 
 ## 二次开发架构
 
@@ -77,13 +83,15 @@ Application Factory → TraceContext → Guardrails
                                   ┌───────────────┴───────────────┐
                                   ▼                               ▼
                                 ReAct                    Plan-and-Execute
-                                                   （依赖/并发/确认/恢复）
+                                             （检查点/租约/超时/取消/预算/恢复）
                                   └───────────────┬───────────────┘
                                                   ├──────────────→ ModelGateway
                                                   │              （超时/重试/限流/指标）
                                                   ├──────────────→ PlanLifecycleService
                                                   │              → PlanRepository
                                                   │                （JSON / SQL / 审计）
+                                                  ├──────────────→ PlanRunService
+                                                  │              （租约 / fencing / 检查点）
                                                   ▼
                                          实例级 ToolRegistry
                                    （Multi-Agent 使用子 Agent 白名单）
@@ -98,8 +106,8 @@ Application Factory → TraceContext → Guardrails
                          │                 （JSON / SQL / 乐观锁）
                          ▼                          │
                  自动批准 / 人工审批                ▼
-                                         幂等抢占 → 退款适配器
-                                         → 重试 / 恢复 / 补偿登记
+                                         幂等抢占 → Provider 契约
+                                         → 重试 / 恢复 / 独立补偿操作
 
 所有核心路径 ──emit──> EventBus
                          ├─ JSONL 日志
@@ -344,6 +352,26 @@ SQL 后端用唯一幂等键和 `WHERE version = ?` 条件更新处理跨进程�
 `pending → completed/failed` 补偿状态，全部抢占、失败、完成、回放和补偿变更都会发送
 EventBus 事件并保留工单审计记录。
 
+### 11. 计划执行治理与工程化闭环
+
+阶段 22 为每次计划执行建立独立运行记录，使用 worker、租约和递增 fencing token
+控制唯一写入者；步骤进入运行态和终态时都会保存检查点及追加式尝试证据。执行器统一
+处理步骤/计划超时、实时取消、只读重试、副作用禁止通用重试、并发组、输出上限、
+总预算、背压和熔断，恢复时复用已完成步骤。
+
+SQL 结构由 Alembic 统一管理，认证支持静态 Token 与可注入 JWKS 的 OIDC JWT；
+订单、物流、退款和补偿通过 Provider 协议隔离，回调必须通过 HMAC 签名并按事件 ID
+持久化去重。补偿操作、风险规则版本和管理写接口幂等结果均有独立 SQL/JSON 状态。
+
+API 增加请求/Trace 标识、统一错误码、cursor 分页、用户/管理员/高成本端点限流、
+`/ready`、脱敏诊断和计划运行视图。维护命令默认 dry-run，并保护活跃计划、运行中
+操作和未完成补偿；SQLite 备份恢复在写入前后执行完整性检查。
+
+离线门禁把 40 条固定计划案例逐条映射到可执行的确定性测试，并聚合 12 项指标；
+安全相关指标必须为 `1.0`。
+CI 同时覆盖 Python 3.10–3.12、SQLite/PostgreSQL 迁移、覆盖率、OpenAPI、SBOM、
+依赖审计和容器扫描。
+
 ## 项目结构
 
 ```text
@@ -371,31 +399,40 @@ ecom-service-agent/
 │   │   ├── strategies/
 │   │   │   ├── selector.py               # 确定性策略选择
 │   │   │   ├── models.py                 # 计划、步骤与生命周期模型
-│   │   │   ├── executor.py               # 依赖、并发、确认与恢复执行器
+│   │   │   ├── executor.py               # 依赖、超时、取消、预算与恢复执行器
+│   │   │   ├── policies.py               # 工具策略、资源预算与熔断器
 │   │   │   └── plan_execute.py           # 规划、持久化与结果合成
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
 │   ├── api.py                            # REST 与 WebSocket 路由注册
 │   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
-│   ├── infrastructure/                   # 模型网关、数据库与 SQL 仓储适配器
-│   ├── repositories/                     # 会话/计划仓储协议与 JSON/SQL 适配器
+│   ├── infrastructure/                   # 模型网关、数据库、Alembic 与 SQL 适配器
+│   ├── repositories/                     # 会话/计划运行/规则的 JSON/SQL 仓储
 │   ├── services/
 │   │   ├── commerce.py                   # 订单、商品与物流应用服务
-│   │   └── plans.py                      # 计划生命周期、旧快照迁移与 API 适配
+│   │   ├── plans.py                      # 计划生命周期、旧快照迁移与 API 适配
+│   │   ├── plan_runs.py                  # 运行租约、检查点与 fencing
+│   │   ├── providers.py                  # 业务 Provider、回调验证与去重
+│   │   ├── compensations.py              # 独立补偿操作与 exactly-once
+│   │   ├── idempotency.py                # 管理写接口幂等结果回放
+│   │   └── data_maintenance.py           # 数据保留、备份、恢复与脱敏导出
 │   ├── observability/                    # EventBus、Trace、日志和指标
 │   ├── security/                         # Token RBAC、注入防护和脱敏
 │   ├── multi_agent/                      # Router、子 Agent、工具隔离与计划恢复
-│   ├── evaluation/                       # 沙箱、Trace、指标与 LLM Judge
+│   ├── evaluation/                       # 沙箱、故障注入、确定性指标与 LLM Judge
 │   └── scripts/
 │       ├── build_kb_index.py             # 构建 Policy RAG 索引
 │       ├── review_after_sale.py           # 独立人工审批入口
+│       ├── manage_migrations.py          # Alembic 统一迁移入口
+│       ├── maintain_data.py              # 清理与 SQLite 备份入口
+│       ├── doctor.py                     # 就绪、迁移与运行租约诊断
 │       ├── run_eval.py                   # 离线评估
 │       └── run_api.py                    # API 启动入口
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
-├── tests/                                # 原有测试和阶段 21 可靠性回归
-└── docs/                                 # 第 1–21 期教学与二次开发文档
+├── tests/                                # 原有测试和阶段 22 治理回归
+└── docs/                                 # 第 1–22 期教学与二次开发文档
 ```
 
 ## 快速开始
@@ -629,7 +666,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归共 68 项，不会调用外部模型或本地模型服务：
+当前完整离线回归共 144 项，不会调用外部模型或本地模型、OIDC 和 Provider 服务：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -670,8 +707,15 @@ ruff format --check .
 - JSON/SQL 售后操作日志、唯一幂等键、并发原子抢占和版本冲突；
 - 失败重试、重试耗尽、过期租约恢复和外部已生效结果收敛；
 - 操作用户隔离、管理员恢复权限、管理台审计和人工补偿状态流转；
+- 步骤/计划超时、实时取消、依赖跳过、只读重试、副作用阻断、配额和熔断；
+- JSON/SQL 运行租约、崩溃接管、fencing、检查点和追加式尝试证据；
+- OIDC JWT 校验、JWKS 刷新、Alembic 空库升级/兼容升级/降级；
+- Provider 超时与错误映射、签名回调去重、独立补偿 exactly-once；
+- 规则版本 diff/试运行/激活/回滚、持久化管理幂等键和安全启动；
+- 就绪诊断、分层限流、cursor 分页、数据清理、事件保留及 SQLite 备份恢复；
+- 40 条固定计划案例、12 项确定性指标、OpenAPI 与迁移漂移门禁；
 - 工具 Schema 与 Pydantic 参数契约一致性；
-- GitHub Actions Ruff 与完整离线回归。
+- GitHub Actions Python 3.10–3.12、SQLite/PostgreSQL、覆盖率、SBOM 与安全扫描。
 
 仅运行计划策略专项回归：
 
@@ -679,7 +723,24 @@ ruff format --check .
 python -m unittest tests.test_strategy_development -v
 python -m unittest tests.test_plan_repository -v
 python -m unittest tests.test_side_effect_reliability -v
+python -m unittest tests.test_execution_governance -v
+python -m unittest tests.test_plan_recovery -v
+python -m unittest tests.test_auth_and_migrations -v
+python -m unittest tests.test_provider_and_policy_governance -v
+python -m unittest tests.test_stage_22_quality_gate -v
+python -m app.scripts.validate_plan_quality
 ```
+
+数据库与运维验收：
+
+```bash
+python -m app.scripts.manage_migrations upgrade
+python -m app.scripts.manage_migrations check
+python -m app.scripts.doctor
+python -m app.scripts.maintain_data cleanup
+```
+
+`cleanup` 默认只预览；只有显式增加 `--apply` 才会清理超过保留期且已进入终态的数据。
 
 运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
 
@@ -717,7 +778,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
-### 第 16–21 期：确定性计划与副作用执行演进
+### 第 16–22 期：确定性计划与副作用执行演进
 
 - 第 16 期引入强类型工具契约和基础 Plan-and-Execute；
 - 第 17 期补齐跨步骤引用、计划身份和精确确认恢复；
@@ -725,6 +786,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由。
 - 第 20 期引入独立 Plan Repository、乐观锁、历史 API 和审计时间线。
 - 第 21 期为售后副作用增加持久化幂等、原子抢占、租约恢复和补偿状态。
+- 第 22 期完成计划运行治理、迁移与认证、Provider/规则治理、运维诊断和离线质量闭环。
 
 | 阶段 | 主题 | 状态 |
 |---|---|---|
@@ -751,6 +813,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 阶段 19 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
 | 阶段 20 | 独立计划仓储、乐观锁与审计时间线 | 已完成 |
 | 阶段 21 | 售后副作用可靠执行、恢复与补偿 | 已完成 |
+| 阶段 22 | 计划执行治理、数据安全、业务适配与工程化闭环 | 已完成 |
 
 ## 相关文档
 
@@ -772,24 +835,34 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第19期：Multi-Agent 计划执行与工具隔离](docs/第19期-Multi-Agent计划执行与工具隔离.md)
 - [第20期：独立计划仓储与审计](docs/第20期-独立计划仓储与审计.md)
 - [第21期：售后副作用可靠执行](docs/第21期-售后副作用可靠执行.md)
+- [第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)
 
 ## 后续路线
 
-阶段 21 已完成售后副作用可靠执行。当前压缩路线只保留最后一个阶段：
+阶段 22 已将当前能够离线开发和验证的二次开发内容收口到四个工作包：
 
-1. 阶段 22：增加步骤超时、取消传播和资源配额，并将固定计划数据集纳入
-   调度、恢复与路由一致性质量门禁。
+1. **计划运行时治理**：完整步骤状态、逐步骤检查点、运行租约、fencing、步骤/计划
+   超时、实时取消传播、工具策略、有限重试、熔断、资源预算、背压和崩溃接管；
+2. **数据、安全与业务适配**：Alembic 迁移、静态 Token/OIDC AuthProvider、订单/
+   物流/退款/补偿 Provider、回调去重、补偿执行闭环以及风险与政策版本治理；
+3. **API、运维与数据生命周期**：统一错误码、请求追踪、分页、幂等与端点限流、
+   配置分层、安全启动、就绪探针、管理诊断、数据保留、备份恢复和审计；
+4. **故障评估与 CI 门禁**：固定计划数据集、可控故障注入、确定性可靠性指标、
+   Python 版本矩阵、SQLite/PostgreSQL、迁移升级/降级、SBOM 和依赖安全检查。
+
+阶段 22 实际新增 76 项离线测试，完整回归由 68 项增至 144 项；固定计划数据集
+40 条，12 项确定性指标均为 `1.0`。详细实现和验收边界见
+[第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)。
 
 ## 当前边界
 
-原二次开发规划已完成。以下是演示项目与真实生产系统之间仍需由部署方替换的边界，
-不属于本轮规划的未完成功能：
+阶段 22 已完成通用 OIDC、Alembic、Provider、补偿执行和规则治理的代码端口、Fake
+适配器及离线契约测试。以下内容仍必须由真实部署环境提供，不能由当前仓库独立完成：
 
-- API Token 映射来自环境变量，生产应接入 OAuth2/OIDC、密钥轮换和组织身份；
-- 数据库表由 SQLAlchemy 自动创建，生产应纳入 Alembic 等受控迁移流程；
-- 真实退款供应商必须持久化并识别传入的幂等键；当前 SQL 演示适配器以订单退款
-  唯一状态完成收敛，JSON/Mock 适配器不代表跨系统事务保证；
-- 补偿模块记录人工处理状态和审计证据，不会自动调用支付冲正接口；
+- 真实组织 OIDC tenant、issuer、scope、单点登录和密钥轮换联调；
+- 真实订单、物流、退款和支付冲正供应商的账号、字段、签名及凭据；
+- 云 KMS、Secrets Manager、WAF、网关限流和生产网络策略；
 - `COMMERCE_SEED_DEMO_DATA=true` 仅用于演示，真实环境应关闭并接入业务主数据；
-- 风险规则和政策文档是示例内容，上线前需要法务、风控和客服运营共同审核；
-- 本次验收只使用 Fake 客户端，不包含真实模型质量、费用、网络和供应商压测。
+- 风险规则和政策文档仍需法务、风控和客服运营正式审核；
+- 真实模型质量、费用、供应商故障、生产流量和 SLA 压测；
+- 生产备份恢复、跨区域容灾和正式发布流程。

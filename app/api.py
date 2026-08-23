@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Callable
 from pathlib import Path
 from uuid import uuid4
@@ -13,31 +14,56 @@ from fastapi import (
     Header,
     HTTPException,
     Query,
+    Request,
     WebSocket,
     WebSocketDisconnect,
 )
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 from app.agent.after_sale import AfterSaleService
 from app.agent.strategies.models import PlanStatus
 from app.bootstrap import ApplicationRuntime
 from app.config.settings import Settings, settings
+from app.infrastructure.migrations.runtime import migration_status
 from app.observability import QueueEventSubscriber, TraceContext
+from app.repositories.plan_runs import build_plan_run_repository
 from app.repositories.plans import (
     PlanRecord,
     PlanVersionConflictError,
     build_plan_repository,
 )
+from app.repositories.policies import (
+    RiskRuleGovernanceService,
+    RiskRuleSchema,
+    build_risk_rule_repository,
+)
 from app.repositories.session import build_session_repository
 from app.security import AuthContext
 from app.services.commerce import CommerceService
+from app.services.data_maintenance import DataMaintenanceService
+from app.services.idempotency import IdempotencyConflictError
 from app.services.plans import (
     PlanNotCancellableError,
     PlanNotFoundError,
     PlanSessionService,
 )
+from app.services.providers import (
+    HmacWebhookVerifier,
+    WebhookEvent,
+    build_webhook_deduplicator,
+)
 from app.web.admin import render_admin_page
-from app.web.schemas import ChatRequest, CompensationRequest, ReviewRequest
+from app.web.middleware import install_api_middleware
+from app.web.schemas import (
+    ChatRequest,
+    CompensationExecuteRequest,
+    CompensationOperationRequest,
+    CompensationRequest,
+    ReviewRequest,
+    RiskRuleDraftRequest,
+    RiskRuleDryRunRequest,
+)
 from app.web.services import (
     AgentFactory,
     ApiServices,
@@ -65,6 +91,106 @@ def _plan_record_payload(record: PlanRecord) -> dict:
     }
 
 
+def _cursor_page(
+    items: list, cursor: str, limit: int, identity
+) -> tuple[list, str | None]:
+    start = 0
+    if cursor:
+        for index, item in enumerate(items):
+            if identity(item) == cursor:
+                start = index + 1
+                break
+        else:
+            raise HTTPException(status_code=422, detail="无效分页 cursor")
+    page = items[start : start + limit]
+    next_cursor = identity(page[-1]) if start + limit < len(items) and page else None
+    return page, next_cursor
+
+
+def _idempotent_write(
+    services: ApiServices,
+    *,
+    scope: str,
+    key: str,
+    payload: dict,
+    operation: Callable[[], dict],
+) -> dict:
+    try:
+        response, replayed = services.idempotency.execute(
+            scope, key, payload, operation
+        )
+    except IdempotencyConflictError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {**response, "idempotent_replay": replayed}
+
+
+def _install_openapi_contract(app: FastAPI) -> None:
+    def governed_openapi() -> dict:
+        if app.openapi_schema is not None:
+            return app.openapi_schema
+        schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=(
+                "阶段 22 API：所有 HTTP 响应返回 X-Request-ID、X-Trace-ID 和"
+                "限流头；管理写接口使用 Idempotency-Key。"
+            ),
+            routes=app.routes,
+        )
+        components = schema.setdefault("components", {})
+        schemas = components.setdefault("schemas", {})
+        schemas["ErrorEnvelope"] = {
+            "type": "object",
+            "required": [
+                "success",
+                "error_code",
+                "detail",
+                "request_id",
+                "trace_id",
+            ],
+            "properties": {
+                "success": {"type": "boolean", "const": False},
+                "error_code": {"type": "string"},
+                "detail": {},
+                "request_id": {"type": "string"},
+                "trace_id": {"type": "string"},
+            },
+        }
+        components.setdefault("securitySchemes", {})["ApiKeyAuth"] = {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+        }
+        rate_response = {
+            "description": "请求超过用户、管理员或高成本端点的滑动窗口限制",
+            "headers": {
+                "Retry-After": {"schema": {"type": "integer"}},
+                "X-RateLimit-Limit": {"schema": {"type": "integer"}},
+                "X-RateLimit-Remaining": {"schema": {"type": "integer"}},
+                "X-Request-ID": {"schema": {"type": "string"}},
+                "X-Trace-ID": {"schema": {"type": "string"}},
+            },
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorEnvelope"}
+                }
+            },
+        }
+        for path, item in schema.get("paths", {}).items():
+            for method, operation in item.items():
+                if method not in {"get", "post", "put", "patch", "delete"}:
+                    continue
+                operation.setdefault("responses", {})["429"] = rate_response
+                if path.startswith("/v1/") and not path.startswith(
+                    "/v1/provider/webhooks/"
+                ):
+                    operation.setdefault("security", [{"ApiKeyAuth": []}])
+        app.openapi_schema = schema
+        return schema
+
+    app.openapi = governed_openapi
+
+
 def create_app(
     config: Settings | None = None,
     *,
@@ -82,6 +208,7 @@ def create_app(
         commerce_service=commerce_service,
     )
     app = FastAPI(title="小夕智能客服 API", version="2.0.0")
+    install_api_middleware(app, services.config)
     app.state.runtime = services.runtime
     app.state.after_sale_service = services.after_sale
     app.state.commerce_service = services.commerce
@@ -109,6 +236,7 @@ def create_app(
     register_commerce_routes(app, services, require)
     register_admin_routes(app, services, require)
     register_websocket_route(app, services)
+    _install_openapi_contract(app)
     return app
 
 
@@ -126,6 +254,58 @@ def register_public_routes(
             "version": app.version,
             "persistence": services.config.persistence_backend,
         }
+
+    @app.get("/ready")
+    def ready() -> JSONResponse:
+        checks: dict[str, dict] = {}
+        try:
+            migration = migration_status(services.config.database_url)
+            checks["migration"] = migration
+        except Exception as exc:  # noqa: BLE001 - 只返回脱敏类型
+            checks["migration"] = {
+                "up_to_date": False,
+                "error_code": f"MIGRATION_CHECK_{type(exc).__name__.upper()}",
+            }
+        checks["auth"] = {
+            "ok": services.config.auth_mode == "static"
+            or bool(services.config.oidc_jwks_path),
+            "mode": services.config.auth_mode,
+        }
+        checks["provider"] = {
+            "ok": services.config.provider_mode == "mock"
+            or (
+                services.runtime.compensation_provider is not None
+                and bool(services.config.provider_webhook_secret)
+            ),
+            "mode": services.config.provider_mode,
+            "compensation_configured": (
+                services.runtime.compensation_provider is not None
+            ),
+        }
+        checks["rules"] = {
+            "ok": Path(services.config.risk_rules_path).is_file(),
+        }
+        required = [
+            checks["auth"]["ok"],
+            checks["provider"]["ok"],
+            checks["rules"]["ok"],
+        ]
+        migration_ok = bool(checks["migration"].get("up_to_date"))
+        ready_state = all(required) and (
+            migration_ok or services.config.database_auto_create
+        )
+        degraded = ready_state and not migration_ok
+        return JSONResponse(
+            status_code=200 if ready_state else 503,
+            content={
+                "status": "degraded"
+                if degraded
+                else "ready"
+                if ready_state
+                else "unavailable",
+                "checks": checks,
+            },
+        )
 
     @app.post("/v1/chat")
     def chat(
@@ -159,6 +339,49 @@ def register_public_routes(
                 "X-Accel-Buffering": "no",
             },
         )
+
+    @app.post("/v1/provider/webhooks/{provider}")
+    async def provider_webhook(
+        provider: str,
+        request: Request,
+        signature: str = Header(default="", alias="X-Provider-Signature"),
+    ) -> dict:
+        """签名验证、结构标准化与持久化去重，不触发隐式副作用。"""
+        if not services.config.provider_webhook_secret:
+            raise HTTPException(status_code=503, detail="Provider 回调尚未配置")
+        raw = await request.body()
+        if not HmacWebhookVerifier(services.config.provider_webhook_secret).verify(
+            raw, signature
+        ):
+            raise HTTPException(status_code=401, detail="Provider 回调签名无效")
+        try:
+            payload = json.loads(raw)
+            event_id = str(payload["event_id"])
+            event_type = str(payload["event_type"])
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            raise HTTPException(
+                status_code=422, detail="Provider 回调格式无效"
+            ) from exc
+        if not event_id or not event_type or not isinstance(payload, dict):
+            raise HTTPException(status_code=422, detail="Provider 回调格式无效")
+        accepted = build_webhook_deduplicator(services.config).accept(
+            WebhookEvent(
+                provider=provider[:80],
+                event_id=event_id[:128],
+                event_type=event_type[:80],
+                payload=payload,
+            )
+        )
+        services.runtime.event_bus.emit(
+            "provider.webhook.accepted" if accepted else "provider.webhook.duplicate",
+            source="provider_webhook",
+            data={
+                "provider": provider[:80],
+                "event_id": event_id[:128],
+                "event_type": event_type[:80],
+            },
+        )
+        return {"accepted": accepted, "duplicate": not accepted}
 
 
 def register_websocket_route(app: FastAPI, services: ApiServices) -> None:
@@ -283,9 +506,24 @@ def register_session_routes(
         )
         plan_service = PlanSessionService(plan_repository, repository)
         try:
-            execution = plan_service.cancel(
-                reason=f"用户 {context.user_id} 通过 API 取消计划",
-            )
+            execution = plan_service.get_latest()
+            reason = f"用户 {context.user_id} 通过 API 取消计划"
+            if execution.status == "running":
+                run = build_plan_run_repository(
+                    services.config,
+                    session_path=reference,
+                    user_id=context.user_id,
+                ).request_cancel(execution.plan_id, reason)
+                if run is None:
+                    raise PlanNotCancellableError("运行计划没有可取消的有效执行租约")
+                execution = execution.model_copy(
+                    update={
+                        "cancellation_requested_at": run.cancellation_requested_at,
+                        "status_reason": reason,
+                    }
+                )
+            else:
+                execution = plan_service.cancel(reason=reason)
         except PlanNotFoundError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except PlanNotCancellableError as exc:
@@ -308,6 +546,7 @@ def register_session_routes(
         session_id: str = "",
         status: PlanStatus | None = None,
         limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         context: AuthContext = Depends(require("session:read")),
     ) -> dict:
         reference = (
@@ -336,10 +575,16 @@ def register_session_routes(
                 pass
         records = plan_service.list(
             status=status,
-            limit=limit,
+            limit=200,
         )
-        plans = [_plan_record_payload(record) for record in records]
-        return {"count": len(plans), "plans": plans}
+        page, next_cursor = _cursor_page(
+            records,
+            cursor,
+            limit,
+            lambda item: item.execution.plan_id,
+        )
+        plans = [_plan_record_payload(record) for record in page]
+        return {"count": len(plans), "plans": plans, "next_cursor": next_cursor}
 
     @app.get("/v1/plans/{plan_id}")
     def get_plan_detail(
@@ -381,10 +626,25 @@ def register_session_routes(
         if record is None:
             raise HTTPException(status_code=404, detail="计划不存在")
         try:
-            execution = PlanSessionService(repository).cancel(
-                plan_id=plan_id,
-                reason=f"用户 {context.user_id} 通过 API 取消计划",
-            )
+            service = PlanSessionService(repository)
+            execution = service.get(plan_id)
+            reason = f"用户 {context.user_id} 通过 API 取消计划"
+            if execution.status == "running":
+                run = build_plan_run_repository(
+                    services.config,
+                    session_path=record.session_key,
+                    user_id=context.user_id,
+                ).request_cancel(plan_id, reason)
+                if run is None:
+                    raise PlanNotCancellableError("运行计划没有可取消的有效执行租约")
+                execution = execution.model_copy(
+                    update={
+                        "cancellation_requested_at": run.cancellation_requested_at,
+                        "status_reason": reason,
+                    }
+                )
+            else:
+                execution = service.cancel(plan_id=plan_id, reason=reason)
         except PlanNotCancellableError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except PlanVersionConflictError as exc:
@@ -522,6 +782,65 @@ def register_admin_routes(
             raise HTTPException(status_code=409, detail=result)
         return result
 
+    @app.post("/v1/admin/compensations")
+    def request_compensation_operation(
+        request: CompensationOperationRequest,
+        idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        if not idempotency_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        if services.compensation is None:
+            raise HTTPException(status_code=409, detail="当前后端未启用独立补偿仓储")
+        payload = request.model_dump()
+        return _idempotent_write(
+            services,
+            scope="compensation.request",
+            key=idempotency_key,
+            payload=payload,
+            operation=lambda: {
+                "operation": services.compensation.request(**payload).model_dump(
+                    mode="json"
+                )
+            },
+        )
+
+    @app.post("/v1/admin/compensations/{idempotency_key}/execute")
+    def execute_compensation_operation(
+        idempotency_key: str,
+        request: CompensationExecuteRequest,
+        _request_key: str = Header(default="", alias="Idempotency-Key"),
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        if not _request_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        if services.compensation is None:
+            raise HTTPException(status_code=409, detail="当前后端未启用独立补偿仓储")
+        return _idempotent_write(
+            services,
+            scope=f"compensation.execute:{idempotency_key}",
+            key=_request_key,
+            payload=request.model_dump(),
+            operation=lambda: {
+                "operation": services.compensation.execute(
+                    idempotency_key,
+                    worker_id=request.worker_id,
+                ).model_dump(mode="json")
+            },
+        )
+
+    @app.get("/v1/admin/compensations/{idempotency_key}")
+    def get_compensation_operation(
+        idempotency_key: str,
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        if services.compensation is None:
+            raise HTTPException(status_code=404, detail="补偿仓储不可用")
+        item = services.compensation.repository.get(idempotency_key)
+        if item is None:
+            raise HTTPException(status_code=404, detail="补偿操作不存在")
+        return {"operation": item.model_dump(mode="json")}
+
     @app.post("/v1/admin/after-sales/{case_id}/review")
     def review(
         case_id: str,
@@ -551,6 +870,7 @@ def register_admin_routes(
     def admin_plans(
         status: PlanStatus | None = None,
         limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("metrics:read")),
     ) -> dict:
         repository = build_plan_repository(
@@ -559,9 +879,15 @@ def register_admin_routes(
             user_id=None,
             all_sessions=True,
         )
-        records = repository.list(status=status, limit=limit)
-        plans = [_plan_record_payload(record) for record in records]
-        return {"count": len(plans), "plans": plans}
+        records = repository.list(status=status, limit=200)
+        page, next_cursor = _cursor_page(
+            records,
+            cursor,
+            limit,
+            lambda item: item.execution.plan_id,
+        )
+        plans = [_plan_record_payload(record) for record in page]
+        return {"count": len(plans), "plans": plans, "next_cursor": next_cursor}
 
     @app.get("/v1/admin/plans/{plan_id}")
     def admin_plan_detail(
@@ -582,6 +908,183 @@ def register_admin_routes(
             item.model_dump(mode="json") for item in repository.history(plan_id)
         ]
         return payload
+
+    @app.get("/v1/admin/plan-runs")
+    def admin_plan_runs(
+        status: str | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
+        _context: AuthContext = Depends(require("metrics:read")),
+    ) -> dict:
+        repository = build_plan_run_repository(
+            services.config,
+            session_path=None,
+            user_id=None,
+        )
+        runs = repository.list(status=status, limit=200)
+        page, next_cursor = _cursor_page(
+            runs,
+            cursor,
+            limit,
+            lambda item: item.run_id,
+        )
+        return {
+            "count": len(page),
+            "runs": [item.model_dump(mode="json") for item in page],
+            "next_cursor": next_cursor,
+        }
+
+    @app.get("/v1/admin/diagnostics")
+    def diagnostics(
+        _context: AuthContext = Depends(require("metrics:read")),
+    ) -> dict:
+        try:
+            migration = migration_status(services.config.database_url)
+        except Exception as exc:  # noqa: BLE001
+            migration = {
+                "up_to_date": False,
+                "error_code": f"MIGRATION_CHECK_{type(exc).__name__.upper()}",
+            }
+        try:
+            runs = build_plan_run_repository(
+                services.config,
+                session_path=None,
+                user_id=None,
+            ).list(status="running", limit=20)
+            plan_runs = {"ok": True, "error_code": ""}
+        except Exception as exc:  # noqa: BLE001
+            runs = []
+            plan_runs = {
+                "ok": False,
+                "error_code": f"PLAN_RUN_CHECK_{type(exc).__name__.upper()}",
+            }
+        return {
+            "status": (
+                "ok" if migration.get("up_to_date") and plan_runs["ok"] else "degraded"
+            ),
+            "config": services.config.safe_summary(),
+            "migration": migration,
+            "active_runs": [item.model_dump(mode="json") for item in runs],
+            "plan_runs": plan_runs,
+            "circuits": services.runtime.circuit_breakers.snapshot(),
+            "provider": {
+                "mode": services.config.provider_mode,
+                "webhook_verifier_configured": bool(
+                    services.config.provider_webhook_secret
+                ),
+            },
+        }
+
+    @app.get("/v1/admin/risk-rules")
+    def list_risk_rules(
+        _context: AuthContext = Depends(require("metrics:read")),
+    ) -> dict:
+        items = build_risk_rule_repository(services.config).list()
+        return {
+            "count": len(items),
+            "rules": [item.model_dump(mode="json") for item in items],
+        }
+
+    @app.post("/v1/admin/risk-rules/drafts")
+    def create_risk_rule_draft(
+        request: RiskRuleDraftRequest,
+        idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+        context: AuthContext = Depends(require("rules:manage")),
+    ) -> dict:
+        if not idempotency_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        repository = build_risk_rule_repository(services.config)
+        rules = RiskRuleSchema.model_validate(request.rules)
+
+        def create_draft() -> dict:
+            existing = repository.get(rules.version)
+            item = existing or repository.save_draft(rules, context.user_id)
+            return {
+                "rule": item.model_dump(mode="json"),
+                "resource_replay": existing is not None,
+            }
+
+        return _idempotent_write(
+            services,
+            scope="risk-rule.draft",
+            key=idempotency_key,
+            payload=rules.model_dump(mode="json"),
+            operation=create_draft,
+        )
+
+    @app.post("/v1/admin/risk-rules/{version}/dry-run")
+    def dry_run_risk_rule(
+        version: str,
+        request: RiskRuleDryRunRequest,
+        _context: AuthContext = Depends(require("rules:manage")),
+    ) -> dict:
+        service = RiskRuleGovernanceService(build_risk_rule_repository(services.config))
+        return service.dry_run(version, request.cases)
+
+    @app.post("/v1/admin/risk-rules/{version}/activate")
+    def activate_risk_rule(
+        version: str,
+        idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+        context: AuthContext = Depends(require("rules:manage")),
+    ) -> dict:
+        if not idempotency_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        repository = build_risk_rule_repository(services.config)
+
+        def activate() -> dict:
+            current = repository.active()
+            if current and current.version == version:
+                return {
+                    "rule": current.model_dump(mode="json"),
+                    "resource_replay": True,
+                }
+            item = repository.activate(version, context.user_id)
+            return {"rule": item.model_dump(mode="json"), "resource_replay": False}
+
+        return _idempotent_write(
+            services,
+            scope=f"risk-rule.activate:{version}",
+            key=idempotency_key,
+            payload={"version": version},
+            operation=activate,
+        )
+
+    @app.post("/v1/admin/risk-rules/rollback")
+    def rollback_risk_rule(
+        idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+        context: AuthContext = Depends(require("rules:manage")),
+    ) -> dict:
+        if not idempotency_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        repository = build_risk_rule_repository(services.config)
+        return _idempotent_write(
+            services,
+            scope="risk-rule.rollback",
+            key=idempotency_key,
+            payload={},
+            operation=lambda: {
+                "rule": repository.rollback(context.user_id).model_dump(mode="json")
+            },
+        )
+
+    @app.post("/v1/admin/maintenance/cleanup")
+    def cleanup_data(
+        apply: bool = False,
+        idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+        context: AuthContext = Depends(require("maintenance:run")),
+    ) -> dict:
+        if not idempotency_key:
+            raise HTTPException(status_code=422, detail="缺少 Idempotency-Key")
+        return _idempotent_write(
+            services,
+            scope="maintenance.cleanup",
+            key=idempotency_key,
+            payload={"apply": apply},
+            operation=lambda: DataMaintenanceService(services.config).cleanup(
+                dry_run=not apply,
+                actor=context.user_id,
+            ),
+        )
 
     @app.get("/admin", response_class=HTMLResponse)
     def admin() -> str:

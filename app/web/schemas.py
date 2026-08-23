@@ -31,3 +31,22 @@ class CompensationRequest(BaseModel):
 
     status: Literal["pending", "completed", "failed"]
     note: str = ""
+
+
+class RiskRuleDraftRequest(BaseModel):
+    rules: dict
+
+
+class RiskRuleDryRunRequest(BaseModel):
+    cases: list[dict] = Field(default_factory=list, max_length=1000)
+
+
+class CompensationOperationRequest(BaseModel):
+    source_operation_id: str = Field(min_length=1, max_length=64)
+    case_id: str = Field(min_length=1, max_length=64)
+    user_id: str = Field(min_length=1, max_length=80)
+    action: str = Field(min_length=1, max_length=80)
+
+
+class CompensationExecuteRequest(BaseModel):
+    worker_id: str = Field(default="api-worker", min_length=1, max_length=128)

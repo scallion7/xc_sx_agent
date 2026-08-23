@@ -20,6 +20,7 @@ from app.agent.after_sale import (
 from app.agent.memory import MemoryManager
 from app.agent.skills import SkillManager
 from app.agent.strategies import PlanExecutionResult
+from app.agent.strategies.policies import CancellationToken
 from app.agent.summarizer import summarize
 from app.agent.tools.knowledge import KnowledgeService
 from app.agent.tools.registry import (
@@ -28,6 +29,7 @@ from app.agent.tools.registry import (
     create_default_tool_registry,
 )
 from app.config.settings import Settings, settings
+from app.infrastructure.database import configure_database
 from app.infrastructure.model_gateway import (
     ModelGateway,
     OpenAIModelGateway,
@@ -48,7 +50,9 @@ from app.observability import (
     current_trace_id,
 )
 from app.repositories.mock_commerce import MockCommerceRepository
+from app.repositories.plan_runs import PlanRun, build_plan_run_repository
 from app.repositories.plans import PlanRepository, build_plan_repository
+from app.repositories.policies import build_risk_rule_repository
 from app.repositories.session import (
     SessionRepository,
     build_session_repository,
@@ -56,6 +60,7 @@ from app.repositories.session import (
 from app.schemas.response import CustomerServiceResponse, IntentType
 from app.security import GuardrailEngine
 from app.services.commerce import CommerceService
+from app.services.plan_runs import PlanRunService
 from app.services.plans import PlanLifecycleService, PlanNotCancellableError
 
 
@@ -85,6 +90,10 @@ class BaseConversationAgent(ABC):
         rate_limiter: SlidingWindowRateLimiter | None = None,
     ):
         self.config = config or settings
+        configure_database(
+            self.config.database_url,
+            auto_create=self.config.database_auto_create,
+        )
         self.event_bus = event_bus or EventBus()
         self.guardrails = guardrails or GuardrailEngine.from_config(self.config)
         self.model_gateway = model_gateway or OpenAIModelGateway.from_config(
@@ -148,12 +157,19 @@ class BaseConversationAgent(ABC):
                 self.config.after_sale_operation_path
                 or case_path.with_name("after_sale_operations.json"),
             )
+        risk_rule_repository = build_risk_rule_repository(self.config)
+
+        def active_risk_rules() -> dict | None:
+            active = risk_rule_repository.active()
+            return active.rules.model_dump() if active else None
+
         self.after_sale_service = after_sale_service or AfterSaleService(
             repository=after_sale_repository,
             risk_router=RiskRouter(
                 self.config.after_sale_auto_approve_max_amount,
                 self.config.after_sale_high_risk_amount,
                 self.config.risk_rules_path,
+                rules_loader=active_risk_rules,
             ),
             commerce_service=self.commerce_service,
             operation_repository=after_sale_operation_repository,
@@ -189,6 +205,18 @@ class BaseConversationAgent(ABC):
             self.plan_repository,
             runtime_state=self._runtime_state,
         )
+        self.plan_run_repository = build_plan_run_repository(
+            self.config,
+            session_path=self.session_path,
+            user_id=self.config.memory_user_id,
+        )
+        self.plan_run_service = PlanRunService(
+            self.plan_run_repository,
+            lease_seconds=self.config.plan_run_lease_seconds,
+            event_bus=self.event_bus,
+        )
+        self._active_plan_runs: dict[str, PlanRun] = {}
+        self.plan_cancellation_token = CancellationToken(self._plan_cancel_requested)
 
     @property
     def history_size(self) -> int:
@@ -318,6 +346,74 @@ class BaseConversationAgent(ABC):
         else:
             self.pending_plan_execution = None
         return saved
+
+    def _checkpoint_plan(
+        self,
+        execution: PlanExecutionResult,
+        event_type: str,
+        detail: dict[str, Any],
+    ) -> PlanExecutionResult:
+        """先校验租约与 fencing，再保存权威计划检查点。"""
+        run = self._active_plan_runs.get(execution.run_id)
+        if run is None:
+            run = self.plan_run_repository.get(execution.run_id)
+        if run is None:
+            run_kind = "confirmation" if execution.resume_count else "initial"
+            run = self.plan_run_service.start(
+                execution,
+                session_key=self.session_path,
+                user_id=self.config.memory_user_id,
+                worker_id=self.config.plan_worker_id,
+                run_kind=run_kind,
+            )
+        execution = execution.model_copy(
+            update={
+                "worker_id": run.worker_id,
+                "fencing_token": run.fencing_token,
+            }
+        )
+        saved = self.plan_lifecycle.record(
+            execution,
+            event_type=event_type,
+            detail={**detail, "run_id": run.run_id, "worker_id": run.worker_id},
+        )
+        run = self.plan_run_service.checkpoint(run, saved)
+        if saved.status in {
+            "awaiting_confirmation",
+            "completed",
+            "failed",
+            "cancelled",
+            "expired",
+        }:
+            run = self.plan_run_service.finish(run, saved)
+        self._active_plan_runs[run.run_id] = run
+        self.latest_plan_execution = saved
+        self.pending_plan_execution = (
+            saved if saved.status == "awaiting_confirmation" else None
+        )
+        return saved
+
+    def _plan_cancel_requested(self) -> bool:
+        latest = getattr(self, "latest_plan_execution", None)
+        if latest is None:
+            return False
+        run = self.plan_run_repository.get_active(latest.plan_id)
+        return bool(run and run.cancellation_requested_at)
+
+    def _heartbeat_plan(self) -> None:
+        latest = getattr(self, "latest_plan_execution", None)
+        if latest is None:
+            return
+        run = self._active_plan_runs.get(latest.run_id)
+        if run is None or run.status != "running":
+            return
+        renewed = self.plan_run_repository.renew(
+            run.run_id,
+            worker_id=run.worker_id,
+            fencing_token=run.fencing_token,
+            lease_seconds=self.config.plan_run_lease_seconds,
+        )
+        self._active_plan_runs[run.run_id] = renewed
 
     def _cancel_pending_plan(self, reason: str) -> None:
         pending = self.pending_plan_execution

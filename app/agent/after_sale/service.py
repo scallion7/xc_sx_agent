@@ -143,6 +143,7 @@ class AfterSaleService:
             created_at=now,
             updated_at=now,
             user_id=user_id,
+            risk_rule_version=self.risk_router.rule_version,
         )
         case.add_audit(
             "case_created", "agent", f"risk={decision.level}, route={decision.route}"

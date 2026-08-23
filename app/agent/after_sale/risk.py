@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -46,6 +47,7 @@ class RiskRouter:
         auto_approve_max_amount: float = 200.0,
         high_risk_amount: float = 2000.0,
         rules_path: str | Path | None = None,
+        rules_loader: Callable[[], Mapping | None] | None = None,
     ):
         self.auto_approve_max_amount = auto_approve_max_amount
         self.high_risk_amount = high_risk_amount
@@ -67,6 +69,7 @@ class RiskRouter:
             "existing_refund": 3,
             "complaint": 2,
         }
+        self.rules_loader = rules_loader
         if rules_path:
             self._load_rules(Path(rules_path))
 
@@ -74,6 +77,9 @@ class RiskRouter:
         if not path.is_file():
             return
         data = json.loads(path.read_text(encoding="utf-8"))
+        self._apply_rules(data)
+
+    def _apply_rules(self, data: Mapping) -> None:
         self.rule_version = str(data.get("version", "unversioned"))
         self.critical_signals = set(data.get("critical_signals", self.critical_signals))
         self.complaint_signals = set(
@@ -103,7 +109,18 @@ class RiskRouter:
             }
         )
 
+    def _refresh_rules(self) -> None:
+        if self.rules_loader is None:
+            return
+        try:
+            rules = self.rules_loader()
+        except Exception:
+            return
+        if rules is not None:
+            self._apply_rules(rules)
+
     def assess_message(self, text: str) -> RiskDecision:
+        self._refresh_rules()
         critical = sorted(signal for signal in self.critical_signals if signal in text)
         if critical:
             return RiskDecision(
