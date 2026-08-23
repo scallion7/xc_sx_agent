@@ -76,6 +76,15 @@ def install_api_middleware(app: FastAPI, config) -> None:
         response.headers["X-Trace-ID"] = trace_id
         response.headers["X-RateLimit-Limit"] = str(limit)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
+        path_parts = request.url.path.strip("/").split("/")
+        if (
+            len(path_parts) == 4
+            and path_parts[:2] == ["v1", "sessions"]
+            and path_parts[3] == "plan"
+        ):
+            response.headers["Deprecation"] = "true"
+            response.headers["Sunset"] = "Thu, 31 Dec 2026 23:59:59 GMT"
+            response.headers["Link"] = '</v1/plans>; rel="successor-version"'
         return response
 
     @app.exception_handler(HTTPException)

@@ -161,6 +161,44 @@ class ApiGovernanceTests(unittest.TestCase):
             self.assertEqual(response.status_code, 422)
             self.assertEqual(response.json()["error_code"], "VALIDATION_ERROR")
 
+    def test_list_pagination_and_legacy_plan_deprecation_headers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            client = TestClient(
+                create_app(self.config(tmp, commerce_seed_demo_data=True))
+            )
+            headers = {"X-API-Key": "user-token"}
+            first = client.get("/v1/orders?limit=1", headers=headers)
+            self.assertEqual(first.status_code, 200)
+            self.assertEqual(first.json()["count"], 1)
+            self.assertTrue(first.json()["next_cursor"])
+            second = client.get(
+                "/v1/orders",
+                headers=headers,
+                params={"limit": 1, "cursor": first.json()["next_cursor"]},
+            )
+            self.assertEqual(second.json()["count"], 1)
+            legacy = client.get("/v1/sessions/demo/plan", headers=headers)
+            self.assertEqual(legacy.headers["Deprecation"], "true")
+            self.assertIn("/v1/plans", legacy.headers["Link"])
+
+    def test_metrics_expose_derived_governance_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = create_app(self.config(tmp))
+            app.state.runtime.event_bus.emit(
+                "plan.run.completed", source="test", data={}
+            )
+            app.state.runtime.event_bus.emit(
+                "plan.step.timed_out",
+                source="test",
+                data={"error_code": "PLAN_STEP_TIMEOUT"},
+            )
+            client = TestClient(app)
+            payload = client.get(
+                "/v1/admin/metrics", headers={"X-API-Key": "admin-token"}
+            ).json()
+            self.assertEqual(payload["governance"]["plan_completion_rate"], 1.0)
+            self.assertGreater(payload["governance"]["step_timeout_rate"], 0)
+
 
 class DataLifecycleTests(unittest.TestCase):
     def test_cleanup_dry_run_protects_active_plan(self):

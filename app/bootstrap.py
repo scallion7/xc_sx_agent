@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from app.agent.after_sale import AfterSaleService
 from app.agent.strategies.models import StrategyName
 from app.agent.strategies.policies import CircuitBreakerRegistry
 from app.config.settings import Settings, settings
@@ -26,7 +27,14 @@ from app.observability import (
     MetricsCollector,
 )
 from app.repositories.plans import PlanRepository
-from app.services.providers import CompensationProvider, MockCompensationProvider
+from app.services.commerce import CommerceService
+from app.services.providers import (
+    CompensationProvider,
+    LogisticsProvider,
+    MockCompensationProvider,
+    OrderProvider,
+    RefundProvider,
+)
 
 AgentMode = Literal["auto", "single", "multi"]
 
@@ -46,6 +54,9 @@ class ApplicationRuntime:
     metrics: MetricsCollector
     model_rate_limiter: SlidingWindowRateLimiter
     circuit_breakers: CircuitBreakerRegistry
+    order_provider: OrderProvider | None
+    logistics_provider: LogisticsProvider | None
+    refund_provider: RefundProvider | None
     compensation_provider: CompensationProvider | None
 
 
@@ -54,6 +65,9 @@ def create_runtime(
     *,
     console: bool = False,
     persist_events: bool = True,
+    order_provider: OrderProvider | None = None,
+    logistics_provider: LogisticsProvider | None = None,
+    refund_provider: RefundProvider | None = None,
     compensation_provider: CompensationProvider | None = None,
 ) -> ApplicationRuntime:
     runtime_config = config or settings
@@ -74,6 +88,9 @@ def create_runtime(
         metrics,
         SlidingWindowRateLimiter(runtime_config.model_requests_per_minute),
         CircuitBreakerRegistry(),
+        order_provider,
+        logistics_provider,
+        refund_provider,
         (
             compensation_provider
             if compensation_provider is not None
@@ -107,6 +124,8 @@ def create_agent(
     plan_repository: PlanRepository | None = None,
     strategy: StrategyName | None = None,
     circuit_breakers: CircuitBreakerRegistry | None = None,
+    commerce_service: CommerceService | None = None,
+    after_sale_service: AfterSaleService | None = None,
 ):
     """按配置创建 Agent，并允许注入测试或私有部署使用的模型客户端。"""
     runtime_config = config or settings
@@ -125,6 +144,8 @@ def create_agent(
             plan_repository=plan_repository,
             strategy=strategy,
             circuit_breakers=circuit_breakers,
+            commerce_service=commerce_service,
+            after_sale_service=after_sale_service,
         )
 
     from app.agent.chat import EcomAgent
@@ -139,6 +160,8 @@ def create_agent(
         plan_repository=plan_repository,
         strategy=strategy,
         circuit_breakers=circuit_breakers,
+        commerce_service=commerce_service,
+        after_sale_service=after_sale_service,
     )
 
 

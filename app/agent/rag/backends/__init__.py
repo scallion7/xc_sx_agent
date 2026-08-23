@@ -2,7 +2,7 @@
 
 教学目的：同一份知识库可在两种后端间切换，便于直观对比
 - 手写余弦（教学透明，零依赖，适合 < 1k chunks）
-- 向量数据库（生产标配，HNSW/IVF 索引，支持亿级规模 + 元数据过滤 + 并发写入）
+- 向量数据库（本项目使用 Chroma/HNSW，支持持久化、近似检索和元数据过滤）
 
 通过 settings.rag_backend 选择，对上层 KnowledgeRetriever / search_knowledge 透明。
 """

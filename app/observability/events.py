@@ -181,6 +181,7 @@ class MetricsCollector:
     def __init__(self):
         self._counts: Counter[str] = Counter()
         self._latency_total: Counter[str] = Counter()
+        self._error_counts: Counter[str] = Counter()
         self._tokens = 0
         self._lock = threading.Lock()
         self._started_at = perf_counter()
@@ -194,11 +195,15 @@ class MetricsCollector:
             tokens = event.data.get("total_tokens")
             if isinstance(tokens, int):
                 self._tokens += tokens
+            error_code = event.data.get("error_code")
+            if isinstance(error_code, str) and error_code:
+                self._error_counts[error_code] += 1
 
     def snapshot(self) -> dict:
         with self._lock:
             counts = dict(self._counts)
             latency_total = dict(self._latency_total)
+            error_counts = dict(self._error_counts)
             total_tokens = self._tokens
         averages = {
             name: latency_total[name] / counts[name]
@@ -208,12 +213,42 @@ class MetricsCollector:
         tool_completed = counts.get("tool.completed", 0)
         tool_failed = counts.get("tool.failed", 0)
         tool_total = tool_completed + tool_failed
+        plan_completed = counts.get("plan.run.completed", 0)
+        plan_failed = counts.get("plan.run.failed", 0)
+        plan_cancelled = counts.get("plan.run.cancelled", 0)
+        plan_terminal = plan_completed + plan_failed + plan_cancelled
+        step_terminal = sum(
+            counts.get(name, 0)
+            for name in (
+                "plan.step.completed",
+                "plan.step.failed",
+                "plan.step.cancelled",
+                "plan.step.timed_out",
+                "plan.step.blocked",
+            )
+        )
+        timed_out = counts.get("plan.step.timed_out", 0)
         return {
             "uptime_seconds": round(perf_counter() - self._started_at, 3),
             "event_counts": counts,
             "average_latency_ms": averages,
             "total_tokens": total_tokens,
             "tool_success_rate": (tool_completed / tool_total if tool_total else 1.0),
+            "governance": {
+                "plan_completion_rate": (
+                    plan_completed / plan_terminal if plan_terminal else 1.0
+                ),
+                "step_timeout_rate": timed_out / step_terminal
+                if step_terminal
+                else 0.0,
+                "cancellation_requests": counts.get(
+                    "plan.run.cancellation_requested", 0
+                ),
+                "lease_recoveries": counts.get("plan.run.recovered", 0),
+                "fenced_runs": counts.get("plan.run.fenced", 0),
+                "side_effect_replays": counts.get("after_sale.operation.replayed", 0),
+                "error_code_counts": error_counts,
+            },
         }
 
 

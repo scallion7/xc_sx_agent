@@ -27,7 +27,7 @@ def _json_rule_lock(path: Path) -> RLock:
 class RiskRuleSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    version: str = Field(min_length=1, max_length=80)
+    version: str = Field(pattern=r"^[A-Za-z0-9._-]{1,80}$")
     critical_signals: list[str] = Field(default_factory=list)
     complaint_signals: list[str] = Field(default_factory=list)
     evidence_required_case_types: list[str] = Field(default_factory=list)

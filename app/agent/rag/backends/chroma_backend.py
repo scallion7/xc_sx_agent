@@ -2,13 +2,13 @@
 
 为什么选 Chroma：
 - 嵌入式模式（PersistentClient）开箱即用，无需 Docker，便于教学
-- 是 LangChain / LlamaIndex 等主流框架的默认后端，工程代表性强
-- 内置 HNSW 索引，万级以上规模 Top-K 查询是 O(log n) 而非 O(n)
+- 可与 LangChain / LlamaIndex 等框架集成，工程代表性较强
+- 内置 HNSW 近似索引；实际查询性能取决于数据量、索引参数、硬件和过滤条件
 
 与 NumpyBackend 的关键差异（讲给学生听）：
-1. 真正的索引结构：HNSW 图，构建/查询都是亚线性
+1. 索引结构：使用 HNSW 图做近似最近邻检索，避免逐条精确扫描
 2. 元数据原生支持：可按 doc/section 等字段过滤后再向量召回
-3. 增量写入安全：Chroma 内部有锁，多进程写入不会脏
+3. 增量写入：由 Chroma 管理持久化；并发与多进程能力仍应按所用版本和部署方式验证
 4. 距离 → 相似度的换算：collection 设 cosine 距离，score = 1 - distance
 
 我们用 collection.metadata 存 embedding_model 标识，

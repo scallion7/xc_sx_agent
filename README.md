@@ -6,7 +6,7 @@
 
 > 当前二次开发进度：阶段 22 已完成计划运行治理、Alembic 迁移、OIDC/JWT 认证
 > 端口、业务 Provider 与回调、独立补偿、规则版本、API/运维治理、数据生命周期和
-> 离线质量门禁。当前完整离线回归共 144 项，不访问真实或本地模型、真实 OIDC 或
+> 离线质量门禁。当前完整离线回归共 149 项，不访问真实或本地模型、真实 OIDC 或
 > 真实业务供应商。
 
 ## 项目定位
@@ -101,13 +101,13 @@ Application Factory → TraceContext → Guardrails
    CommerceService   Policy RAG    AfterSaleService
           │                              │
           ▼                    ┌─────────┴─────────┐
- CommerceRepository            ▼                   ▼
-（SQL / Mock 适配器）     工单级风险路由      OperationRepository
-                         │                 （JSON / SQL / 乐观锁）
-                         ▼                          │
-                 自动批准 / 人工审批                ▼
-                                         幂等抢占 → Provider 契约
-                                         → 重试 / 恢复 / 独立补偿操作
+ Provider 协议                  ▼                   ▼
+   ├─ 外部业务适配器       工单级风险路由      OperationRepository
+   └─ CommerceRepositoryProvider          （JSON / SQL / 乐观锁）
+          │                    │                   │
+          ▼                    ▼                   ▼
+ CommerceRepository      自动批准 / 人工审批   幂等抢占 → RefundProvider
+（SQL / Mock 适配器）                          → 重试 / 恢复 / 独立补偿操作
 
 所有核心路径 ──emit──> EventBus
                          ├─ JSONL 日志
@@ -301,9 +301,9 @@ python app/scripts/review_after_sale.py compensate AS-XXXXXXXXXX `
 应用运行时共享的滑动窗口限流、Token/延迟指标和失败事件，并允许注入离线测试客户端
 或私有兼容接口。
 
-每个 Agent 拥有独立的 `ToolRegistry`、Memory、Skill、KnowledgeService、
-CommerceService 和 AfterSaleService，不再通过模块级 setter 或 Retriever
-单例共享运行时依赖。
+每个 Agent 拥有独立的 `ToolRegistry`、Memory、Skill 和 KnowledgeService；API 应用工厂
+显式组装并向对话 Agent 注入同一业务作用域的 `CommerceService` 与
+`AfterSaleService`。运行时依赖不再通过模块级 setter 或 Retriever 单例隐式共享。
 
 ### 8. API、安全与可观测性
 
@@ -360,7 +360,8 @@ EventBus 事件并保留工单审计记录。
 总预算、背压和熔断，恢复时复用已完成步骤。
 
 SQL 结构由 Alembic 统一管理，认证支持静态 Token 与可注入 JWKS 的 OIDC JWT；
-订单、物流、退款和补偿通过 Provider 协议隔离，回调必须通过 HMAC 签名并按事件 ID
+订单、物流、退款 Provider 已接入 API 和 Agent 共用的 CommerceService 主链路，补偿使用
+独立 Provider；回调必须通过 HMAC 签名并按事件 ID
 持久化去重。补偿操作、风险规则版本和管理写接口幂等结果均有独立 SQL/JSON 状态。
 
 API 增加请求/Trace 标识、统一错误码、cursor 分页、用户/管理员/高成本端点限流、
@@ -369,8 +370,8 @@ API 增加请求/Trace 标识、统一错误码、cursor 分页、用户/管理�
 
 离线门禁把 40 条固定计划案例逐条映射到可执行的确定性测试，并聚合 12 项指标；
 安全相关指标必须为 `1.0`。
-CI 同时覆盖 Python 3.10–3.12、SQLite/PostgreSQL 迁移、覆盖率、OpenAPI、SBOM、
-依赖审计和容器扫描。
+GitHub Actions 配置覆盖 Python 3.10–3.12、SQLite/PostgreSQL 迁移、覆盖率、OpenAPI、
+SBOM、依赖审计和容器扫描；每次发布仍以目标提交的实际在线任务结果为准。
 
 ## 项目结构
 
@@ -424,7 +425,7 @@ ecom-service-agent/
 │       ├── build_kb_index.py             # 构建 Policy RAG 索引
 │       ├── review_after_sale.py           # 独立人工审批入口
 │       ├── manage_migrations.py          # Alembic 统一迁移入口
-│       ├── maintain_data.py              # 清理与 SQLite 备份入口
+│       ├── maintain_data.py              # 清理、备份、恢复、校验与脱敏导出
 │       ├── doctor.py                     # 就绪、迁移与运行租约诊断
 │       ├── run_eval.py                   # 离线评估
 │       └── run_api.py                    # API 启动入口
@@ -490,6 +491,9 @@ DATABASE_URL=sqlite:///app/sessions/xc_sx_agent.db
 COMMERCE_SEED_DEMO_DATA=true
 API_USER_TOKENS=dev-user-token:user-1
 API_ADMIN_TOKENS=dev-admin-token:admin
+PROVIDER_MODE=mock
+PROVIDER_TIMEOUT_SECONDS=5
+PROVIDER_READ_MAX_ATTEMPTS=2
 ```
 
 ### 3. 构建 Policy RAG 索引
@@ -555,7 +559,7 @@ MULTI_AGENT_ENABLED=true
 ### 5. 启动 FastAPI
 
 ```bash
-python app/scripts/run_api.py
+python -m app.scripts.run_api
 ```
 
 常用入口：
@@ -567,7 +571,8 @@ python app/scripts/run_api.py
 - 实时事件流：`POST /v1/chat/stream`
 - WebSocket：`/ws/events/{session_id}?token=...`
 - 会话查询/删除：`GET/DELETE /v1/sessions/{session_id}`
-- 计划查询/取消：`GET/DELETE /v1/sessions/{session_id}/plan`
+- 兼容期计划查询/取消：`GET/DELETE /v1/sessions/{session_id}/plan`（已弃用，响应带
+  `Deprecation`、`Sunset` 和后继接口 `Link`）
 - 计划历史/详情/取消：`GET /v1/plans`、`GET/DELETE /v1/plans/{plan_id}`
 - 计划审计：`GET /v1/admin/plans`、`GET /v1/admin/plans/{plan_id}`
 - 事件查询：`GET /v1/events`
@@ -578,6 +583,8 @@ python app/scripts/run_api.py
   `GET /v1/admin/after-sales/operations/recoverable`、
   `POST /v1/admin/after-sales/{case_id}/recover`、
   `POST /v1/admin/after-sales/{case_id}/compensation`
+- 独立补偿：`GET/POST /v1/admin/compensations`、
+  `POST /v1/admin/compensations/{idempotency_key}/execute`
 - 人工审批与指标：`/v1/admin/after-sales/*`、`/v1/admin/metrics`、
   `/v1/admin/regression`
 
@@ -666,7 +673,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归共 144 项，不会调用外部模型或本地模型、OIDC 和 Provider 服务：
+当前完整离线回归共 149 项，不会调用外部模型或本地模型、OIDC 和 Provider 服务：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -766,6 +773,11 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 
 ## 开发历程
 
+### 第 10 期：售后工单与人工审批
+
+- 新增售后工单状态机、Policy RAG、风险路由和 Human-in-the-Loop；
+- Agent 只能创建、查询和执行已批准工单，不能自行审批或绕过工单直接退款。
+
 ### 第 11 期：架构演进与统一应用工厂
 
 - 提取 `BaseConversationAgent`，统一会话、记忆、Skill、结构化输出和历史压缩；
@@ -778,14 +790,24 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
+### 第 12–15 期：工程化二次开发
+
+- 第 12 期完成实例级 ToolRegistry 与依赖隔离；
+- 第 13 期完成 ModelGateway、超时、重试和限流；
+- 第 14 期完成 EventBus、Trace、日志、指标和实时订阅；
+- 第 15 期完成 FastAPI、Repository/Service 分层与 SQL 持久化。
+
+详细验收见
+[阶段12-15：工程化二次开发完成说明](docs/阶段12-15-工程化二次开发完成说明.md)。
+
 ### 第 16–22 期：确定性计划与副作用执行演进
 
 - 第 16 期引入强类型工具契约和基础 Plan-and-Execute；
 - 第 17 期补齐跨步骤引用、计划身份和精确确认恢复；
 - 第 18 期增加有限并发、TTL、恢复上限以及查询/取消 API；
-- 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由。
-- 第 20 期引入独立 Plan Repository、乐观锁、历史 API 和审计时间线。
-- 第 21 期为售后副作用增加持久化幂等、原子抢占、租约恢复和补偿状态。
+- 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由；
+- 第 20 期引入独立 Plan Repository、乐观锁、历史 API 和审计时间线；
+- 第 21 期为售后副作用增加持久化幂等、原子抢占、租约恢复和补偿状态；
 - 第 22 期完成计划运行治理、迁移与认证、Provider/规则治理、运维诊断和离线质量闭环。
 
 | 阶段 | 主题 | 状态 |
@@ -799,21 +821,19 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 第 7 期 | 短期与长期 Memory | 已完成 |
 | 第 8 期 | 可复用 Agent Skills | 已完成 |
 | 第 9 期 | Agent 沙箱、Trace 与双层评估 | 已完成 |
-| 二次开发阶段 1 | 数据库、业务服务和真实状态机 | 已完成 |
-| 二次开发阶段 2 | FastAPI、流式响应和管理后台 | 已完成 |
-| 二次开发阶段 3 | 售后 Skill、Policy RAG、HITL、风险路由 | 已完成 |
-| 二次开发阶段 4 | 可观测性、安全护栏和自动化回归 | 已完成 |
-| 阶段 12 | 实例级 ToolRegistry 与依赖隔离 | 已完成 |
-| 阶段 13 | ModelGateway、超时、重试与限流 | 已完成 |
-| 阶段 14 | EventBus、Trace、日志、指标与实时订阅 | 已完成 |
-| 阶段 15 | API、Repository/Service 与 SQL 持久化 | 已完成 |
-| 阶段 16 | Plan-and-Execute、强类型工具契约与离线 CI | 已完成 |
-| 阶段 17 | 跨步骤引用、计划持久化与精确确认恢复 | 已完成 |
-| 阶段 18 | 有限并发、计划生命周期与查询取消 API | 已完成 |
-| 阶段 19 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
-| 阶段 20 | 独立计划仓储、乐观锁与审计时间线 | 已完成 |
-| 阶段 21 | 售后副作用可靠执行、恢复与补偿 | 已完成 |
-| 阶段 22 | 计划执行治理、数据安全、业务适配与工程化闭环 | 已完成 |
+| 第 10 期 | 售后工单、Policy RAG、HITL 与风险路由 | 已完成 |
+| 第 11 期 | 架构演进与统一应用工厂 | 已完成 |
+| 第 12 期 | 实例级 ToolRegistry 与依赖隔离 | 已完成 |
+| 第 13 期 | ModelGateway、超时、重试与限流 | 已完成 |
+| 第 14 期 | EventBus、Trace、日志、指标与实时订阅 | 已完成 |
+| 第 15 期 | API、Repository/Service 与 SQL 持久化 | 已完成 |
+| 第 16 期 | Plan-and-Execute、强类型工具契约与离线 CI | 已完成 |
+| 第 17 期 | 跨步骤引用、计划持久化与精确确认恢复 | 已完成 |
+| 第 18 期 | 有限并发、计划生命周期与查询取消 API | 已完成 |
+| 第 19 期 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
+| 第 20 期 | 独立计划仓储、乐观锁与审计时间线 | 已完成 |
+| 第 21 期 | 售后副作用可靠执行、恢复与补偿 | 已完成 |
+| 第 22 期 | 计划执行治理、数据安全、业务适配与工程化闭环 | 已完成 |
 
 ## 相关文档
 
@@ -826,7 +846,9 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第7期：Memory 短期记忆与长期记忆](docs/第7期-Memory短期记忆与长期记忆.md)
 - [第8期：Skill 可复用能力模块](docs/第8期-Skill可复用能力模块.md)
 - [第9期：Agent 评估体系](docs/第9期-Agent评估体系.md)
-- [二次开发：售后工单、Policy RAG 与人工审批](docs/第10期-Agent深化售后工单PolicyRAG与人工审批.md)
+- [第9期上：Agent 评估体系之沙箱](docs/第9期上-Agent评估体系之沙箱.md)
+- [第9期下：Agent 评估体系之测评](docs/第9期下-Agent评估体系之测评.md)
+- [第10期：售后工单、Policy RAG 与人工审批](docs/第10期-Agent深化售后工单PolicyRAG与人工审批.md)
 - [第11期：架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)
 - [阶段12-15：工程化二次开发完成说明](docs/阶段12-15-工程化二次开发完成说明.md)
 - [第16期：Plan-and-Execute 与强类型工具契约](docs/第16期-Plan-and-Execute与工具契约.md)
@@ -836,6 +858,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第20期：独立计划仓储与审计](docs/第20期-独立计划仓储与审计.md)
 - [第21期：售后副作用可靠执行](docs/第21期-售后副作用可靠执行.md)
 - [第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)
+- [生产配置检查清单](docs/生产配置检查清单.md)
 
 ## 后续路线
 
@@ -850,7 +873,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 4. **故障评估与 CI 门禁**：固定计划数据集、可控故障注入、确定性可靠性指标、
    Python 版本矩阵、SQLite/PostgreSQL、迁移升级/降级、SBOM 和依赖安全检查。
 
-阶段 22 实际新增 76 项离线测试，完整回归由 68 项增至 144 项；固定计划数据集
+阶段 22 实际新增 81 项离线测试，完整回归由 68 项增至 149 项；固定计划数据集
 40 条，12 项确定性指标均为 `1.0`。详细实现和验收边界见
 [第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)。
 

@@ -103,6 +103,8 @@ class Settings(BaseSettings):
     oidc_algorithms: str = "RS256"
     oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=86400)
     provider_mode: Literal["mock", "external"] = "mock"
+    provider_timeout_seconds: float = Field(default=5.0, gt=0, le=300)
+    provider_read_max_attempts: int = Field(default=2, ge=1, le=5)
     provider_webhook_secret: str = ""
     provider_webhook_events_path: str = "app/sessions/provider_webhook_events.json"
     api_idempotency_path: str = "app/sessions/api_idempotency_keys.json"
@@ -174,6 +176,8 @@ class Settings(BaseSettings):
             "persistence_backend": self.persistence_backend,
             "auth_mode": self.auth_mode,
             "provider_mode": self.provider_mode,
+            "provider_timeout_seconds": self.provider_timeout_seconds,
+            "provider_read_max_attempts": self.provider_read_max_attempts,
             "database_auto_create": self.database_auto_create,
             "plan_limits": {
                 "max_steps": self.max_plan_steps,

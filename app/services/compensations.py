@@ -54,6 +54,24 @@ class SqlCompensationOperationRepository:
             )
         return self._record(row) if row else None
 
+    def list(
+        self,
+        *,
+        status: CompensationOperationStatus | None = None,
+        limit: int = 50,
+    ) -> list[CompensationOperation]:
+        statement = select(compensation_operations_table)
+        if status is not None:
+            statement = statement.where(
+                compensation_operations_table.c.status == status
+            )
+        statement = statement.order_by(
+            compensation_operations_table.c.updated_at.desc()
+        ).limit(max(0, limit))
+        with self.engine.begin() as connection:
+            rows = connection.execute(statement).mappings().all()
+        return [self._record(row) for row in rows]
+
     def create(self, item: CompensationOperation) -> CompensationOperation:
         existing = self.get(item.idempotency_key)
         if existing is not None:
@@ -174,6 +192,12 @@ class SqlCompensationOperationRepository:
 
     @staticmethod
     def _record(row) -> CompensationOperation:
+        lease_expires_at = row["lease_expires_at"] or None
+        if isinstance(lease_expires_at, str):
+            lease_expires_at = datetime.fromisoformat(lease_expires_at)
+        updated_at = row["updated_at"]
+        if isinstance(updated_at, str):
+            updated_at = datetime.fromisoformat(updated_at)
         return CompensationOperation.model_validate_json(
             row["payload_json"]
         ).model_copy(
@@ -181,8 +205,8 @@ class SqlCompensationOperationRepository:
                 "status": row["status"],
                 "attempt_count": row["attempt_count"],
                 "worker_id": row["worker_id"],
-                "lease_expires_at": row["lease_expires_at"] or None,
-                "updated_at": row["updated_at"],
+                "lease_expires_at": lease_expires_at,
+                "updated_at": updated_at,
             }
         )
 

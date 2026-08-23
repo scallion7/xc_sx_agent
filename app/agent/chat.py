@@ -3,6 +3,7 @@
 import json
 from typing import Any
 
+from app.agent.after_sale import AfterSaleService
 from app.agent.base import BaseConversationAgent
 from app.agent.strategies import (
     PlanExecuteStrategy,
@@ -27,6 +28,7 @@ from app.prompts.customer_service import SYSTEM_PROMPT
 from app.repositories.plans import PlanRepository
 from app.schemas.response import CustomerServiceResponse
 from app.security import GuardrailEngine
+from app.services.commerce import CommerceService
 
 
 class EcomAgent(BaseConversationAgent):
@@ -46,6 +48,8 @@ class EcomAgent(BaseConversationAgent):
         plan_repository: PlanRepository | None = None,
         strategy: StrategyName | None = None,
         circuit_breakers: CircuitBreakerRegistry | None = None,
+        commerce_service: CommerceService | None = None,
+        after_sale_service: AfterSaleService | None = None,
     ) -> None:
         super().__init__(
             session_path=session_path,
@@ -56,6 +60,8 @@ class EcomAgent(BaseConversationAgent):
             guardrails=guardrails,
             rate_limiter=rate_limiter,
             plan_repository=plan_repository,
+            commerce_service=commerce_service,
+            after_sale_service=after_sale_service,
         )
         self.risk_router = self.after_sale_service.risk_router
         self.tool_manager = tool_manager or ToolManager(

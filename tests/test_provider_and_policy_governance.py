@@ -13,6 +13,7 @@ from threading import Barrier
 
 from app.agent.after_sale.risk import RiskRouter
 from app.api import create_app
+from app.bootstrap import create_runtime
 from app.config.settings import Settings
 from app.repositories.mock_commerce import MockCommerceRepository
 from app.repositories.policies import (
@@ -22,6 +23,7 @@ from app.repositories.policies import (
     RiskRuleSchema,
     SqlRiskRuleRepository,
 )
+from app.services.commerce import CommerceService
 from app.services.compensations import (
     CompensationService,
     SqlCompensationOperationRepository,
@@ -56,6 +58,91 @@ def rules(version: str, *, manual: int = 1) -> RiskRuleSchema:
 
 
 class ProviderContractTests(unittest.TestCase):
+    def test_commerce_service_uses_injected_providers_on_business_path(self):
+        class RecordingProvider:
+            def __init__(self):
+                self.calls: list[str] = []
+
+            def get_order(self, order_id: str, user_id: str):
+                self.calls.append(f"order:{order_id}:{user_id}")
+                return {
+                    "order_id": order_id,
+                    "owner_id": user_id,
+                    "tracking_number": "TRACK-1",
+                }
+
+            def get_logistics(self, order_id: str, user_id: str):
+                self.calls.append(f"logistics:{order_id}:{user_id}")
+                return {"tracking_number": "TRACK-1", "status": "运输中"}
+
+            def submit_refund(
+                self,
+                order_id: str,
+                user_id: str,
+                reason: str,
+                idempotency_key: str,
+            ):
+                self.calls.append(f"refund:{idempotency_key}")
+                return {"success": True, "refund_id": "REF-1"}
+
+        provider = RecordingProvider()
+        service = CommerceService(
+            MockCommerceRepository(),
+            order_provider=provider,
+            logistics_provider=provider,
+            refund_provider=provider,
+        )
+        self.assertTrue(service.get_logistics("external-order", "user-1")["success"])
+        self.assertTrue(
+            service.apply_refund(
+                "external-order",
+                "测试退款",
+                "user-1",
+                idempotency_key="refund-1",
+            )["success"]
+        )
+        self.assertIn("logistics:external-order:user-1", provider.calls)
+        self.assertEqual(provider.calls.count("refund:refund-1"), 1)
+
+    def test_api_runtime_injects_provider_and_requires_all_external_ports(self):
+        class Provider:
+            def get_order(self, order_id: str, user_id: str):
+                return {"order_id": order_id, "owner_id": user_id}
+
+            def get_logistics(self, order_id: str, user_id: str):
+                return None
+
+            def submit_refund(self, *args):
+                return {"success": True}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            provider = Provider()
+            config = Settings(
+                environment="test",
+                openai_api_key="offline",
+                database_url=f"sqlite:///{Path(tmp) / 'provider-api.db'}",
+                commerce_seed_demo_data=False,
+                provider_mode="external",
+                provider_webhook_secret="secret",
+                api_user_tokens="user-token:user-1",
+            )
+            runtime = create_runtime(
+                config,
+                persist_events=False,
+                order_provider=provider,
+                logistics_provider=provider,
+                refund_provider=provider,
+                compensation_provider=MockCompensationProvider(),
+            )
+            client = TestClient(create_app(config, runtime=runtime))
+            response = client.get(
+                "/v1/orders/external-order",
+                headers={"X-API-Key": "user-token"},
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["order"]["order_id"], "external-order")
+            self.assertIn(client.get("/ready").json()["status"], {"ready", "degraded"})
+
     def test_hmac_webhook_verifier_accepts_valid_signature(self):
         payload = b'{"event":"refund"}'
         signature = hmac.new(b"secret", payload, "sha256").hexdigest()
@@ -267,6 +354,12 @@ class CompensationExecutionTests(unittest.TestCase):
         )
         self.assertEqual(completed.status, "succeeded")
         self.assertEqual(completed.result["actor"], "admin")
+
+    def test_repository_lists_compensations_by_status(self):
+        service = CompensationService(self.repository, None)
+        item = self.request(service)
+        self.assertEqual(self.repository.list(status="pending"), [item])
+        self.assertEqual(self.repository.list(status="succeeded"), [])
 
 
 class RiskRuleGovernanceTests(unittest.TestCase):

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -39,7 +40,7 @@ from app.repositories.policies import (
     build_risk_rule_repository,
 )
 from app.repositories.session import build_session_repository
-from app.security import AuthContext
+from app.security import AuthContext, AuthProvider
 from app.services.commerce import CommerceService
 from app.services.data_maintenance import DataMaintenanceService
 from app.services.idempotency import IdempotencyConflictError
@@ -105,6 +106,18 @@ def _cursor_page(
     page = items[start : start + limit]
     next_cursor = identity(page[-1]) if start + limit < len(items) and page else None
     return page, next_cursor
+
+
+def _utc_datetime(value: datetime | None) -> datetime | None:
+    if value is None or value.tzinfo is not None:
+        return value
+    return value.replace(tzinfo=timezone.utc)
+
+
+def _raise_commerce_error(result: dict, *, default_status: int = 404) -> None:
+    code = result.get("error_code", "")
+    status = 504 if code == "PROVIDER_TIMEOUT" else 502 if code else default_status
+    raise HTTPException(status_code=status, detail=result.get("error", "业务请求失败"))
 
 
 def _idempotent_write(
@@ -198,6 +211,7 @@ def create_app(
     agent_factory: AgentFactory | None = None,
     after_sale_service: AfterSaleService | None = None,
     commerce_service: CommerceService | None = None,
+    auth_provider: AuthProvider | None = None,
 ) -> FastAPI:
     """创建隔离的应用实例，支持测试和私有部署注入依赖。"""
     services = build_api_services(
@@ -206,6 +220,7 @@ def create_app(
         agent_factory=agent_factory,
         after_sale_service=after_sale_service,
         commerce_service=commerce_service,
+        auth_provider=auth_provider,
     )
     app = FastAPI(title="小夕智能客服 API", version="2.0.0")
     install_api_middleware(app, services.config)
@@ -274,10 +289,19 @@ def register_public_routes(
         checks["provider"] = {
             "ok": services.config.provider_mode == "mock"
             or (
-                services.runtime.compensation_provider is not None
+                services.runtime.order_provider is not None
+                and services.runtime.logistics_provider is not None
+                and services.runtime.refund_provider is not None
+                and services.runtime.compensation_provider is not None
                 and bool(services.config.provider_webhook_secret)
             ),
             "mode": services.config.provider_mode,
+            "order_configured": services.config.provider_mode == "mock"
+            or services.runtime.order_provider is not None,
+            "logistics_configured": services.config.provider_mode == "mock"
+            or services.runtime.logistics_provider is not None,
+            "refund_configured": services.config.provider_mode == "mock"
+            or services.runtime.refund_provider is not None,
             "compensation_configured": (
                 services.runtime.compensation_provider is not None
             ),
@@ -465,7 +489,7 @@ def register_session_routes(
         repository.delete()
         return {"success": True}
 
-    @app.get("/v1/sessions/{session_id}/plan")
+    @app.get("/v1/sessions/{session_id}/plan", deprecated=True)
     def get_plan(
         session_id: str,
         context: AuthContext = Depends(require("session:read")),
@@ -488,7 +512,7 @@ def register_session_routes(
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"plan": execution.model_dump(mode="json")}
 
-    @app.delete("/v1/sessions/{session_id}/plan")
+    @app.delete("/v1/sessions/{session_id}/plan", deprecated=True)
     def cancel_plan(
         session_id: str,
         context: AuthContext = Depends(require("plan:cancel")),
@@ -573,10 +597,7 @@ def register_session_routes(
                 plan_service.get_latest()
             except PlanNotFoundError:
                 pass
-        records = plan_service.list(
-            status=status,
-            limit=200,
-        )
+        records = plan_service.list(status=status, limit=10_000)
         page, next_cursor = _cursor_page(
             records,
             cursor,
@@ -666,12 +687,26 @@ def register_session_routes(
     @app.get("/v1/events")
     def events(
         trace_id: str = "",
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         context: AuthContext = Depends(require("session:read")),
     ) -> dict:
         items = services.runtime.event_buffer.snapshot(trace_id=trace_id)
         if context.role != "admin":
             items = [item for item in items if item["user_id"] == context.user_id]
-        return {"count": len(items), "events": items}
+        page, next_cursor = _cursor_page(
+            items,
+            cursor,
+            limit,
+            lambda item: "|".join(
+                (
+                    item["timestamp"],
+                    item["trace_id"],
+                    item["event_type"],
+                )
+            ),
+        )
+        return {"count": len(page), "events": page, "next_cursor": next_cursor}
 
 
 def register_commerce_routes(
@@ -705,9 +740,20 @@ def register_commerce_routes(
 
     @app.get("/v1/orders")
     def orders(
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         context: AuthContext = Depends(require("chat:use")),
     ) -> dict:
-        return services.commerce.list_orders(context.user_id)
+        result = services.commerce.list_orders(context.user_id)
+        page, next_cursor = _cursor_page(
+            result["orders"], cursor, limit, lambda item: item["order_id"]
+        )
+        return {
+            **result,
+            "count": len(page),
+            "orders": page,
+            "next_cursor": next_cursor,
+        }
 
     @app.get("/v1/orders/{order_id}")
     def order(
@@ -716,15 +762,26 @@ def register_commerce_routes(
     ) -> dict:
         result = services.commerce.get_order(order_id, context.user_id)
         if not result.get("success"):
-            raise HTTPException(status_code=404, detail=result["error"])
+            _raise_commerce_error(result)
         return result
 
     @app.get("/v1/products")
     def products(
         query: str,
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("chat:use")),
     ) -> dict:
-        return services.commerce.search_products(query)
+        result = services.commerce.search_products(query)
+        page, next_cursor = _cursor_page(
+            result["products"], cursor, limit, lambda item: item["product_id"]
+        )
+        return {
+            **result,
+            "count": len(page),
+            "products": page,
+            "next_cursor": next_cursor,
+        }
 
 
 def register_admin_routes(
@@ -736,22 +793,49 @@ def register_admin_routes(
 
     @app.get("/v1/admin/after-sales/pending")
     def pending(
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("after_sale:review")),
     ) -> dict:
-        return services.after_sale.list_pending_approvals()
+        result = services.after_sale.list_pending_approvals()
+        page, next_cursor = _cursor_page(
+            result["cases"], cursor, limit, lambda item: item["case_id"]
+        )
+        return {**result, "count": len(page), "cases": page, "next_cursor": next_cursor}
 
     @app.get("/v1/admin/after-sales/operations/recoverable")
     def recoverable_operations(
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("after_sale:recover")),
     ) -> dict:
-        return services.after_sale.list_recoverable_operations()
+        result = services.after_sale.list_recoverable_operations()
+        page, next_cursor = _cursor_page(
+            result["operations"], cursor, limit, lambda item: item["operation_id"]
+        )
+        return {
+            **result,
+            "count": len(page),
+            "operations": page,
+            "next_cursor": next_cursor,
+        }
 
     @app.get("/v1/admin/after-sales/operations")
     def after_sale_operations(
         limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("after_sale:recover")),
     ) -> dict:
-        return services.after_sale.list_operations(limit=limit)
+        result = services.after_sale.list_operations(limit=10_000)
+        page, next_cursor = _cursor_page(
+            result["operations"], cursor, limit, lambda item: item["operation_id"]
+        )
+        return {
+            **result,
+            "count": len(page),
+            "operations": page,
+            "next_cursor": next_cursor,
+        }
 
     @app.post("/v1/admin/after-sales/{case_id}/recover")
     def recover_after_sale(
@@ -829,6 +913,28 @@ def register_admin_routes(
             },
         )
 
+    @app.get("/v1/admin/compensations")
+    def list_compensation_operations(
+        status: str | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        if services.compensation is None:
+            raise HTTPException(status_code=404, detail="补偿仓储不可用")
+        allowed = {"pending", "running", "succeeded", "failed", "exhausted"}
+        if status is not None and status not in allowed:
+            raise HTTPException(status_code=422, detail="无效补偿状态")
+        items = services.compensation.repository.list(status=status, limit=10_000)
+        page, next_cursor = _cursor_page(
+            items, cursor, limit, lambda item: item.idempotency_key
+        )
+        return {
+            "count": len(page),
+            "operations": [item.model_dump(mode="json") for item in page],
+            "next_cursor": next_cursor,
+        }
+
     @app.get("/v1/admin/compensations/{idempotency_key}")
     def get_compensation_operation(
         idempotency_key: str,
@@ -869,17 +975,38 @@ def register_admin_routes(
     @app.get("/v1/admin/plans")
     def admin_plans(
         status: PlanStatus | None = None,
+        user_id: str = "",
+        session_id: str = "",
+        plan_id: str = "",
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
         limit: int = Query(default=50, ge=1, le=200),
         cursor: str = "",
         _context: AuthContext = Depends(require("metrics:read")),
     ) -> dict:
+        updated_after = _utc_datetime(updated_after)
+        updated_before = _utc_datetime(updated_before)
         repository = build_plan_repository(
             services.config,
             session_path=None,
             user_id=None,
             all_sessions=True,
         )
-        records = repository.list(status=status, limit=200)
+        records = repository.list(status=status, limit=10_000)
+        records = [
+            record
+            for record in records
+            if (not user_id or record.user_id == user_id)
+            and (
+                not session_id
+                or _plan_record_payload(record)["session_id"] == session_id
+            )
+            and (not plan_id or record.execution.plan_id == plan_id)
+            and (updated_after is None or record.execution.updated_at >= updated_after)
+            and (
+                updated_before is None or record.execution.updated_at <= updated_before
+            )
+        ]
         page, next_cursor = _cursor_page(
             records,
             cursor,
@@ -912,16 +1039,32 @@ def register_admin_routes(
     @app.get("/v1/admin/plan-runs")
     def admin_plan_runs(
         status: str | None = None,
+        user_id: str = "",
+        session_id: str = "",
+        plan_id: str = "",
+        updated_after: datetime | None = None,
+        updated_before: datetime | None = None,
         limit: int = Query(default=50, ge=1, le=200),
         cursor: str = "",
         _context: AuthContext = Depends(require("metrics:read")),
     ) -> dict:
+        updated_after = _utc_datetime(updated_after)
+        updated_before = _utc_datetime(updated_before)
         repository = build_plan_run_repository(
             services.config,
             session_path=None,
             user_id=None,
         )
-        runs = repository.list(status=status, limit=200)
+        runs = repository.list(status=status, limit=10_000)
+        runs = [
+            item
+            for item in runs
+            if (not user_id or item.user_id == user_id)
+            and (not session_id or item.session_key.rsplit(":", 1)[-1] == session_id)
+            and (not plan_id or item.plan_id == plan_id)
+            and (updated_after is None or item.updated_at >= updated_after)
+            and (updated_before is None or item.updated_at <= updated_before)
+        ]
         page, next_cursor = _cursor_page(
             runs,
             cursor,
@@ -969,6 +1112,15 @@ def register_admin_routes(
             "circuits": services.runtime.circuit_breakers.snapshot(),
             "provider": {
                 "mode": services.config.provider_mode,
+                "order_configured": services.config.provider_mode == "mock"
+                or services.runtime.order_provider is not None,
+                "logistics_configured": services.config.provider_mode == "mock"
+                or services.runtime.logistics_provider is not None,
+                "refund_configured": services.config.provider_mode == "mock"
+                or services.runtime.refund_provider is not None,
+                "compensation_configured": (
+                    services.runtime.compensation_provider is not None
+                ),
                 "webhook_verifier_configured": bool(
                     services.config.provider_webhook_secret
                 ),
@@ -977,12 +1129,18 @@ def register_admin_routes(
 
     @app.get("/v1/admin/risk-rules")
     def list_risk_rules(
+        limit: int = Query(default=50, ge=1, le=200),
+        cursor: str = "",
         _context: AuthContext = Depends(require("metrics:read")),
     ) -> dict:
         items = build_risk_rule_repository(services.config).list()
+        page, next_cursor = _cursor_page(
+            items, cursor, limit, lambda item: item.version
+        )
         return {
-            "count": len(items),
-            "rules": [item.model_dump(mode="json") for item in items],
+            "count": len(page),
+            "rules": [item.model_dump(mode="json") for item in page],
+            "next_cursor": next_cursor,
         }
 
     @app.post("/v1/admin/risk-rules/drafts")

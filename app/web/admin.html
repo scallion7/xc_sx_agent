@@ -9,10 +9,14 @@
     header{background:#171b26;color:white;padding:20px 5vw}
     main{padding:24px 5vw;display:grid;gap:20px}
     section{background:white;border-radius:12px;padding:18px;box-shadow:0 4px 18px #0001}
-    button,input{padding:8px 12px;margin:4px;border:1px solid #ccd2dc;border-radius:7px}
+    button,input,select,textarea{padding:8px 12px;margin:4px;border:1px solid #ccd2dc;border-radius:7px}
     table{width:100%;border-collapse:collapse}
     td,th{padding:9px;border-bottom:1px solid #eee;text-align:left}
     pre{white-space:pre-wrap}
+    textarea{width:min(900px,95%);min-height:100px;font-family:ui-monospace,monospace}
+    .filters{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:10px}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+    .metric{background:#f6f7fb;border-radius:8px;padding:12px}.metric strong{display:block;font-size:1.4rem}
   </style>
 </head>
 <body>
@@ -23,18 +27,20 @@
     <button onclick="refreshAll()">刷新</button>
     <span id="status"></span>
   </section>
-  <section><h2>运行指标</h2><pre id="metrics">加载中...</pre></section>
+  <section><h2>运行指标</h2><div id="metrics">加载中...</div><details><summary>原始指标</summary><pre id="metricsRaw"></pre></details></section>
   <section><h2>离线回归</h2><pre id="regression">加载中...</pre></section>
   <section><h2>就绪诊断与熔断器</h2><pre id="diagnostics">加载中...</pre></section>
   <section><h2>待审批工单</h2><div id="cases">加载中...</div></section>
   <section><h2>售后副作用操作</h2><div id="operations">加载中...</div></section>
+  <section><h2>独立补偿操作</h2><div id="compensations">加载中...</div></section>
   <section>
     <h2>计划历史与步骤时间线</h2>
+    <div class="filters"><input id="planUser" placeholder="用户 ID"><input id="planSession" placeholder="会话 ID"><input id="planId" placeholder="计划 ID"><select id="planStatus"><option value="">全部状态</option><option>running</option><option>awaiting_confirmation</option><option>completed</option><option>failed</option><option>cancelled</option><option>expired</option></select><label>起始 <input id="planAfter" type="datetime-local"></label><label>截止 <input id="planBefore" type="datetime-local"></label><button onclick="refreshAll()">筛选</button></div>
     <div id="plans">加载中...</div>
     <div id="timeline"></div>
   </section>
   <section><h2>计划运行、租约与资源预算</h2><div id="runs">加载中...</div></section>
-  <section><h2>风险规则版本</h2><div id="rules">加载中...</div></section>
+  <section><h2>风险规则版本</h2><div id="rules">加载中...</div><h3>创建草稿</h3><textarea id="ruleDraft" placeholder='粘贴完整规则 JSON，version 必须唯一'></textarea><button onclick="createRuleDraft()">保存草稿</button><h3>试运行样例</h3><textarea id="ruleCases">[{"case_id":"sample-1","amount":99,"signals":[],"current_route":"auto"}]</textarea></section>
 </main>
 <script>
 const headers=()=>({'X-API-Key':document.getElementById('token').value,'Content-Type':'application/json'});
@@ -54,6 +60,38 @@ async function recover(id) {
 async function compensate(id, status) {
   await api(`/v1/admin/after-sales/${id}/compensation`,{method:'POST',body:JSON.stringify({status,note:'管理台登记'})});
   refreshAll();
+}
+const idempotencyHeaders=()=>({'Idempotency-Key':crypto.randomUUID()});
+async function executeCompensation(key) {
+  await api(`/v1/admin/compensations/${encodeURIComponent(key)}/execute`,{method:'POST',headers:idempotencyHeaders(),body:JSON.stringify({worker_id:'admin-console'})});
+  refreshAll();
+}
+async function createRuleDraft() {
+  try {
+    const rules=JSON.parse(document.getElementById('ruleDraft').value);
+    await api('/v1/admin/risk-rules/drafts',{method:'POST',headers:idempotencyHeaders(),body:JSON.stringify({rules})});
+    refreshAll();
+  } catch(error) { document.getElementById('status').textContent=error.message; }
+}
+async function dryRunRule(version) {
+  try {
+    const cases=JSON.parse(document.getElementById('ruleCases').value);
+    const result=await api(`/v1/admin/risk-rules/${encodeURIComponent(version)}/dry-run`,{method:'POST',body:JSON.stringify({cases})});
+    document.getElementById('status').textContent=`规则 ${version} 试运行：${JSON.stringify(result.route_counts||result)}`;
+  } catch(error) { document.getElementById('status').textContent=error.message; }
+}
+async function activateRule(version) {
+  await api(`/v1/admin/risk-rules/${encodeURIComponent(version)}/activate`,{method:'POST',headers:idempotencyHeaders()});
+  refreshAll();
+}
+async function rollbackRule() {
+  await api('/v1/admin/risk-rules/rollback',{method:'POST',headers:idempotencyHeaders()});
+  refreshAll();
+}
+function governanceMetrics(data) {
+  const governance=data.governance||{};
+  const percent=value=>`${((value??0)*100).toFixed(1)}%`;
+  return `<div class="metrics"><div class="metric">计划完成率<strong>${percent(governance.plan_completion_rate)}</strong></div><div class="metric">步骤超时率<strong>${percent(governance.step_timeout_rate)}</strong></div><div class="metric">工具成功率<strong>${percent(data.tool_success_rate)}</strong></div><div class="metric">租约恢复<strong>${governance.lease_recoveries??0}</strong></div><div class="metric">取消请求<strong>${governance.cancellation_requests??0}</strong></div><div class="metric">副作用回放<strong>${governance.side_effect_replays??0}</strong></div></div>`;
 }
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 function operationActions(item) {
@@ -78,7 +116,8 @@ async function showPlan(id) {
 async function refreshAll(){
   try{
     const metrics=await api('/v1/admin/metrics');
-    document.getElementById('metrics').textContent=JSON.stringify(metrics,null,2);
+    document.getElementById('metrics').innerHTML=governanceMetrics(metrics);
+    document.getElementById('metricsRaw').textContent=JSON.stringify(metrics,null,2);
     const regression=await api('/v1/admin/regression');
     document.getElementById('regression').textContent=JSON.stringify(regression,null,2);
     const diagnostics=await api('/v1/admin/diagnostics');
@@ -91,17 +130,24 @@ async function refreshAll(){
     document.getElementById('operations').innerHTML=operations.count
       ? `<table><tr><th>操作</th><th>工单</th><th>状态</th><th>重试</th><th>补偿</th><th>操作</th></tr>${operations.operations.map(item=>`<tr><td>${escapeHtml(item.operation_id)}</td><td>${escapeHtml(item.case_id)}</td><td>${escapeHtml(item.status)}</td><td>${item.attempt_count}/${item.max_attempts}</td><td>${escapeHtml(item.compensation_status)}</td><td>${operationActions(item)}</td></tr>`).join('')}</table>`
       : '暂无售后副作用操作';
-    const plans=await api('/v1/admin/plans');
+    const compensations=await api('/v1/admin/compensations');
+    document.getElementById('compensations').innerHTML=compensations.count
+      ? `<table><tr><th>幂等键</th><th>工单</th><th>动作</th><th>状态</th><th>尝试</th><th>操作</th></tr>${compensations.operations.map(item=>`<tr><td>${escapeHtml(item.idempotency_key)}</td><td>${escapeHtml(item.case_id)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.status)}</td><td>${item.attempt_count}/${item.max_attempts}</td><td>${['pending','failed'].includes(item.status)?`<button onclick="executeCompensation('${escapeHtml(item.idempotency_key)}')">执行</button>`:''}</td></tr>`).join('')}</table>`
+      : '暂无独立补偿操作';
+    const planParams=new URLSearchParams();
+    [['user_id','planUser'],['session_id','planSession'],['plan_id','planId'],['status','planStatus']].forEach(([key,id])=>{const value=document.getElementById(id).value.trim();if(value)planParams.set(key,value)});
+    [['updated_after','planAfter'],['updated_before','planBefore']].forEach(([key,id])=>{const value=document.getElementById(id).value;if(value)planParams.set(key,new Date(value).toISOString())});
+    const plans=await api(`/v1/admin/plans?${planParams}`);
     document.getElementById('plans').innerHTML=plans.count
       ? `<table><tr><th>计划</th><th>用户</th><th>会话</th><th>目标</th><th>状态</th><th>版本</th></tr>${plans.plans.map(item=>`<tr><td><button onclick="showPlan('${item.plan.plan_id}')">${item.plan.plan_id.slice(0,8)}</button></td><td>${escapeHtml(item.user_id)}</td><td>${escapeHtml(item.session_id)}</td><td>${escapeHtml(item.plan.plan.goal)}</td><td>${escapeHtml(item.plan.status)}</td><td>v${item.plan.version}</td></tr>`).join('')}</table>`
       : '暂无计划记录';
-    const runs=await api('/v1/admin/plan-runs');
+    const runs=await api(`/v1/admin/plan-runs?${planParams}`);
     document.getElementById('runs').innerHTML=runs.count
       ? `<table><tr><th>运行</th><th>计划</th><th>worker</th><th>状态</th><th>fencing</th><th>租约</th><th>调用/重试/输出</th></tr>${runs.runs.map(item=>`<tr><td>${escapeHtml(item.run_id.slice(0,8))}</td><td>${escapeHtml(item.plan_id.slice(0,8))}</td><td>${escapeHtml(item.worker_id)}</td><td>${escapeHtml(item.status)}</td><td>${item.fencing_token}</td><td>${escapeHtml(item.lease_expires_at)}</td><td>${item.usage.tool_calls}/${item.usage.retry_attempts}/${item.usage.output_bytes}B</td></tr>`).join('')}</table>`
       : '暂无运行记录';
     const rules=await api('/v1/admin/risk-rules');
     document.getElementById('rules').innerHTML=rules.count
-      ? `<table><tr><th>版本</th><th>状态</th><th>创建人</th><th>哈希</th><th>激活时间</th></tr>${rules.rules.map(item=>`<tr><td>${escapeHtml(item.version)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.created_by)}</td><td>${escapeHtml(item.content_hash.slice(0,12))}</td><td>${escapeHtml(item.activated_at||'-')}</td></tr>`).join('')}</table>`
+      ? `<button onclick="rollbackRule()">回滚到上一版本</button><table><tr><th>版本</th><th>状态</th><th>创建人</th><th>哈希</th><th>激活时间</th><th>治理操作</th></tr>${rules.rules.map(item=>`<tr><td>${escapeHtml(item.version)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.created_by)}</td><td>${escapeHtml(item.content_hash.slice(0,12))}</td><td>${escapeHtml(item.activated_at||'-')}</td><td><button onclick="dryRunRule('${escapeHtml(item.version)}')">试运行</button>${item.status==='draft'?`<button onclick="activateRule('${escapeHtml(item.version)}')">激活</button>`:''}</td></tr>`).join('')}</table>`
       : '暂无版本化规则；可通过管理 API 创建 draft、试运行、激活或回滚';
     document.getElementById('status').textContent='已更新';
   }catch(error){document.getElementById('status').textContent=error.message}

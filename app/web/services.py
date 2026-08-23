@@ -28,7 +28,7 @@ from app.observability import TraceContext
 from app.repositories.mock_commerce import MockCommerceRepository
 from app.repositories.policies import build_risk_rule_repository
 from app.schemas.response import CustomerServiceResponse
-from app.security import AuthContext, AuthService, build_auth_provider
+from app.security import AuthContext, AuthProvider, AuthService, build_auth_provider
 from app.services.commerce import CommerceService
 from app.services.compensations import (
     CompensationService,
@@ -73,6 +73,7 @@ def build_api_services(
     agent_factory: AgentFactory | None = None,
     after_sale_service: AfterSaleService | None = None,
     commerce_service: CommerceService | None = None,
+    auth_provider: AuthProvider | None = None,
 ) -> ApiServices:
     """在应用边界集中完成依赖组装，路由只负责协议转换。"""
     configure_database(
@@ -80,7 +81,7 @@ def build_api_services(
         auto_create=config.database_auto_create,
     )
     app_runtime = runtime or create_runtime(config)
-    auth = AuthService(provider=build_auth_provider(config))
+    auth = AuthService(provider=auth_provider or build_auth_provider(config))
 
     if commerce_service is None and after_sale_service is not None:
         commerce_service = after_sale_service.commerce_service
@@ -93,7 +94,14 @@ def build_api_services(
             if config.persistence_backend == "sql"
             else MockCommerceRepository()
         )
-        commerce_service = CommerceService(repository)
+        commerce_service = CommerceService(
+            repository,
+            order_provider=app_runtime.order_provider,
+            logistics_provider=app_runtime.logistics_provider,
+            refund_provider=app_runtime.refund_provider,
+            provider_timeout_seconds=config.provider_timeout_seconds,
+            provider_read_max_attempts=config.provider_read_max_attempts,
+        )
 
     if after_sale_service is None:
         if config.persistence_backend == "sql":
@@ -187,6 +195,8 @@ def invoke_chat(
             rate_limiter=services.runtime.model_rate_limiter,
             strategy=request.strategy,
             circuit_breakers=services.runtime.circuit_breakers,
+            commerce_service=services.commerce,
+            after_sale_service=services.after_sale,
         )
         try:
             return agent.chat(request.message)
