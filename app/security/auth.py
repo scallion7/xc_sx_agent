@@ -34,6 +34,7 @@ class AuthService:
                     "session:delete",
                     "after_sale:read",
                     "after_sale:review",
+                    "after_sale:recover",
                     "metrics:read",
                     "plan:cancel",
                 }

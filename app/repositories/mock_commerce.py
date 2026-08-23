@@ -36,5 +36,9 @@ class MockCommerceRepository:
         order_id: str,
         user_id: str,
         reason: str,
+        idempotency_key: str = "",
     ) -> dict:
-        return apply_refund(order_id, reason)
+        result = apply_refund(order_id, reason)
+        if idempotency_key:
+            result["idempotency_key"] = idempotency_key
+        return result

@@ -24,3 +24,10 @@ class ReviewRequest(BaseModel):
 
     decision: Literal["approve", "reject"]
     note: str = ""
+
+
+class CompensationRequest(BaseModel):
+    """管理员登记售后补偿状态。"""
+
+    status: Literal["pending", "completed", "failed"]
+    note: str = ""

@@ -106,6 +106,42 @@ Index(
 )
 Index("ix_after_sale_status", after_sale_cases_table.c.status)
 
+after_sale_operations_table = Table(
+    "after_sale_operations",
+    metadata,
+    Column("idempotency_key", String(255), primary_key=True),
+    Column("operation_id", String(64), nullable=False, unique=True),
+    Column("case_id", String(64), nullable=False),
+    Column("user_id", String(128), nullable=False),
+    Column("operation_type", String(80), nullable=False),
+    Column("request_hash", String(64), nullable=False),
+    Column("status", String(64), nullable=False),
+    Column("attempt_count", Integer, nullable=False),
+    Column("max_attempts", Integer, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("compensation_status", String(64), nullable=False),
+    Column("lease_expires_at", String(64), nullable=False),
+    Column("payload_json", Text, nullable=False),
+    Column("created_at", String(64), nullable=False),
+    Column("updated_at", String(64), nullable=False),
+)
+Index(
+    "ix_after_sale_operations_case",
+    after_sale_operations_table.c.case_id,
+)
+Index(
+    "ix_after_sale_operations_user",
+    after_sale_operations_table.c.user_id,
+)
+Index(
+    "ix_after_sale_operations_status",
+    after_sale_operations_table.c.status,
+)
+Index(
+    "ix_after_sale_operations_compensation",
+    after_sale_operations_table.c.compensation_status,
+)
+
 orders_table = Table(
     "orders",
     metadata,

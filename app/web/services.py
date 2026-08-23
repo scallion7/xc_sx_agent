@@ -12,11 +12,15 @@ from fastapi import HTTPException
 
 from app.agent.after_sale import (
     AfterSaleService,
+    JsonAfterSaleOperationRepository,
     JsonAfterSaleRepository,
     RiskRouter,
 )
 from app.bootstrap import ApplicationRuntime, create_agent, create_runtime
 from app.config.settings import Settings
+from app.infrastructure.sql_after_sale_operation_repository import (
+    SqlAfterSaleOperationRepository,
+)
 from app.infrastructure.sql_after_sale_repository import SqlAfterSaleRepository
 from app.infrastructure.sql_commerce_repository import SqlCommerceRepository
 from app.observability import TraceContext
@@ -76,11 +80,16 @@ def build_api_services(
         commerce_service = CommerceService(repository)
 
     if after_sale_service is None:
-        after_sale_repository = (
-            SqlAfterSaleRepository(config.database_url)
-            if config.persistence_backend == "sql"
-            else JsonAfterSaleRepository(config.after_sale_case_path)
-        )
+        if config.persistence_backend == "sql":
+            after_sale_repository = SqlAfterSaleRepository(config.database_url)
+            operation_repository = SqlAfterSaleOperationRepository(config.database_url)
+        else:
+            after_sale_repository = JsonAfterSaleRepository(config.after_sale_case_path)
+            case_path = Path(config.after_sale_case_path)
+            operation_repository = JsonAfterSaleOperationRepository(
+                config.after_sale_operation_path
+                or case_path.with_name("after_sale_operations.json")
+            )
         after_sale_service = AfterSaleService(
             after_sale_repository,
             RiskRouter(
@@ -89,6 +98,10 @@ def build_api_services(
                 config.risk_rules_path,
             ),
             commerce_service=commerce_service,
+            operation_repository=operation_repository,
+            operation_lease_seconds=config.after_sale_operation_lease_seconds,
+            operation_max_attempts=config.after_sale_operation_max_attempts,
+            event_bus=app_runtime.event_bus,
         )
 
     return ApiServices(

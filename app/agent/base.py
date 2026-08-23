@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 from app.agent.after_sale import (
     AfterSaleService,
+    JsonAfterSaleOperationRepository,
     JsonAfterSaleRepository,
     RiskRouter,
 )
@@ -30,6 +32,9 @@ from app.infrastructure.model_gateway import (
     ModelGateway,
     OpenAIModelGateway,
     SlidingWindowRateLimiter,
+)
+from app.infrastructure.sql_after_sale_operation_repository import (
+    SqlAfterSaleOperationRepository,
 )
 from app.infrastructure.sql_after_sale_repository import (
     SqlAfterSaleRepository,
@@ -131,9 +136,17 @@ class BaseConversationAgent(ABC):
             after_sale_repository = SqlAfterSaleRepository(
                 self.config.database_url,
             )
+            after_sale_operation_repository = SqlAfterSaleOperationRepository(
+                self.config.database_url,
+            )
         else:
             after_sale_repository = JsonAfterSaleRepository(
                 self.config.after_sale_case_path,
+            )
+            case_path = Path(self.config.after_sale_case_path)
+            after_sale_operation_repository = JsonAfterSaleOperationRepository(
+                self.config.after_sale_operation_path
+                or case_path.with_name("after_sale_operations.json"),
             )
         self.after_sale_service = after_sale_service or AfterSaleService(
             repository=after_sale_repository,
@@ -143,6 +156,10 @@ class BaseConversationAgent(ABC):
                 self.config.risk_rules_path,
             ),
             commerce_service=self.commerce_service,
+            operation_repository=after_sale_operation_repository,
+            operation_lease_seconds=(self.config.after_sale_operation_lease_seconds),
+            operation_max_attempts=(self.config.after_sale_operation_max_attempts),
+            event_bus=self.event_bus,
         )
         self.tool_registry = tool_registry or create_default_tool_registry(
             config=self.config,

@@ -6,7 +6,7 @@ LLM 只负责收集参数；状态转换、审批与执行均由这些确定性�
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -26,6 +26,7 @@ class CaseStatus(str, Enum):
     PROCESSING = "processing"
     COMPLETED = "completed"
     REJECTED = "rejected"
+    EXECUTION_FAILED = "execution_failed"
 
 
 class RiskLevel(str, Enum):
@@ -40,6 +41,21 @@ class ApprovalStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class OperationStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    EXHAUSTED = "exhausted"
+
+
+class CompensationStatus(str, Enum):
+    NOT_REQUIRED = "not_required"
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 @dataclass
@@ -87,3 +103,71 @@ class AfterSaleCase:
         now = datetime.now().isoformat(timespec="seconds")
         self.updated_at = now
         self.audit_log.append(AuditEvent(action, actor, now, note))
+
+
+@dataclass
+class AfterSaleOperation:
+    """一次售后副作用操作的持久化事务日志。"""
+
+    operation_id: str
+    idempotency_key: str
+    case_id: str
+    user_id: str
+    operation_type: str
+    request_hash: str
+    status: str
+    attempt_count: int
+    max_attempts: int
+    version: int
+    lease_expires_at: str
+    created_at: str
+    updated_at: str
+    result: dict = field(default_factory=dict)
+    error: str = ""
+    completed_at: str = ""
+    compensation_status: str = CompensationStatus.NOT_REQUIRED.value
+    compensation_note: str = ""
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> AfterSaleOperation:
+        payload = dict(data)
+        payload.setdefault("result", {})
+        payload.setdefault("error", "")
+        payload.setdefault("completed_at", "")
+        payload.setdefault(
+            "compensation_status",
+            CompensationStatus.NOT_REQUIRED.value,
+        )
+        payload.setdefault("compensation_note", "")
+        return cls(**payload)
+
+    def lease_active(self, now: datetime) -> bool:
+        if self.status != OperationStatus.RUNNING.value:
+            return False
+        try:
+            expires_at = datetime.fromisoformat(self.lease_expires_at)
+        except ValueError:
+            return False
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return expires_at > now
+
+    def recoverable(self, now: datetime) -> bool:
+        if self.attempt_count >= self.max_attempts:
+            return False
+        if self.status == OperationStatus.FAILED.value:
+            return True
+        return self.status == OperationStatus.RUNNING.value and not self.lease_active(
+            now
+        )
+
+
+@dataclass(frozen=True)
+class OperationClaim:
+    """原子抢占结果：claimed/replay/in_progress/exhausted。"""
+
+    disposition: str
+    operation: AfterSaleOperation

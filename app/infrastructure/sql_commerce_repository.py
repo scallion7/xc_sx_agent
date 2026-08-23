@@ -182,6 +182,7 @@ class SqlCommerceRepository:
         order_id: str,
         user_id: str,
         reason: str,
+        idempotency_key: str = "",
     ) -> dict:
         now = _now()
         with self.engine.begin() as connection:
@@ -201,6 +202,8 @@ class SqlCommerceRepository:
                 return {
                     "success": False,
                     "idempotent": True,
+                    "effect_applied": True,
+                    "idempotency_key": idempotency_key,
                     "error": "该订单已有退款申请正在处理中，请耐心等待",
                 }
             existing = (
@@ -219,6 +222,8 @@ class SqlCommerceRepository:
                 return {
                     "success": False,
                     "idempotent": True,
+                    "effect_applied": True,
+                    "idempotency_key": idempotency_key,
                     "refund_id": existing["refund_id"],
                     "error": "该订单已有退款申请正在处理中，请耐心等待",
                 }
@@ -231,6 +236,7 @@ class SqlCommerceRepository:
                 "reason": reason,
                 "status": "submitted",
                 "created_at": now,
+                "idempotency_key": idempotency_key,
             }
             connection.execute(
                 insert(refunds_table).values(
@@ -274,6 +280,7 @@ class SqlCommerceRepository:
             "success": True,
             "refund_id": refund_id,
             "status": "submitted",
+            "idempotency_key": idempotency_key,
             "message": (
                 f"{action}。订单 {order_id}，退款原因：{reason}。"
                 "预计 1-3 个工作日内处理完成。"

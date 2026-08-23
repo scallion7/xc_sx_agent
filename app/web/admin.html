@@ -16,7 +16,7 @@
   </style>
 </head>
 <body>
-<header><h1>小夕客服管理台</h1><p>审批、运行指标与计划审计</p></header>
+<header><h1>小夕客服管理台</h1><p>审批、副作用恢复、运行指标与计划审计</p></header>
 <main>
   <section>
     <label>管理员 Token <input id="token" type="password" value="dev-admin-token"></label>
@@ -26,6 +26,7 @@
   <section><h2>运行指标</h2><pre id="metrics">加载中...</pre></section>
   <section><h2>离线回归</h2><pre id="regression">加载中...</pre></section>
   <section><h2>待审批工单</h2><div id="cases">加载中...</div></section>
+  <section><h2>售后副作用操作</h2><div id="operations">加载中...</div></section>
   <section>
     <h2>计划历史与步骤时间线</h2>
     <div id="plans">加载中...</div>
@@ -43,7 +44,25 @@ async function review(id, decision) {
   await api(`/v1/admin/after-sales/${id}/review`,{method:'POST',body:JSON.stringify({decision,note:'管理台审批'})});
   refreshAll();
 }
+async function recover(id) {
+  await api(`/v1/admin/after-sales/${id}/recover`,{method:'POST'});
+  refreshAll();
+}
+async function compensate(id, status) {
+  await api(`/v1/admin/after-sales/${id}/compensation`,{method:'POST',body:JSON.stringify({status,note:'管理台登记'})});
+  refreshAll();
+}
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+function operationActions(item) {
+  const id=escapeHtml(item.case_id);
+  const leaseExpired=item.status==='running'&&item.lease_expires_at&&Date.parse(item.lease_expires_at)<=Date.now();
+  const actions=[];
+  if(item.status==='failed'||leaseExpired) actions.push(`<button onclick="recover('${id}')">恢复执行</button>`);
+  if(item.status==='succeeded'&&item.compensation_status==='not_required') actions.push(`<button onclick="compensate('${id}','pending')">登记补偿</button>`);
+  if(item.compensation_status==='pending') actions.push(`<button onclick="compensate('${id}','completed')">补偿完成</button><button onclick="compensate('${id}','failed')">补偿失败</button>`);
+  if(item.compensation_status==='failed') actions.push(`<button onclick="compensate('${id}','pending')">重试补偿</button>`);
+  return actions.join('');
+}
 async function showPlan(id) {
   try {
     const data=await api(`/v1/admin/plans/${id}`);
@@ -63,6 +82,10 @@ async function refreshAll(){
     document.getElementById('cases').innerHTML=data.cases.length
       ? `<table><tr><th>工单</th><th>订单</th><th>金额</th><th>风险</th><th>操作</th></tr>${data.cases.map(c=>`<tr><td>${c.case_id}</td><td>${c.order_id}</td><td>${c.amount}</td><td>${c.risk_level}</td><td><button onclick="review('${c.case_id}','approve')">批准</button><button onclick="review('${c.case_id}','reject')">拒绝</button></td></tr>`).join('')}</table>`
       : '暂无待审批工单';
+    const operations=await api('/v1/admin/after-sales/operations');
+    document.getElementById('operations').innerHTML=operations.count
+      ? `<table><tr><th>操作</th><th>工单</th><th>状态</th><th>重试</th><th>补偿</th><th>操作</th></tr>${operations.operations.map(item=>`<tr><td>${escapeHtml(item.operation_id)}</td><td>${escapeHtml(item.case_id)}</td><td>${escapeHtml(item.status)}</td><td>${item.attempt_count}/${item.max_attempts}</td><td>${escapeHtml(item.compensation_status)}</td><td>${operationActions(item)}</td></tr>`).join('')}</table>`
+      : '暂无售后副作用操作';
     const plans=await api('/v1/admin/plans');
     document.getElementById('plans').innerHTML=plans.count
       ? `<table><tr><th>计划</th><th>用户</th><th>会话</th><th>目标</th><th>状态</th><th>版本</th></tr>${plans.plans.map(item=>`<tr><td><button onclick="showPlan('${item.plan.plan_id}')">${item.plan.plan_id.slice(0,8)}</button></td><td>${escapeHtml(item.user_id)}</td><td>${escapeHtml(item.session_id)}</td><td>${escapeHtml(item.plan.plan.goal)}</td><td>${escapeHtml(item.plan.status)}</td><td>v${item.plan.version}</td></tr>`).join('')}</table>`

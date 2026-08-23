@@ -4,9 +4,9 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：阶段 20 已将可恢复的 Plan-and-Execute
-> 升级为独立计划仓储，支持 JSON/SQL 持久化、乐观锁、历史查询、步骤时间线
-> 和管理员审计。当前完整离线回归共 60 项，不访问真实或本地模型服务。
+> 当前二次开发进度：阶段 21 已为售后退款副作用增加持久化幂等键、原子抢占、
+> 执行租约、失败重试、崩溃恢复和人工补偿状态。当前完整离线回归共 68 项，
+> 不访问真实或本地模型服务。
 
 ## 项目定位
 
@@ -19,7 +19,10 @@
 - 如何评估工具调用过程和最终回答；
 - 如何把敏感业务动作收敛到状态机、风险规则和人工审批中。
 
-默认 SQL 模式会把演示订单、商品和物流种子写入 SQLite/PostgreSQL，退款状态和售后工单均真实持久化。种子数据可通过 `COMMERCE_SEED_DEMO_DATA=false` 关闭，以接入真实业务数据。仓库仍是教学与作品演示项目，生产使用前应替换演示 Token、密钥管理、数据库迁移和组织级身份系统。
+默认 SQL 模式会把演示订单、商品和物流种子写入 SQLite/PostgreSQL，退款状态、
+售后工单和副作用操作日志均真实持久化。种子数据可通过
+`COMMERCE_SEED_DEMO_DATA=false` 关闭，以接入真实业务数据。仓库仍是教学与作品
+演示项目，生产使用前应替换演示 Token、密钥管理、数据库迁移和组织级身份系统。
 
 ## 当前核心能力
 
@@ -55,8 +58,9 @@
 7. Prompt Injection 防护、敏感信息脱敏、RBAC 和敏感工具权限；
 8. Docker Compose API + PostgreSQL 演示环境；
 9. Pydantic 工具参数契约、单/Multi-Agent Plan-and-Execute 与离线 CI 门禁；
-10. 跨步骤结果引用、有限并发、计划身份、确认恢复、过期/取消和跨模式权限保护。
-11. 独立 Plan Repository、计划版本与乐观锁、步骤投影、审计时间线和历史 API。
+10. 跨步骤结果引用、有限并发、计划身份、确认恢复、过期/取消和跨模式权限保护；
+11. 独立 Plan Repository、计划版本与乐观锁、步骤投影、审计时间线和历史 API；
+12. 售后副作用事务日志、持久化幂等、原子抢占、租约恢复、重试耗尽和补偿登记。
 
 ## 二次开发架构
 
@@ -88,13 +92,14 @@ Application Factory → TraceContext → Guardrails
           ▼              ▼              ▼
    CommerceService   Policy RAG    AfterSaleService
           │                              │
-          ▼                              ▼
- CommerceRepository              工单级风险路由
-（SQL / Mock 适配器）        ┌────────────┴────────────┐
-                         low：自动批准        medium/high/critical
-                                      │
-                                      ▼
-                              SQL 工单 / 人工审批
+          ▼                    ┌─────────┴─────────┐
+ CommerceRepository            ▼                   ▼
+（SQL / Mock 适配器）     工单级风险路由      OperationRepository
+                         │                 （JSON / SQL / 乐观锁）
+                         ▼                          │
+                 自动批准 / 人工审批                ▼
+                                         幂等抢占 → 退款适配器
+                                         → 重试 / 恢复 / 补偿登记
 
 所有核心路径 ──emit──> EventBus
                          ├─ JSONL 日志
@@ -211,6 +216,17 @@ python app/scripts/review_after_sale.py approve AS-XXXXXXXXXX `
 python app/scripts/review_after_sale.py reject AS-XXXXXXXXXX `
   --reviewer customer-service-01 `
   --note "超过政策规定的售后时效"
+
+# 查看并恢复失败或租约过期的副作用操作
+python app/scripts/review_after_sale.py operations
+python app/scripts/review_after_sale.py recover AS-XXXXXXXXXX `
+  --reviewer customer-service-01
+
+# 登记人工补偿
+python app/scripts/review_after_sale.py compensate AS-XXXXXXXXXX `
+  --status pending `
+  --reviewer customer-service-01 `
+  --note "需要冲正"
 ```
 
 创建、提交审批、批准、拒绝、开始执行和执行结果都会写入工单审计日志。
@@ -263,9 +279,10 @@ python app/scripts/review_after_sale.py reject AS-XXXXXXXXXX `
 
 ### 6. 服务化、持久化与用户隔离
 
-- `SessionRepository`、`AfterSaleRepository` 和 `CommerceRepository` 是业务层依赖的协议；
+- `SessionRepository`、`AfterSaleRepository`、`AfterSaleOperationRepository` 和
+  `CommerceRepository` 是业务层依赖的协议；
 - SQLAlchemy 适配器同时支持本地 SQLite 与 PostgreSQL；
-- 订单、商品、物流、退款、会话和售后工单均有 SQL 表；
+- 订单、商品、物流、退款、会话、售后工单和副作用操作均有 SQL 表；
 - 订单查询、退款、会话和工单查询都按 `user_id` 校验归属；
 - JSON 与 Mock 适配器只保留给旧课程和轻量本地开发；
 - 演示数据初始化是幂等的，生产接入真实库时可关闭。
@@ -311,6 +328,22 @@ Multi-Agent 会先由 Router 选定售前、售后或投诉子 Agent，再使用
 `ToolManager` 规划和执行。计划会持久化 `agent_key` 与原风险转人工标记；确认轮恢复
 原子 Agent，不重新路由。Multi-Agent 计划也不能切换到工具范围更大的单 Agent 执行。
 
+### 10. 售后副作用可靠执行
+
+每个售后工单使用稳定的 `after_sale.execute:<case_id>` 幂等键和请求摘要。执行前必须
+先在 `AfterSaleOperationRepository` 中原子抢占租约；重复请求会根据持久化状态返回
+“执行中”、成功回放或重试耗尽，不会直接再次调用退款适配器。
+
+操作状态为 `running / failed / succeeded / exhausted`，同时记录尝试次数、版本、租约、
+结果和补偿状态。失败操作可以在限制内重试，进程中断留下的过期租约可以由管理员恢复；
+SQL 后端用唯一幂等键和 `WHERE version = ?` 条件更新处理跨进程竞争，JSON 后端使用
+同进程共享锁和原子文件替换。退款适配器收到同一个幂等键，若发现外部退款已存在，
+服务会把工单与操作日志收敛到成功状态。
+
+重试耗尽后工单进入 `execution_failed`，不再自动执行。管理员可以登记
+`pending → completed/failed` 补偿状态，全部抢占、失败、完成、回放和补偿变更都会发送
+EventBus 事件并保留工单审计记录。
+
 ## 项目结构
 
 ```text
@@ -321,8 +354,9 @@ ecom-service-agent/
 │   │   ├── base.py                      # 共享会话与依赖生命周期
 │   │   ├── chat.py                      # 单 Agent ReAct/计划执行与恢复入口
 │   │   ├── after_sale/                  # 二次开发：售后工单领域层
-│   │   │   ├── models.py                # 工单、状态、风险和审计模型
+│   │   │   ├── models.py                # 工单、副作用操作、风险和审计模型
 │   │   │   ├── repository.py            # 仓储协议与 JSON 适配器
+│   │   │   ├── operation_repository.py  # 幂等抢占、租约与 JSON 操作日志
 │   │   │   ├── risk.py                  # 消息级/工单级风险路由
 │   │   │   └── service.py               # 创建、审批和执行状态转换
 │   │   ├── tools/
@@ -343,7 +377,7 @@ ecom-service-agent/
 │   │   └── memory/                       # 短期和长期记忆
 │   ├── api.py                            # REST 与 WebSocket 路由注册
 │   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
-│   ├── infrastructure/                   # 模型网关、数据库与计划表结构
+│   ├── infrastructure/                   # 模型网关、数据库与 SQL 仓储适配器
 │   ├── repositories/                     # 会话/计划仓储协议与 JSON/SQL 适配器
 │   ├── services/
 │   │   ├── commerce.py                   # 订单、商品与物流应用服务
@@ -360,8 +394,8 @@ ecom-service-agent/
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
-├── tests/                                # 原有测试和深化回归测试
-└── docs/                                 # 第 1–20 期教学与二次开发文档
+├── tests/                                # 原有测试和阶段 21 可靠性回归
+└── docs/                                 # 第 1–21 期教学与二次开发文档
 ```
 
 ## 快速开始
@@ -502,7 +536,12 @@ python app/scripts/run_api.py
 - 事件查询：`GET /v1/events`
 - 订单、商品和售后查询：`GET /v1/orders`、`GET /v1/products`、
   `GET /v1/after-sales/{case_id}`
-- 人工审批与运维：`/v1/admin/after-sales/*`、`/v1/admin/metrics`、
+- 售后执行记录：`GET /v1/after-sales/{case_id}/operation`
+- 副作用运维：`GET /v1/admin/after-sales/operations`、
+  `GET /v1/admin/after-sales/operations/recoverable`、
+  `POST /v1/admin/after-sales/{case_id}/recover`、
+  `POST /v1/admin/after-sales/{case_id}/compensation`
+- 人工审批与指标：`/v1/admin/after-sales/*`、`/v1/admin/metrics`、
   `/v1/admin/regression`
 
 请求使用 `X-API-Key`。`.env.example` 中的开发 Token 只用于本地演示。
@@ -590,7 +629,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归共 60 项，不会调用外部模型或本地模型服务：
+当前完整离线回归共 68 项，不会调用外部模型或本地模型服务：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -628,6 +667,9 @@ ruff format --check .
 - Multi-Agent 子 Agent 工具隔离、原路由恢复、风险标记持久化与跨模式保护；
 - JSON/SQL 独立计划仓储、旧快照迁移、用户隔离与乐观锁冲突；
 - 计划历史、详情、按身份取消、步骤快照和审计时间线 API；
+- JSON/SQL 售后操作日志、唯一幂等键、并发原子抢占和版本冲突；
+- 失败重试、重试耗尽、过期租约恢复和外部已生效结果收敛；
+- 操作用户隔离、管理员恢复权限、管理台审计和人工补偿状态流转；
 - 工具 Schema 与 Pydantic 参数契约一致性；
 - GitHub Actions Ruff 与完整离线回归。
 
@@ -636,6 +678,7 @@ ruff format --check .
 ```bash
 python -m unittest tests.test_strategy_development -v
 python -m unittest tests.test_plan_repository -v
+python -m unittest tests.test_side_effect_reliability -v
 ```
 
 运行原有专项测试（其中 Agent/RAG/评估脚本可能调用配置的模型，不属于上面的纯离线验收）：
@@ -674,13 +717,14 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 详细设计与已完成的替换路线见
 [第11期-架构演进与应用工厂](docs/第11期-架构演进与应用工厂.md)。
 
-### 第 16–20 期：确定性计划执行演进
+### 第 16–21 期：确定性计划与副作用执行演进
 
 - 第 16 期引入强类型工具契约和基础 Plan-and-Execute；
 - 第 17 期补齐跨步骤引用、计划身份和精确确认恢复；
 - 第 18 期增加有限并发、TTL、恢复上限以及查询/取消 API；
 - 第 19 期将计划执行接入 Multi-Agent，并绑定子 Agent 工具范围与原路由。
 - 第 20 期引入独立 Plan Repository、乐观锁、历史 API 和审计时间线。
+- 第 21 期为售后副作用增加持久化幂等、原子抢占、租约恢复和补偿状态。
 
 | 阶段 | 主题 | 状态 |
 |---|---|---|
@@ -706,6 +750,7 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 阶段 18 | 有限并发、计划生命周期与查询取消 API | 已完成 |
 | 阶段 19 | Multi-Agent 计划执行与子 Agent 工具隔离 | 已完成 |
 | 阶段 20 | 独立计划仓储、乐观锁与审计时间线 | 已完成 |
+| 阶段 21 | 售后副作用可靠执行、恢复与补偿 | 已完成 |
 
 ## 相关文档
 
@@ -726,13 +771,13 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第18期：计划调度与生命周期](docs/第18期-计划调度与生命周期.md)
 - [第19期：Multi-Agent 计划执行与工具隔离](docs/第19期-Multi-Agent计划执行与工具隔离.md)
 - [第20期：独立计划仓储与审计](docs/第20期-独立计划仓储与审计.md)
+- [第21期：售后副作用可靠执行](docs/第21期-售后副作用可靠执行.md)
 
 ## 后续路线
 
-阶段 20 已完成独立计划中心。按当前压缩后的三阶段路线，后续保留两个阶段：
+阶段 21 已完成售后副作用可靠执行。当前压缩路线只保留最后一个阶段：
 
-1. 阶段 21：为售后副作用工具增加持久化幂等键、事务状态与失败补偿；
-2. 阶段 22：增加步骤超时、取消传播和资源配额，并将固定计划数据集纳入
+1. 阶段 22：增加步骤超时、取消传播和资源配额，并将固定计划数据集纳入
    调度、恢复与路由一致性质量门禁。
 
 ## 当前边界
@@ -742,6 +787,9 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 
 - API Token 映射来自环境变量，生产应接入 OAuth2/OIDC、密钥轮换和组织身份；
 - 数据库表由 SQLAlchemy 自动创建，生产应纳入 Alembic 等受控迁移流程；
+- 真实退款供应商必须持久化并识别传入的幂等键；当前 SQL 演示适配器以订单退款
+  唯一状态完成收敛，JSON/Mock 适配器不代表跨系统事务保证；
+- 补偿模块记录人工处理状态和审计证据，不会自动调用支付冲正接口；
 - `COMMERCE_SEED_DEMO_DATA=true` 仅用于演示，真实环境应关闭并接入业务主数据；
 - 风险规则和政策文档是示例内容，上线前需要法务、风控和客服运营共同审核；
 - 本次验收只使用 Fake 客户端，不包含真实模型质量、费用、网络和供应商压测。

@@ -21,4 +21,5 @@ class CommerceRepository(Protocol):
         order_id: str,
         user_id: str,
         reason: str,
+        idempotency_key: str = "",
     ) -> dict: ...

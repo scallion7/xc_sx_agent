@@ -42,8 +42,11 @@ class Settings(BaseSettings):
     # Agent 深化：售后工单 / Human-in-the-Loop
     after_sale_enabled: bool = True
     after_sale_case_path: str = "app/sessions/after_sale_cases.json"
+    after_sale_operation_path: str = ""
     after_sale_auto_approve_max_amount: float = 200.0
     after_sale_high_risk_amount: float = 2000.0
+    after_sale_operation_lease_seconds: int = 300
+    after_sale_operation_max_attempts: int = 3
     risk_rules_path: str = "app/config/risk_rules.json"
 
     # Multi-Agent 配置（第6期）

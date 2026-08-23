@@ -37,7 +37,7 @@ from app.services.plans import (
     PlanSessionService,
 )
 from app.web.admin import render_admin_page
-from app.web.schemas import ChatRequest, ReviewRequest
+from app.web.schemas import ChatRequest, CompensationRequest, ReviewRequest
 from app.web.services import (
     AgentFactory,
     ApiServices,
@@ -432,6 +432,17 @@ def register_commerce_routes(
             raise HTTPException(status_code=404, detail=result["error"])
         return result
 
+    @app.get("/v1/after-sales/{case_id}/operation")
+    def after_sale_operation(
+        case_id: str,
+        context: AuthContext = Depends(require("after_sale:read")),
+    ) -> dict:
+        owner_id = None if context.role == "admin" else context.user_id
+        result = services.after_sale.get_operation(case_id, owner_id)
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result["error"])
+        return result
+
     @app.get("/v1/orders")
     def orders(
         context: AuthContext = Depends(require("chat:use")),
@@ -468,6 +479,48 @@ def register_admin_routes(
         _context: AuthContext = Depends(require("after_sale:review")),
     ) -> dict:
         return services.after_sale.list_pending_approvals()
+
+    @app.get("/v1/admin/after-sales/operations/recoverable")
+    def recoverable_operations(
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        return services.after_sale.list_recoverable_operations()
+
+    @app.get("/v1/admin/after-sales/operations")
+    def after_sale_operations(
+        limit: int = Query(default=50, ge=1, le=200),
+        _context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        return services.after_sale.list_operations(limit=limit)
+
+    @app.post("/v1/admin/after-sales/{case_id}/recover")
+    def recover_after_sale(
+        case_id: str,
+        context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        result = services.after_sale.recover_case(
+            case_id,
+            actor=context.user_id,
+        )
+        if not result.get("success"):
+            raise HTTPException(status_code=409, detail=result)
+        return result
+
+    @app.post("/v1/admin/after-sales/{case_id}/compensation")
+    def update_after_sale_compensation(
+        case_id: str,
+        request: CompensationRequest,
+        context: AuthContext = Depends(require("after_sale:recover")),
+    ) -> dict:
+        result = services.after_sale.update_compensation(
+            case_id,
+            request.status,
+            context.user_id,
+            request.note,
+        )
+        if not result.get("success"):
+            raise HTTPException(status_code=409, detail=result)
+        return result
 
     @app.post("/v1/admin/after-sales/{case_id}/review")
     def review(

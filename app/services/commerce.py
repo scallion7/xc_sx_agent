@@ -88,6 +88,8 @@ class CommerceService:
         order_id: str,
         reason: str,
         user_id: str = "default",
+        *,
+        idempotency_key: str = "",
     ) -> dict:
         owned = self.get_order(order_id, user_id)
         if not owned.get("success"):
@@ -98,4 +100,5 @@ class CommerceService:
             order_id,
             user_id,
             reason.strip(),
+            idempotency_key=idempotency_key,
         )
