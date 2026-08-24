@@ -101,4 +101,7 @@ jobs:
           image-ref: xc-sx-agent:stage22
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-          exit-code: "1"
+          format: json
+          output: trivy-results.json
+          exit-code: "0"
+      - run: python -m app.scripts.validate_trivy_report trivy-results.json

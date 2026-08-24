@@ -25,6 +25,10 @@ from app.infrastructure.database import (
 )
 from app.repositories.plan_runs import JsonPlanRunRepository
 from app.repositories.plans import SqlPlanRepository
+from app.scripts.validate_trivy_report import (
+    find_vulnerabilities,
+    github_error_annotation,
+)
 from app.services.data_maintenance import DataMaintenanceService
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -91,6 +95,40 @@ class EvaluationQualityGateTests(unittest.TestCase):
     def test_configuration_rejects_step_timeout_over_total(self):
         with self.assertRaises(ValidationError):
             Settings(plan_step_timeout_seconds=20, plan_total_timeout_seconds=10)
+
+    def test_trivy_report_emits_sorted_actionable_annotations(self):
+        report = {
+            "Results": [
+                {
+                    "Target": "Python",
+                    "Vulnerabilities": [
+                        {
+                            "VulnerabilityID": "CVE-HIGH",
+                            "PkgName": "wheel",
+                            "InstalledVersion": "1",
+                            "FixedVersion": "2",
+                            "Severity": "HIGH",
+                        },
+                        {
+                            "VulnerabilityID": "CVE-CRITICAL",
+                            "PkgName": "runtime",
+                            "InstalledVersion": "3",
+                            "FixedVersion": "4",
+                            "Severity": "CRITICAL",
+                        },
+                    ],
+                }
+            ]
+        }
+        findings = find_vulnerabilities(report)
+        self.assertEqual(
+            [item["id"] for item in findings], ["CVE-CRITICAL", "CVE-HIGH"]
+        )
+        annotation = github_error_annotation(findings[0])
+        self.assertIn(
+            "::error file=Dockerfile,line=1,title=Trivy CRITICAL::", annotation
+        )
+        self.assertIn("upgrade to 4", annotation)
 
 
 class ApiGovernanceTests(unittest.TestCase):
@@ -322,6 +360,7 @@ class DataLifecycleTests(unittest.TestCase):
             "validate_plan_quality",
             "pip-audit",
             "sbom",
+            "validate_trivy_report",
         ]:
             self.assertIn(marker, workflow)
         self.assertIn("/ready", Path("Dockerfile").read_text())
