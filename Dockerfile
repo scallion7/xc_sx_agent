@@ -6,8 +6,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade \
+        "wheel>=0.46.2" \
+        "jaraco.context>=6.1.0" \
+    && python -m pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 

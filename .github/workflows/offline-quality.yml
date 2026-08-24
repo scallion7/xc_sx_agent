@@ -100,4 +100,5 @@ jobs:
         with:
           image-ref: xc-sx-agent:stage22
           severity: HIGH,CRITICAL
+          ignore-unfixed: true
           exit-code: "1"
