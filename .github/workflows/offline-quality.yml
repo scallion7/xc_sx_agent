@@ -96,7 +96,7 @@ jobs:
           name: stage22-sbom
           path: sbom.json
       - run: docker build -t xc-sx-agent:stage22 .
-      - uses: aquasecurity/trivy-action@v0.28.0
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: xc-sx-agent:stage22
           severity: HIGH,CRITICAL
