@@ -23,6 +23,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine import Engine
 
+from app.infrastructure.delivery_schema import inbox_table, queue_table
+
 metadata = MetaData()
 _AUTO_CREATE: dict[str, bool] = {}
 _AUTO_CREATE_LOCK = RLock()
@@ -431,6 +433,13 @@ run_events_table = Table(
     Column("data_json", Text, nullable=False),
     Column("created_at", Float, nullable=False),
 )
+
+
+# Stage 26 uses a frozen schema shared with its migration.
+
+outbox_events_table = queue_table(metadata, "outbox_events")
+inbox_events_table = inbox_table(metadata)
+reconciliation_jobs_table = queue_table(metadata, "reconciliation_jobs")
 
 
 def _prepare_sqlite_path(database_url: str) -> None:

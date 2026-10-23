@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import replace
 from time import monotonic
 
@@ -107,7 +108,24 @@ class ToolExecutionService:
                 "error_code": "TOOL_EXECUTION_FAILED",
                 "error": "工具执行异常",
             }
-        encoded = self.redactor(json.dumps(result, ensure_ascii=False))
+        sanitized = self._redact_value(result)
+        # Server-generated action references are execution control data. A random
+        # hexadecimal ID/hash can contain a phone/card-like digit sequence; never
+        # redact it into an ID that cannot be confirmed or resumed. Free text and
+        # arguments still pass through the normal redactor.
+        action = result.get("action")
+        if isinstance(action, dict):
+            for key, length in (
+                ("action_id", 32),
+                ("arguments_hash", 64),
+                ("business_version", 64),
+            ):
+                value = action.get(key)
+                if isinstance(value, str) and re.fullmatch(
+                    rf"[a-f0-9]{{{length}}}", value
+                ):
+                    sanitized["action"][key] = value
+        encoded = json.dumps(sanitized, ensure_ascii=False)
         self.event_bus.emit(
             "tool.failed"
             if result.get("success") is False or result.get("error")

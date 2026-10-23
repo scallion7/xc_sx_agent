@@ -109,9 +109,11 @@ class Settings(BaseSettings):
     oidc_required_scopes: str = "chat:use"
     oidc_algorithms: str = "RS256"
     oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=86400)
-    provider_mode: Literal["mock", "external"] = "mock"
+    provider_mode: Literal["mock", "external", "sandbox"] = "mock"
     provider_timeout_seconds: float = Field(default=5.0, gt=0, le=300)
     provider_read_max_attempts: int = Field(default=2, ge=1, le=5)
+    sandbox_base_url: str = "http://127.0.0.1:9124"
+    sandbox_api_token: str = ""
     provider_webhook_secret: str = ""
     provider_webhook_events_path: str = "app/sessions/provider_webhook_events.json"
     api_idempotency_path: str = "app/sessions/api_idempotency_keys.json"
@@ -155,6 +157,15 @@ class Settings(BaseSettings):
             for algorithm in self.oidc_algorithms.split()
         ):
             raise ValueError("OIDC 签名算法不在允许列表")
+        if self.provider_mode == "sandbox":
+            if (
+                self.persistence_backend != "sql"
+                or not self.sandbox_api_token
+                or not self.provider_webhook_secret
+            ):
+                raise ValueError(
+                    "Sandbox mode requires SQL, API token and webhook secret"
+                )
         if self.environment == "production":
             if not self.openai_api_key.strip() or self.openai_api_key in {
                 "sk-xxx",
@@ -170,7 +181,7 @@ class Settings(BaseSettings):
                 raise ValueError("生产环境禁止写入演示业务数据")
             if self.database_auto_create:
                 raise ValueError("生产环境必须通过迁移管理数据库结构")
-            if self.provider_mode == "mock":
+            if self.provider_mode in {"mock", "sandbox"}:
                 raise ValueError("生产环境禁止使用 Mock Provider")
             if self.provider_mode == "external" and not self.provider_webhook_secret:
                 raise ValueError("外部 Provider 模式必须配置回调签名密钥")

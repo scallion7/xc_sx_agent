@@ -9,12 +9,13 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from sqlalchemy import insert, select, update
+from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.database import compensation_operations_table, get_engine
 from app.services.providers import CompensationProvider, map_provider_exception
 
 CompensationOperationStatus = Literal[
-    "pending", "running", "succeeded", "failed", "exhausted"
+    "pending", "running", "succeeded", "failed", "exhausted", "needs_manual"
 ]
 
 
@@ -78,13 +79,20 @@ class SqlCompensationOperationRepository:
             if (
                 existing.source_operation_id != item.source_operation_id
                 or existing.action != item.action
+                or existing.case_id != item.case_id
+                or existing.user_id != item.user_id
             ):
                 raise ValueError("补偿幂等键已用于不同请求")
             return existing
-        with self.engine.begin() as connection:
-            connection.execute(
-                insert(compensation_operations_table).values(**self._values(item))
-            )
+        try:
+            with self.engine.begin() as connection:
+                connection.execute(
+                    insert(compensation_operations_table).values(**self._values(item))
+                )
+        except IntegrityError:
+            if self.get(item.idempotency_key) is None:
+                raise
+            return self.create(item)
         return item
 
     def claim(
@@ -98,7 +106,7 @@ class SqlCompensationOperationRepository:
         if current is None:
             raise ValueError("补偿操作不存在")
         now = datetime.now(timezone.utc)
-        if current.status == "succeeded":
+        if current.status in {"succeeded", "needs_manual"}:
             return current
         if (
             current.status == "running"
@@ -117,6 +125,8 @@ class SqlCompensationOperationRepository:
                     compensation_operations_table.c.idempotency_key == idempotency_key,
                     compensation_operations_table.c.attempt_count
                     == current.attempt_count,
+                    compensation_operations_table.c.status == current.status,
+                    compensation_operations_table.c.worker_id == current.worker_id,
                 )
                 .values(
                     status="running",
@@ -160,14 +170,31 @@ class SqlCompensationOperationRepository:
             update={**changes, "updated_at": datetime.now(timezone.utc)}
         )
         with self.engine.begin() as connection:
-            connection.execute(
+            changed = connection.execute(
                 update(compensation_operations_table)
                 .where(
                     compensation_operations_table.c.idempotency_key
-                    == item.idempotency_key
+                    == item.idempotency_key,
+                    compensation_operations_table.c.status == item.status,
+                    compensation_operations_table.c.worker_id == item.worker_id,
+                    compensation_operations_table.c.attempt_count == item.attempt_count,
+                    *(
+                        [
+                            compensation_operations_table.c.lease_expires_at
+                            > datetime.now(timezone.utc).isoformat()
+                        ]
+                        if item.status == "running"
+                        and changes.get("status") != "exhausted"
+                        else []
+                    ),
                 )
                 .values(**self._values(updated))
             )
+        if changed.rowcount != 1:
+            latest = self.get(item.idempotency_key)
+            if latest is None:
+                raise ValueError("补偿操作不存在")
+            return latest
         return updated
 
     @staticmethod
@@ -238,6 +265,23 @@ class CompensationService:
         user_id: str,
         action: str,
     ) -> CompensationOperation:
+        if getattr(self.provider, "durable_http", False):
+            from app.infrastructure.database import after_sale_operations_table
+
+            with self.repository.engine.connect() as conn:
+                source = conn.execute(
+                    select(after_sale_operations_table).where(
+                        after_sale_operations_table.c.operation_id
+                        == source_operation_id,
+                        after_sale_operations_table.c.case_id == case_id,
+                        after_sale_operations_table.c.user_id == user_id,
+                        after_sale_operations_table.c.status == "succeeded",
+                    )
+                ).first()
+            if not source:
+                raise ValueError(
+                    "Compensation source is not a matching succeeded operation"
+                )
         return self.repository.create(
             CompensationOperation(
                 idempotency_key=self.idempotency_key(source_operation_id, action),
@@ -250,14 +294,17 @@ class CompensationService:
         )
 
     def execute(self, idempotency_key: str, *, worker_id: str) -> CompensationOperation:
+        # Each invocation owns a distinct lease, including concurrent calls from
+        # the same admin identity or process.
+        owner = f"{worker_id[:80]}:{uuid4().hex}"
         item = self.repository.claim(
             idempotency_key,
-            worker_id=worker_id,
+            worker_id=owner,
             lease_seconds=self.lease_seconds,
         )
-        if item.status in {"succeeded", "exhausted"}:
+        if item.status in {"succeeded", "exhausted", "needs_manual"}:
             return item
-        if item.status == "running" and item.worker_id != worker_id:
+        if item.status == "running" and item.worker_id != owner:
             return item
         if self.provider is None:
             return self.repository.complete(
@@ -273,6 +320,18 @@ class CompensationService:
             )
         except Exception as exc:  # noqa: BLE001
             mapped = map_provider_exception(exc)
+            if mapped.code in {"COMPENSATION_UNSUPPORTED", "PROVIDER_HTTP_422"}:
+                return self.repository._update(
+                    item,
+                    status="needs_manual",
+                    worker_id="",
+                    lease_expires_at=None,
+                    error=mapped.code,
+                    result={
+                        "manual_required": True,
+                        "reason": "Provider does not support this compensation",
+                    },
+                )
             return self.repository.complete(
                 item,
                 success=False,

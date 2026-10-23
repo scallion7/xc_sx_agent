@@ -82,6 +82,23 @@ class AfterSaleService:
         self.operation_max_attempts = max(1, operation_max_attempts)
         self.event_bus = event_bus or EventBus()
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.refund_workflow = None
+        if getattr(
+            getattr(self.commerce_service, "refund_provider", None),
+            "durable_http",
+            False,
+        ):
+            from app.services.refund_workflow import RefundWorkflow
+
+            case_engine = getattr(self.repository, "engine", None)
+            operation_engine = getattr(self.operation_repository, "engine", None)
+            if case_engine is None or case_engine is not operation_engine:
+                raise ValueError(
+                    "HTTP refunds require case and operation repositories in the same SQL database"
+                )
+            self.refund_workflow = RefundWorkflow(
+                case_engine, self.commerce_service.refund_provider
+            )
 
     @staticmethod
     def infer_case_type(reason: str, requested: str = "auto") -> str:
@@ -331,6 +348,13 @@ class AfterSaleService:
                 "blocked": case.status == CaseStatus.PENDING_REVIEW.value,
                 "error": f"工单当前状态 {case.status}，只有已批准工单可以执行",
             }
+        if self.refund_workflow is not None:
+            from app.services.refund_workflow import RefundWorkflowError
+
+            try:
+                return self.refund_workflow.enqueue(template, actor)
+            except RefundWorkflowError as exc:
+                return {"success": False, "error_code": exc.code, "error": str(exc)}
         now = self._now()
         try:
             claim = self.operation_repository.claim(
@@ -516,6 +540,15 @@ class AfterSaleService:
         )
         if operation is None:
             return {"success": False, "error": "该工单没有可恢复的执行记录"}
+        if self.refund_workflow is not None:
+            from app.services.refund_workflow import RefundWorkflowError
+
+            try:
+                return self.refund_workflow.requeue_reconciliation(
+                    operation.operation_id, actor
+                )
+            except RefundWorkflowError as exc:
+                return {"success": False, "error_code": exc.code}
         if not operation.recoverable(self._now()):
             return {
                 "success": False,

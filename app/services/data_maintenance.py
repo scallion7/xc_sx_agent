@@ -20,6 +20,7 @@ from app.infrastructure.database import (
     compensation_operations_table,
     get_engine,
     maintenance_audits_table,
+    outbox_events_table,
     plan_events_table,
     plan_runs_table,
     plan_step_attempts_table,
@@ -134,7 +135,7 @@ class DataMaintenanceService:
                 compensation_operations_table.c.source_operation_id
             ).where(
                 compensation_operations_table.c.status.in_(
-                    ["pending", "running", "failed"]
+                    ["pending", "running", "failed", "needs_manual"]
                 )
             )
             operation_keys = [
@@ -152,6 +153,11 @@ class DataMaintenanceService:
                         ),
                         after_sale_operations_table.c.operation_id.not_in(
                             active_compensation_sources
+                        ),
+                        # Preserve the provider identity and local dedup ledger for
+                        # HTTP refunds until a coordinated archival protocol exists.
+                        after_sale_operations_table.c.operation_id.not_in(
+                            select(outbox_events_table.c.aggregate_id)
                         ),
                     )
                     .limit(max(1, batch_size))

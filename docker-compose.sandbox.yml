@@ -1,0 +1,57 @@
+# Local demo overlay: docker compose -f docker-compose.yml -f docker-compose.sandbox.yml up --build
+# Application DB is PostgreSQL; sandbox DB is a separate persistent SQLite volume.
+services:
+  api:
+    depends_on:
+      commerce-sandbox:
+        condition: service_healthy
+    environment: &sandbox_client
+      PROVIDER_MODE: sandbox
+      SANDBOX_BASE_URL: http://commerce-sandbox:9124
+      SANDBOX_API_TOKEN: ${SANDBOX_API_TOKEN:-sandbox-dev-key}
+      PROVIDER_WEBHOOK_SECRET: ${PROVIDER_WEBHOOK_SECRET:-sandbox-dev-webhook-secret}
+      COMMERCE_SEED_DEMO_DATA: "false"
+
+  worker:
+    environment: *sandbox_client
+
+  refund-worker:
+    build: .
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      <<: *sandbox_client
+      DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
+      DATABASE_AUTO_CREATE: "false"
+      PERSISTENCE_BACKEND: sql
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    command: ["python", "-m", "app.scripts.run_refund_worker"]
+    healthcheck:
+      disable: true
+    stop_grace_period: 40s
+
+  commerce-sandbox:
+    build: .
+    command: ["python", "-m", "app.scripts.run_commerce_sandbox"]
+    environment:
+      SANDBOX_HOST: 0.0.0.0
+      SANDBOX_DATABASE_URL: sqlite:////app/app/sessions/commerce-sandbox.db
+      SANDBOX_API_TOKEN: ${SANDBOX_API_TOKEN:-sandbox-dev-key}
+      SANDBOX_ADMIN_TOKEN: ${SANDBOX_ADMIN_TOKEN:-sandbox-dev-admin}
+      SANDBOX_CALLBACK_URL: http://api:8000/v1/provider/webhooks/commerce-sandbox
+      PROVIDER_WEBHOOK_SECRET: ${PROVIDER_WEBHOOK_SECRET:-sandbox-dev-webhook-secret}
+      SANDBOX_SUPPORTS_REVERSAL: "false"
+    ports:
+      - "127.0.0.1:9124:9124"
+    volumes:
+      - sandbox_data:/app/app/sessions
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9124/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    stop_grace_period: 40s
+
+volumes:
+  sandbox_data:

@@ -94,6 +94,40 @@ class TrustedActionsTests(unittest.TestCase):
                 select(func.count()).select_from(table)
             ).scalar_one()
 
+    def test_action_id_with_phone_digits_survives_confirmation(self):
+        from app.security.guardrails import GuardrailEngine
+
+        self.boundary.redactor = GuardrailEngine().redact
+        identifier = "a13812345678b" + "c" * 19
+        with patch(
+            "app.services.actions.uuid4", return_value=SimpleNamespace(hex=identifier)
+        ):
+            action = self.propose()
+        self.assertEqual(action["action_id"], identifier)
+        self.confirm(action)
+        self.assertTrue(self.invoke(action_id=identifier)["success"])
+
+    def test_action_hashes_are_preserved_but_free_text_is_redacted(self):
+        from app.security.guardrails import GuardrailEngine
+
+        self.boundary.redactor = GuardrailEngine().redact
+        fingerprint = "a" + "123456789012345678" + "b" * 45
+        payload = {
+            "action": {
+                "action_id": "c" * 32,
+                "arguments_hash": fingerprint,
+                "business_version": fingerprint,
+                "arguments": {"reason": "联系13812345678"},
+            },
+            "message": "联系13812345678",
+        }
+        with patch.object(self.boundary, "_execute", return_value=payload):
+            result = self.invoke()
+        self.assertEqual(result["action"]["arguments_hash"], fingerprint)
+        self.assertEqual(result["action"]["business_version"], fingerprint)
+        self.assertNotIn("13812345678", result["message"])
+        self.assertNotIn("13812345678", result["action"]["arguments"]["reason"])
+
     def test_model_claim_is_proposal_not_execution_and_registry_cannot_bypass(self):
         action = self.propose({**ARGS, "evidence_provided": True})
         self.assertFalse(action["arguments"]["user_confirmed"])

@@ -141,6 +141,17 @@ class BaseConversationAgent(ABC):
             if use_sql
             else MockCommerceRepository()
         )
+        if self.config.provider_mode == "sandbox" and commerce_service is None:
+            from app.services.http_commerce import HttpCommerceProvider
+
+            provider = HttpCommerceProvider(
+                self.config.sandbox_base_url,
+                self.config.sandbox_api_token,
+                timeout=self.config.provider_timeout_seconds,
+            )
+            self.commerce_service.order_provider = provider
+            self.commerce_service.logistics_provider = provider
+            self.commerce_service.refund_provider = provider
         self.knowledge_service = KnowledgeService(self.config)
         if use_sql:
             after_sale_repository = SqlAfterSaleRepository(
@@ -399,7 +410,9 @@ class BaseConversationAgent(ABC):
                 outcome = json.loads(result)
                 reply = (
                     (
-                        "已执行您确认的操作。"
+                        "已提交退款请求，请查询工单确认最终结果。"
+                        if outcome.get("accepted")
+                        else "已执行您确认的操作。"
                         if outcome.get("success")
                         else "操作未完成，请核对执行结果。"
                     )

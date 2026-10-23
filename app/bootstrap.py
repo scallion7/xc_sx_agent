@@ -71,6 +71,18 @@ def create_runtime(
     compensation_provider: CompensationProvider | None = None,
 ) -> ApplicationRuntime:
     runtime_config = config or settings
+    if runtime_config.provider_mode == "sandbox":
+        from app.services.http_commerce import HttpCommerceProvider
+
+        provider = HttpCommerceProvider(
+            runtime_config.sandbox_base_url,
+            runtime_config.sandbox_api_token,
+            timeout=runtime_config.provider_timeout_seconds,
+        )
+        order_provider = order_provider or provider
+        logistics_provider = logistics_provider or provider
+        refund_provider = refund_provider or provider
+        compensation_provider = compensation_provider or provider
     bus = EventBus()
     buffer = BufferedEventSubscriber(
         max_events=runtime_config.event_buffer_size,

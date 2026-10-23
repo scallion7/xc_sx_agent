@@ -106,6 +106,8 @@ def claim_operation(
         return OperationClaim("replay", existing)
     if existing.status == OperationStatus.EXHAUSTED.value:
         return OperationClaim("exhausted", existing)
+    if existing.status in {"unknown", "needs_reconciliation"} or existing.provider:
+        return OperationClaim("in_progress", existing)
     if existing.lease_active(now):
         return OperationClaim("in_progress", existing)
     if existing.attempt_count >= existing.max_attempts:

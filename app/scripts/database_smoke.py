@@ -10,6 +10,7 @@ from app.infrastructure.database import configure_database
 from app.repositories.plan_runs import SqlPlanRunRepository
 from app.repositories.policies import RiskRuleSchema, SqlRiskRuleRepository
 from app.scripts.case_creation_smoke import run_case_creation_smoke
+from app.scripts.refund_delivery_smoke import run_refund_delivery_smoke
 from app.scripts.run_queue_smoke import run_queue_smoke
 from app.services.actions import ActionService, digest
 from app.services.providers import SqlWebhookDeduplicator, WebhookEvent
@@ -61,6 +62,7 @@ def main() -> None:
     report = run_case_creation_smoke(config.database_url)
     print(f"case_creation_smoke={report}")
     print(f"run_queue_smoke={run_queue_smoke(config.database_url)}")
+    print(f"refund_delivery_smoke={run_refund_delivery_smoke(config.database_url)}")
     print("database_smoke=ok")
 
 

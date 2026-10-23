@@ -401,6 +401,25 @@ def register_public_routes(
             ) from exc
         if not event_id or not event_type or not isinstance(payload, dict):
             raise HTTPException(status_code=422, detail="Provider 回调格式无效")
+        if provider == "commerce-sandbox":
+            from pydantic import ValidationError
+
+            from app.services.refund_contracts import RefundEvent
+            from app.services.refund_workflow import RefundWorkflowError
+
+            workflow = services.after_sale.refund_workflow
+            if workflow is None:
+                raise HTTPException(
+                    503, detail="HTTP refund workflow is not configured"
+                )
+            try:
+                return workflow.receive(RefundEvent.model_validate(payload))
+            except ValidationError as exc:
+                raise HTTPException(
+                    422, detail="Refund event schema/version invalid"
+                ) from exc
+            except RefundWorkflowError as exc:
+                raise HTTPException(409, detail={"error_code": exc.code}) from exc
         accepted = build_webhook_deduplicator(services.config).accept(
             WebhookEvent(
                 provider=provider[:80],
@@ -924,16 +943,23 @@ def register_admin_routes(
         if services.compensation is None:
             raise HTTPException(status_code=409, detail="当前后端未启用独立补偿仓储")
         payload = request.model_dump()
+
+        def create_compensation():
+            try:
+                return {
+                    "operation": services.compensation.request(**payload).model_dump(
+                        mode="json"
+                    )
+                }
+            except ValueError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+
         return _idempotent_write(
             services,
             scope="compensation.request",
             key=idempotency_key,
             payload=payload,
-            operation=lambda: {
-                "operation": services.compensation.request(**payload).model_dump(
-                    mode="json"
-                )
-            },
+            operation=create_compensation,
         )
 
     @app.post("/v1/admin/compensations/{idempotency_key}/execute")
@@ -969,7 +995,14 @@ def register_admin_routes(
     ) -> dict:
         if services.compensation is None:
             raise HTTPException(status_code=404, detail="补偿仓储不可用")
-        allowed = {"pending", "running", "succeeded", "failed", "exhausted"}
+        allowed = {
+            "pending",
+            "running",
+            "succeeded",
+            "failed",
+            "exhausted",
+            "needs_manual",
+        }
         if status is not None and status not in allowed:
             raise HTTPException(status_code=422, detail="无效补偿状态")
         items = services.compensation.repository.list(status=status, limit=10_000)

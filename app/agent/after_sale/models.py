@@ -49,6 +49,8 @@ class OperationStatus(str, Enum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     EXHAUSTED = "exhausted"
+    UNKNOWN = "unknown"
+    NEEDS_RECONCILIATION = "needs_reconciliation"
 
 
 class CompensationStatus(str, Enum):
@@ -132,6 +134,11 @@ class AfterSaleOperation:
     compensation_status: str = CompensationStatus.NOT_REQUIRED.value
     compensation_note: str = ""
 
+    provider: str = ""
+    provider_version: int = 0
+    provider_reference: str = ""
+    request: dict = field(default_factory=dict)
+
     def to_dict(self) -> dict:
         return asdict(self)
 
@@ -160,6 +167,8 @@ class AfterSaleOperation:
         return expires_at > now
 
     def recoverable(self, now: datetime) -> bool:
+        if self.provider:
+            return False  # HTTP operations converge through the query-only workflow.
         if self.attempt_count >= self.max_attempts:
             return False
         if self.status == OperationStatus.FAILED.value:
