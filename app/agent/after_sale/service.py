@@ -7,8 +7,15 @@ import json
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime, timezone
+from functools import wraps
 from uuid import uuid4
 
+from app.agent.after_sale.creation import (
+    CaseConflictError,
+    CaseCreationResult,
+    case_creation_hash,
+    creation_hash,
+)
 from app.agent.after_sale.models import (
     AfterSaleCase,
     AfterSaleOperation,
@@ -28,6 +35,27 @@ from app.agent.after_sale.risk import RiskRouter
 from app.observability import EventBus
 from app.repositories.mock_commerce import MockCommerceRepository
 from app.services.commerce import CommerceService
+
+
+def _case_conflicts(method):
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except CaseConflictError as exc:
+            self.event_bus.emit(
+                "after_sale.case.conflict",
+                source="after_sale",
+                data={"error_code": exc.code},
+            )
+            return {
+                "success": False,
+                "conflict": True,
+                "error_code": exc.code,
+                "error": str(exc),
+            }
+
+    return wrapped
 
 
 class AfterSaleService:
@@ -75,6 +103,7 @@ class AfterSaleService:
                 return case_type
         return CaseType.OTHER.value
 
+    @_case_conflicts
     def create_case(
         self,
         *,
@@ -84,6 +113,8 @@ class AfterSaleService:
         evidence_provided: bool = False,
         user_confirmed: bool = False,
         user_id: str = "default",
+        idempotency_key: str = "",
+        evidence_ids: list[str] | None = None,
     ) -> dict:
         if not user_confirmed:
             return {
@@ -91,26 +122,42 @@ class AfterSaleService:
                 "confirmation_required": True,
                 "error": "创建售后工单前必须获得用户对订单号和原因的明确确认",
             }
-        order_result = self.commerce_service.get_order(
-            order_id,
-            user_id,
+        order_id = order_id.strip()
+        reason = reason.strip()
+        if not reason or not order_id or len(order_id) > 64 or len(reason) > 1000:
+            return {
+                "success": False,
+                "error_code": "INVALID_ARGUMENT",
+                "error": "订单号或售后原因无效",
+            }
+        if (
+            not isinstance(idempotency_key, str)
+            or len(idempotency_key) > 128
+            or (idempotency_key and not idempotency_key.strip())
+        ):
+            return {
+                "success": False,
+                "error_code": "INVALID_ARGUMENT",
+                "error": "创建幂等键必须为不超过 128 字符的非空文本",
+            }
+        evidence_ids = sorted(set(evidence_ids or []))
+        resolved_type = self.infer_case_type(reason, case_type)
+        fingerprint = creation_hash(
+            order_id=order_id,
+            reason=reason,
+            case_type=resolved_type,
+            evidence_provided=evidence_provided,
+            evidence_ids=evidence_ids,
         )
+        if idempotency_key:
+            replay = self.repository.get_creation(user_id, idempotency_key, fingerprint)
+            if replay is not None:
+                return self._creation_response(replay, fingerprint)
+        order_result = self.commerce_service.get_order(order_id, user_id)
         if not order_result.get("success"):
             return order_result
         order = order_result["order"]
-        if not reason.strip():
-            return {"success": False, "error": "售后原因不能为空"}
 
-        existing = self.repository.find_active_by_order(order_id, user_id)
-        if existing:
-            return {
-                "success": True,
-                "idempotent": True,
-                "message": "该订单已有进行中的售后工单",
-                "case": existing.to_dict(),
-            }
-
-        resolved_type = self.infer_case_type(reason, case_type)
         decision = self.risk_router.assess_case(
             amount=float(order["total"]),
             case_type=resolved_type,
@@ -121,7 +168,7 @@ class AfterSaleService:
         requires_approval = decision.requires_human
         now = datetime.now().isoformat(timespec="seconds")
         case = AfterSaleCase(
-            case_id=f"AS-{uuid4().hex[:10].upper()}",
+            case_id=f"AS-{uuid4().hex.upper()}",
             order_id=order_id,
             case_type=resolved_type,
             reason=reason.strip(),
@@ -144,6 +191,7 @@ class AfterSaleService:
             updated_at=now,
             user_id=user_id,
             risk_rule_version=self.risk_router.rule_version,
+            evidence_ids=evidence_ids,
         )
         case.add_audit(
             "case_created", "agent", f"risk={decision.level}, route={decision.route}"
@@ -152,16 +200,47 @@ class AfterSaleService:
             case.add_audit("approval_requested", "system", "; ".join(decision.reasons))
         else:
             case.add_audit("auto_approved", "risk_router", "; ".join(decision.reasons))
-        self.repository.save(case)
-        return {
+        creation = self.repository.create_or_get(case, idempotency_key=idempotency_key)
+        return self._creation_response(creation, fingerprint)
+
+    def _creation_response(
+        self, creation: CaseCreationResult, fingerprint: str
+    ) -> dict:
+        case = creation.case
+        matches = case_creation_hash(case) == fingerprint
+        scope = "new" if creation.created else creation.scope
+        self.event_bus.emit(
+            "after_sale.case.created" if creation.created else "after_sale.case.reused",
+            source="after_sale",
+            data={
+                "case_id": case.case_id,
+                "user_id": case.user_id,
+                "order_id": case.order_id,
+                "version": case.version,
+                "idempotency_scope": scope,
+                "request_matches": matches,
+            },
+        )
+        result = {
             "success": True,
+            "created": creation.created,
+            "idempotent": not creation.created,
+            "idempotency_scope": scope,
+            "request_matches": matches,
             "case": case.to_dict(),
-            "next_action": (
-                "等待人工审批，当前不可执行退款"
-                if requires_approval
-                else "工单已通过自动规则，可调用 execute_after_sale_case 执行"
-            ),
         }
+        if not creation.created:
+            result["message"] = (
+                "返回已有关联工单的当前状态，未创建新工单，也未修改原工单内容"
+            )
+            result["next_action"] = "请查询已有工单；如需更改诉求，请先处理已有工单"
+        elif case.status == CaseStatus.PENDING_REVIEW.value:
+            result["next_action"] = "等待人工审批，当前不可执行退款"
+        else:
+            result["next_action"] = (
+                "工单已通过自动规则，可调用 execute_after_sale_case 执行"
+            )
+        return result
 
     def get_case(self, case_id: str, user_id: str | None = None) -> dict:
         case = self.repository.get(case_id, user_id)
@@ -185,6 +264,7 @@ class AfterSaleService:
             return {"success": False, "error": "该工单还没有副作用执行记录"}
         return {"success": True, "operation": operation.to_dict()}
 
+    @_case_conflicts
     def review_case(
         self,
         case_id: str,
@@ -215,6 +295,7 @@ class AfterSaleService:
         self.repository.save(case)
         return {"success": True, "case": case.to_dict()}
 
+    @_case_conflicts
     def execute_case(
         self,
         case_id: str,
@@ -417,6 +498,7 @@ class AfterSaleService:
             "operation": operation.to_dict(),
         }
 
+    @_case_conflicts
     def recover_case(
         self,
         case_id: str,
@@ -471,6 +553,7 @@ class AfterSaleService:
             "operations": [operation.to_dict() for operation in operations],
         }
 
+    @_case_conflicts
     def update_compensation(
         self,
         case_id: str,

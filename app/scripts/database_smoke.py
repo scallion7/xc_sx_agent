@@ -9,6 +9,7 @@ from app.config.settings import Settings
 from app.infrastructure.database import configure_database
 from app.repositories.plan_runs import SqlPlanRunRepository
 from app.repositories.policies import RiskRuleSchema, SqlRiskRuleRepository
+from app.scripts.case_creation_smoke import run_case_creation_smoke
 from app.services.actions import ActionService, digest
 from app.services.providers import SqlWebhookDeduplicator, WebhookEvent
 
@@ -56,6 +57,8 @@ def main() -> None:
     if sum(claims) != 1:
         raise SystemExit("并发确认一次性消费 smoke test 失败")
     actions.finish(proposal["action_id"], {"success": True})
+    report = run_case_creation_smoke(config.database_url)
+    print(f"case_creation_smoke={report}")
     print("database_smoke=ok")
 
 

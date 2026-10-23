@@ -31,6 +31,7 @@ jobs:
       - run: python -m app.scripts.benchmark_plan
       - run: test -f 'docs/第22期-计划执行治理与工程化闭环.md'
       - run: test -f 'docs/第23期-可信确认与统一工具执行.md'
+      - run: test -f 'docs/第24期-工单并发唯一约束与业务幂等.md'
 
   migrations:
     runs-on: ubuntu-latest
@@ -69,7 +70,7 @@ jobs:
         env:
           DATABASE_URL: ${{ matrix.database }}
         run: alembic check
-      - name: Governance repository smoke
+      - name: Governance and 50-request case creation smoke
         env:
           DATABASE_URL: ${{ matrix.database }}
           DATABASE_AUTO_CREATE: "false"

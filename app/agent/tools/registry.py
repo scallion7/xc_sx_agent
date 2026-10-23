@@ -63,6 +63,7 @@ class RegisteredTool:
     required_permission: str = ""
     read_only: bool = True
     idempotent: bool = True
+    context_aware: bool = False
 
 
 class ToolRegistry:
@@ -150,7 +151,10 @@ class ToolRegistry:
 
         # 工具是模型输入边界，单个实现异常不能终止本轮 Agent 推理。
         try:
-            result = tool.handler(**validated.model_dump())
+            arguments = validated.model_dump()
+            if tool.context_aware:
+                arguments["context"] = execution_context
+            result = tool.handler(**arguments)
         except Exception:  # noqa: BLE001
             result = {
                 "success": False,
@@ -190,11 +194,15 @@ def create_default_tool_registry(
             return {"success": False, "error": "技能系统未启用"}
         return load_skill(skill_manager, skill_name)
 
-    def create_case_handler(**kwargs: Any) -> ToolResult:
+    def create_case_handler(context: ToolExecutionContext, **kwargs: Any) -> ToolResult:
         if not runtime_config.after_sale_enabled or after_sale_service is None:
             return {"success": False, "error": "售后工单系统未启用"}
-        kwargs.pop("evidence_ids", None)
-        return create_case(after_sale_service, user_id=user_id, **kwargs)
+        return create_case(
+            after_sale_service,
+            user_id=user_id,
+            idempotency_key=f"action:{context.action_id}",
+            **kwargs,
+        )
 
     def query_case_handler(case_id: str) -> ToolResult:
         if not runtime_config.after_sale_enabled or after_sale_service is None:
@@ -248,6 +256,7 @@ def create_default_tool_registry(
             arguments_model=TOOL_ARGUMENT_MODELS[name],
             required_permission=required_permissions.get(name, ""),
             read_only=name not in mutating_tools,
+            context_aware=name == "create_after_sale_case",
         )
         for name, handler in handlers.items()
     )

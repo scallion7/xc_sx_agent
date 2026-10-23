@@ -87,6 +87,8 @@ class AfterSaleCase:
     result: dict = field(default_factory=dict)
     audit_log: list[AuditEvent] = field(default_factory=list)
     risk_rule_version: str = "builtin"
+    version: int = 0
+    evidence_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)

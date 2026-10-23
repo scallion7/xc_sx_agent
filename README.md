@@ -4,12 +4,11 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：第 23 期已接入可信业务提案、用户确认记录、证据审核记录与
-> 统一工具执行入口。单/Multi-Agent ReAct、计划执行和手动操作 API 共用执行边界；
-> 模型输出“用户已确认”不能授权写操作。实现与验收见
-> [第23期文档](docs/第23期-可信确认与统一工具执行.md)。本地 182 项离线回归通过，
-> app 语句覆盖率 80%。离线测试不调用真实模型、
-> 真实 OIDC 或真实业务供应商。
+> 当前二次开发进度：第 24 期已完成活跃工单数据库唯一约束、创建幂等账本、
+> 工单版本校验，以及 JSON 仓储的进程锁。不同会话/action 并发创建同一用户订单的
+> 工单会收敛到一个活跃工单；第 23 期可信确认边界继续生效。实现与验收见
+> [第24期文档](docs/第24期-工单并发唯一约束与业务幂等.md)。本地 208 项离线回归通过，
+> app 语句覆盖率 81%。离线测试不调用真实模型、OIDC 或真实业务供应商。
 
 ## 项目定位
 
@@ -70,7 +69,9 @@
 16. 统一错误码、请求追踪、cursor 分页、持久化幂等键、分层限流、就绪诊断、备份清理
     以及 40 条固定计划案例的确定性 CI 门禁；
 17. 绑定用户、会话、规范化参数、业务快照和有效期的可信提案，确认原子消费、
-    已完成结果重放、归属校验后的证据审核及统一工具执行服务。
+    已完成结果重放、归属校验后的证据审核及统一工具执行服务；
+18. 数据库活跃工单唯一约束、工单与创建幂等记录同事务提交、版本 CAS、JSON 进程锁，
+    以及 50 请求/多进程竞争、事务回滚和历史数据迁移验证。
 
 ## 二次开发架构
 
@@ -440,7 +441,7 @@ ecom-service-agent/
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
-├── tests/                                # 原有测试及阶段 22/23 治理回归
+├── tests/                                # 原有测试及阶段 22–24 治理回归
 └── docs/                                 # 第 1–22 期教学与二次开发文档
 ```
 
@@ -681,7 +682,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归包含第 23 期可信确认专项，不会调用外部模型或本地模型、OIDC 和 Provider 服务。最新验收数量见[第23期文档](docs/第23期-可信确认与统一工具执行.md)：
+当前完整离线回归包含第 23 期可信确认与第 24 期并发创建专项，不会调用外部模型或本地模型、OIDC 和 Provider 服务。最新验收数量见[第24期文档](docs/第24期-工单并发唯一约束与业务幂等.md)：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -706,6 +707,8 @@ ruff format --check .
 - 待审工单无法执行；
 - 人工批准后可以执行；
 - 同一订单的活跃工单幂等；
+- SQL/JSON 的 50 并发创建、4 进程竞争、同键异参冲突、终态重放及并发审批版本冲突；
+- 创建工单与幂等记录原子提交、写入故障回滚、历史重复工单升级阻断和旧库启动保护；
 - 严重风险信号强制转人工；
 - Policy 元数据正确进入 Chunk；
 - ToolRegistry 实例隔离与敏感操作权限；
@@ -747,6 +750,7 @@ python -m unittest tests.test_auth_and_migrations -v
 python -m unittest tests.test_provider_and_policy_governance -v
 python -m unittest tests.test_stage_22_quality_gate -v
 python -m unittest tests.test_trusted_actions -v
+python -m unittest tests.test_case_creation -v
 python -m app.scripts.validate_plan_quality
 ```
 
@@ -871,13 +875,14 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第21期：售后副作用可靠执行](docs/第21期-售后副作用可靠执行.md)
 - [第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)
 - [第23期：可信确认与统一工具执行](docs/第23期-可信确认与统一工具执行.md)
+- [第24期：工单并发唯一约束与业务幂等](docs/第24期-工单并发唯一约束与业务幂等.md)
 - [生产配置检查清单](docs/生产配置检查清单.md)
 
 ## 后续路线
 
-第 23 期已完成第一版可信确认边界，后续优先推进业务工单创建的并发唯一约束、
-Provider 幂等键与结果对账、运行超时后的外部副作用隔离。确认账本的一次性消费
-不等于外部退款 exactly-once，具体边界见第 23 期文档。
+第 23–24 期已完成第一版可信确认边界和业务工单并发创建约束，后续优先推进
+Provider 结果对账、可恢复任务执行、运行超时后的外部副作用隔离。工单创建幂等
+不等于外部退款 exactly-once；本期未引入 tenant_id 或会话串行调度。
 
 阶段 22 的历史交付包含四个工作包：
 

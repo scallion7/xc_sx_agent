@@ -11,6 +11,8 @@ def create_after_sale_case(
     evidence_provided: bool = False,
     user_confirmed: bool = False,
     user_id: str = "default",
+    idempotency_key: str = "",
+    evidence_ids: list[str] | None = None,
 ) -> dict:
     return service.create_case(
         order_id=order_id,
@@ -19,6 +21,8 @@ def create_after_sale_case(
         evidence_provided=evidence_provided,
         user_confirmed=user_confirmed,
         user_id=user_id,
+        idempotency_key=idempotency_key,
+        evidence_ids=evidence_ids,
     )
 
 

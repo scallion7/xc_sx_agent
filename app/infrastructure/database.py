@@ -9,6 +9,7 @@ from threading import RLock
 from sqlalchemy import (
     Column,
     Float,
+    ForeignKey,
     Index,
     Integer,
     MetaData,
@@ -17,6 +18,8 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     create_engine,
+    inspect,
+    text,
 )
 from sqlalchemy.engine import Engine
 
@@ -147,6 +150,7 @@ after_sale_cases_table = Table(
     Column("status", String(64), nullable=False),
     Column("payload_json", Text, nullable=False),
     Column("updated_at", String(64), nullable=False),
+    Column("version", Integer, nullable=False, server_default="0"),
 )
 Index(
     "ix_after_sale_user_order",
@@ -154,6 +158,26 @@ Index(
     after_sale_cases_table.c.order_id,
 )
 Index("ix_after_sale_status", after_sale_cases_table.c.status)
+Index(
+    "uq_after_sale_active_user_order",
+    after_sale_cases_table.c.user_id,
+    after_sale_cases_table.c.order_id,
+    unique=True,
+    sqlite_where=text("status NOT IN ('completed', 'rejected')"),
+    postgresql_where=text("status NOT IN ('completed', 'rejected')"),
+)
+
+after_sale_creation_requests_table = Table(
+    "after_sale_creation_requests",
+    metadata,
+    Column("user_id", String(128), primary_key=True),
+    Column("idempotency_key", String(128), primary_key=True),
+    Column("request_hash", String(64), nullable=False),
+    Column(
+        "case_id", String(64), ForeignKey("after_sale_cases.case_id"), nullable=False
+    ),
+    Column("created_at", String(64), nullable=False),
+)
 
 after_sale_operations_table = Table(
     "after_sale_operations",
@@ -384,6 +408,24 @@ def get_engine(database_url: str) -> Engine:
     with _AUTO_CREATE_LOCK:
         auto_create = _AUTO_CREATE.get(database_url, True)
     if auto_create:
+        inspector = inspect(engine)
+        if inspector.has_table("after_sale_cases"):
+            columns = {
+                item["name"] for item in inspector.get_columns("after_sale_cases")
+            }
+            indexes = {
+                item["name"]
+                for item in inspector.get_indexes("after_sale_cases")
+                if item["unique"]
+            }
+            if (
+                "version" not in columns
+                or "uq_after_sale_active_user_order" not in indexes
+            ):
+                engine.dispose()
+                raise RuntimeError(
+                    "CASE_SCHEMA_UPGRADE_REQUIRED: run python -m app.scripts.manage_migrations upgrade before starting the application"
+                )
         metadata.create_all(engine)
     return engine
 
