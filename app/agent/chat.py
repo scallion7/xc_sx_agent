@@ -1,6 +1,5 @@
 """单 Agent 客服实现。"""
 
-import json
 from typing import Any
 
 from app.agent.after_sale import AfterSaleService
@@ -120,6 +119,9 @@ class EcomAgent(BaseConversationAgent):
             safe_input, blocked = self._prepare_user_input(user_input)
             if blocked is not None:
                 return blocked
+            action_reply = self._handle_action_input(safe_input)
+            if action_reply is not None:
+                return action_reply
             risk_decision = self.risk_router.assess_message(safe_input)
             self.raw_messages.append({"role": "user", "content": safe_input})
             if self.pending_plan_execution is not None:
@@ -318,7 +320,7 @@ class EcomAgent(BaseConversationAgent):
 
             for tc in assistant_msg.tool_calls:
                 func_name = tc.function.name
-                func_args = json.loads(tc.function.arguments)
+                func_args = tc.function.arguments
 
                 result_str = self.guardrails.redact(
                     self.tool_manager.execute_tool(

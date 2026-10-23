@@ -41,6 +41,7 @@ from app.repositories.policies import (
 )
 from app.repositories.session import build_session_repository
 from app.security import AuthContext, AuthProvider
+from app.services.actions import ActionService
 from app.services.commerce import CommerceService
 from app.services.data_maintenance import DataMaintenanceService
 from app.services.idempotency import IdempotencyConflictError
@@ -54,6 +55,7 @@ from app.services.providers import (
     WebhookEvent,
     build_webhook_deduplicator,
 )
+from app.web.actions import register_action_routes
 from app.web.admin import render_admin_page
 from app.web.middleware import install_api_middleware
 from app.web.schemas import (
@@ -246,6 +248,7 @@ def create_app(
 
         return dependency
 
+    register_action_routes(app, services, require)
     register_public_routes(app, services, require)
     register_session_routes(app, services, require)
     register_commerce_routes(app, services, require)
@@ -486,6 +489,9 @@ def register_session_routes(
             PlanVersionConflictError,
         ):
             pass
+        ActionService(services.config.database_url).revoke_scope(
+            context.user_id, reference
+        )
         repository.delete()
         return {"success": True}
 
@@ -554,6 +560,14 @@ def register_session_routes(
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except PlanVersionConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        ActionService(services.config.database_url).revoke_scope(
+            context.user_id,
+            reference,
+            [
+                step.output.get("action", {}).get("action_id", "")
+                for step in execution.steps
+            ],
+        )
         with TraceContext(session_id=reference, user_id=context.user_id):
             services.runtime.event_bus.emit(
                 "plan.cancelled",
@@ -670,6 +684,14 @@ def register_session_routes(
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except PlanVersionConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        ActionService(services.config.database_url).revoke_scope(
+            context.user_id,
+            record.session_key,
+            [
+                step.output.get("action", {}).get("action_id", "")
+                for step in execution.steps
+            ],
+        )
         with TraceContext(
             session_id=record.session_key,
             user_id=context.user_id,

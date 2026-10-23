@@ -314,6 +314,52 @@ api_idempotency_keys_table = Table(
 Index("ix_api_idempotency_updated", api_idempotency_keys_table.c.updated_at)
 
 
+# Stage 23: durable confirmation ledger, including for JSON conversation storage.
+action_proposals_table = Table(
+    "action_proposals",
+    metadata,
+    Column("action_id", String(64), primary_key=True),
+    Column("user_id", String(128), nullable=False),
+    Column("session_id", String(512), nullable=False),
+    Column("tool_name", String(80), nullable=False),
+    Column("arguments_hash", String(64), nullable=False),
+    Column("arguments_json", Text, nullable=False),
+    Column("business_version", String(64), nullable=False),
+    Column("status", String(32), nullable=False),
+    Column("expires_at", String(64), nullable=False),
+    Column("created_at", String(64), nullable=False),
+    Column("result_json", Text, nullable=False),
+)
+Index(
+    "ix_actions_scope",
+    action_proposals_table.c.user_id,
+    action_proposals_table.c.session_id,
+)
+
+action_confirmations_table = Table(
+    "action_confirmations",
+    metadata,
+    Column("action_id", String(64), primary_key=True),
+    Column("actor", String(128), nullable=False),
+    Column("channel", String(32), nullable=False),
+    Column("arguments_hash", String(64), nullable=False),
+    Column("confirmed_at", String(64), nullable=False),
+)
+
+evidence_records_table = Table(
+    "evidence_records",
+    metadata,
+    Column("evidence_id", String(64), primary_key=True),
+    Column("user_id", String(128), nullable=False),
+    Column("order_id", String(80), nullable=False),
+    Column("content", Text, nullable=False),
+    Column("content_hash", String(64), nullable=False),
+    Column("status", String(32), nullable=False),
+    Column("reviewer", String(128), nullable=False),
+    Column("created_at", String(64), nullable=False),
+)
+
+
 def _prepare_sqlite_path(database_url: str) -> None:
     prefix = "sqlite:///"
     if not database_url.startswith(prefix):

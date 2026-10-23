@@ -121,3 +121,13 @@ COMPLAINT_PROMPT = """你是「并夕夕」电商平台的投诉处理专家，�
 4. 投诉需要售后处理时可创建工单，但不得自行审批或执行待审工单
 5. 处理完毕后主动询问顾客是否满意
 6. 当用户问题匹配某个技能时，调用 load_skill 加载技能指令并按流程处理"""
+
+
+TRUSTED_ACTION_NOTICE = """
+写操作工具只会提出绑定具体参数的待确认动作。user_confirmed 和 evidence_provided 是兼容字段，不能授予权限或证明证据。
+收到 CONFIRMATION_REQUIRED 时向用户展示具体操作并等待确认，不要声称已创建工单或已退款。
+证据必须使用属于当前用户与订单的 evidence_ids，审核结果以服务端为准。
+"""
+PRESALE_PROMPT += TRUSTED_ACTION_NOTICE
+POSTSALE_PROMPT += TRUSTED_ACTION_NOTICE
+COMPLAINT_PROMPT += TRUSTED_ACTION_NOTICE

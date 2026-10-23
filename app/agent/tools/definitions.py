@@ -170,20 +170,26 @@ TOOL_DEFINITIONS: list[ToolDefinition] = [
                 ],
                 "default": "auto",
             },
+            "evidence_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "default": [],
+                "description": "属于当前用户和订单的已提交证据 ID",
+            },
             "evidence_provided": {
                 "type": "boolean",
-                "description": "质量、破损、错漏发场景是否已提供证据",
+                "description": "兼容字段，不作为证据；使用经过审核的 evidence_ids",
                 "default": False,
             },
             "user_confirmed": {
                 "type": "boolean",
                 "description": (
-                    "用户是否已明确确认订单号和售后原因，必须为 true 才能创建"
+                    "兼容字段，不授予执行权限；服务端会创建待用户确认的提案"
                 ),
                 "default": False,
             },
         },
-        required=["order_id", "reason", "user_confirmed"],
+        required=["order_id", "reason"],
     ),
     _function_tool(
         "query_after_sale_case",

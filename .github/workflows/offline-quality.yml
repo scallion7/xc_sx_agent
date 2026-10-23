@@ -30,6 +30,7 @@ jobs:
       - run: python -m app.scripts.validate_plan_quality
       - run: python -m app.scripts.benchmark_plan
       - run: test -f 'docs/第22期-计划执行治理与工程化闭环.md'
+      - run: test -f 'docs/第23期-可信确认与统一工具执行.md'
 
   migrations:
     runs-on: ubuntu-latest

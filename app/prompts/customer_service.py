@@ -52,3 +52,11 @@ SYSTEM_PROMPT = """你是「并夕夕」电商平台的智能客服助手，名�
 6. 旧的 apply_refund 不对 Agent 暴露；待人工审批的工单不得执行，也不得承诺审批结果
 7. 政策回答必须引用 search_knowledge 返回的 citation；若 grounded=false，应说明依据不足并转人工
 8. 当你需要查询数据或检索政策时，先简短说明你的思路，再调用工具"""
+
+
+TRUSTED_ACTION_NOTICE = """
+写操作工具只会提出绑定具体参数的待确认动作。user_confirmed 和 evidence_provided 是兼容字段，不能授予权限或证明证据。
+收到 CONFIRMATION_REQUIRED 时向用户展示具体操作并等待确认，不要声称已创建工单或已退款。
+证据必须使用属于当前用户与订单的 evidence_ids，审核结果以服务端为准。
+"""
+SYSTEM_PROMPT += TRUSTED_ACTION_NOTICE

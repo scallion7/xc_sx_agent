@@ -51,6 +51,8 @@ class ToolExecutionContext:
     role: str = "agent"
     permissions: frozenset[str] = frozenset()
     trace_id: str = ""
+    session_id: str = ""
+    action_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +70,8 @@ class ToolRegistry:
 
     def __init__(self, tools: Iterable[RegisteredTool] = ()) -> None:
         self._tools: dict[str, RegisteredTool] = {}
+        self.action_service = None
+        self.business_snapshot = None
         for tool in tools:
             self.register(tool)
 
@@ -94,6 +98,10 @@ class ToolRegistry:
     def is_idempotent(self, name: str) -> bool:
         tool = self._tools.get(name)
         return bool(tool and tool.idempotent)
+
+    def validate_arguments(self, name: str, arguments: dict) -> dict:
+        tool = self._tools[name]
+        return tool.arguments_model.model_validate(arguments).model_dump()
 
     def execute(
         self,
@@ -130,13 +138,23 @@ class ToolRegistry:
                 ensure_ascii=False,
             )
 
+        if not tool.read_only and not execution_context.action_id:
+            return json.dumps(
+                {
+                    "success": False,
+                    "error_code": "CONFIRMATION_REQUIRED",
+                    "error": "写操作必须通过可信确认执行入口",
+                },
+                ensure_ascii=False,
+            )
+
         # 工具是模型输入边界，单个实现异常不能终止本轮 Agent 推理。
         try:
             result = tool.handler(**validated.model_dump())
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             result = {
                 "success": False,
-                "error": f"工具执行出错: {exc}",
+                "error": "工具执行异常，请查询操作状态后处理",
                 "error_code": "TOOL_EXECUTION_FAILED",
             }
         return json.dumps(result, ensure_ascii=False)
@@ -175,6 +193,7 @@ def create_default_tool_registry(
     def create_case_handler(**kwargs: Any) -> ToolResult:
         if not runtime_config.after_sale_enabled or after_sale_service is None:
             return {"success": False, "error": "售后工单系统未启用"}
+        kwargs.pop("evidence_ids", None)
         return create_case(after_sale_service, user_id=user_id, **kwargs)
 
     def query_case_handler(case_id: str) -> ToolResult:
@@ -222,7 +241,7 @@ def create_default_tool_registry(
         "execute_after_sale_case",
     }
     definitions = definitions_by_name()
-    return ToolRegistry(
+    registry = ToolRegistry(
         RegisteredTool(
             definition=definitions[name],
             handler=handler,
@@ -233,11 +252,61 @@ def create_default_tool_registry(
         for name, handler in handlers.items()
     )
 
+    from app.services.actions import ActionError, ActionService
+
+    registry.action_service = ActionService(
+        runtime_config.database_url,
+        ttl_seconds=runtime_config.action_confirmation_ttl_seconds,
+    )
+
+    def business_snapshot(name, arguments, context):
+        if name not in {
+            "create_after_sale_case",
+            "execute_after_sale_case",
+            "apply_refund",
+        }:
+            raise ActionError("ACTION_UNSUPPORTED", "远端写工具尚未配置可信确认适配器")
+        order_id = arguments.get("order_id", "")
+        snapshot = {}
+        if name == "execute_after_sale_case":
+            result = after_sale_service.get_case(arguments["case_id"], context.user_id)
+            if not result.get("success"):
+                raise ActionError("ACTION_BUSINESS_INVALID", "工单不存在或无权访问")
+            snapshot["case"] = result["case"]
+            order_id = result["case"]["order_id"]
+        result = commerce.get_order(order_id, context.user_id)
+        if not result.get("success"):
+            raise ActionError(
+                "ACTION_BUSINESS_INVALID", "订单不存在、无权访问或暂不可用"
+            )
+        snapshot["order"] = result["order"]
+        if after_sale_service is not None:
+            router = after_sale_service.risk_router
+            router._refresh_rules()
+            snapshot["rules"] = {
+                "version": router.rule_version,
+                "auto_amount": router.auto_approve_max_amount,
+                "high_amount": router.high_risk_amount,
+                "weights": dict(router.score_weights),
+                "manual": router.manual_review_score,
+                "escalation": router.human_escalation_score,
+                "critical": sorted(router.critical_signals),
+                "complaint": sorted(router.complaint_signals),
+                "evidence_types": sorted(router.evidence_types),
+            }
+        snapshot["evidence"] = registry.action_service.evidence_snapshot(
+            arguments.get("evidence_ids", []),
+            context.user_id,
+            order_id,
+        )
+        return snapshot
+
+    registry.business_snapshot = business_snapshot
+    return registry
+
 
 def execute_tool(name: str, arguments: dict[str, Any]) -> str:
     """旧入口兼容：使用一次性的默认注册表执行本地工具。"""
-    registry = create_default_tool_registry()
-    context = ToolExecutionContext(
-        permissions=frozenset({"refund:execute", "after_sale:execute"}),
-    )
-    return registry.execute(name, arguments, context)
+    from app.agent.tools.manager import ToolManager
+
+    return ToolManager().execute_tool(name, arguments)

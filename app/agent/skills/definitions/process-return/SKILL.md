@@ -37,10 +37,10 @@ description: 当用户要退货、退款、换货或处理质量问题时使用�
 ### 第四步：确认意愿并创建售后工单
 
 - 向用户复述订单号、商品、售后类型和原因，取得明确确认（不能跳过）
-- 确认后调用 `create_after_sale_case`，将 `user_confirmed` 设为 true
-- 质量、破损、错漏发场景如已提供证据，将 `evidence_provided` 设为 true
+- 调用 `create_after_sale_case` 提出具体操作；返回 `CONFIRMATION_REQUIRED` 时展示提案，等待用户通过确认接口或下一轮明确确认。模型不能自行确认。
+- 质量、破损、错漏发场景使用 `evidence_ids` 绑定已提交的证据；只有服务端审核通过的记录计为有效证据，模型布尔值无效。
 - 根据返回的风险路由处理：
-  - `auto_process` / `approved`：可以调用 `execute_after_sale_case`
+  - `auto_process` / `approved`：可以调用 `execute_after_sale_case` 提出执行提案，执行前仍须取得该动作的用户确认。
   - `manual_review` / `human_escalation`：告知工单号和待审状态，不得继续执行
 
 ### 第五步：Human-in-the-Loop 审批

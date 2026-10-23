@@ -9,6 +9,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
+from time import monotonic
 from typing import Any
 
 from app.agent.after_sale import (
@@ -189,6 +190,7 @@ class BaseConversationAgent(ABC):
         self.tool_execution_context = ToolExecutionContext(
             user_id=self.config.memory_user_id,
             role="agent",
+            session_id=self.session_path,
             permissions=frozenset({"refund:execute", "after_sale:execute"}),
         )
 
@@ -223,6 +225,9 @@ class BaseConversationAgent(ABC):
         return len(self.raw_messages)
 
     def reset(self) -> None:
+        actions = self.tool_registry.action_service
+        if actions is not None:
+            actions.revoke_scope(self.config.memory_user_id, self.session_path)
         pending = getattr(self, "pending_plan_execution", None)
         if pending is not None:
             try:
@@ -274,6 +279,7 @@ class BaseConversationAgent(ABC):
             self.tool_execution_context = ToolExecutionContext(
                 user_id=self.config.memory_user_id,
                 role="agent",
+                session_id=self.session_path,
                 permissions=self.tool_execution_context.permissions,
                 trace_id=trace_id,
             )
@@ -315,6 +321,88 @@ class BaseConversationAgent(ABC):
                 ),
                 requires_human=False,
             ),
+        )
+
+    def _handle_action_input(self, text: str) -> CustomerServiceResponse | None:
+        from app.agent.strategies.selector import StrategySelector
+        from app.services.actions import ActionError
+        from app.services.tool_execution import ToolExecutionService
+
+        actions = self.tool_registry.action_service
+        if actions is None:
+            return None
+        confirm = StrategySelector.is_explicit_confirmation(text)
+        reject = text.strip().rstrip("。！! ") in {
+            "拒绝",
+            "取消",
+            "取消操作",
+            "不同意",
+            "不要执行",
+        }
+        if not confirm and not reject:
+            return None
+        pending = actions.pending(self.config.memory_user_id, self.session_path)
+        if not pending:
+            return None
+        if reject:
+            for item in pending:
+                actions.reject(
+                    item["action_id"], self.config.memory_user_id, self.session_path
+                )
+            if self.pending_plan_execution is not None:
+                self._cancel_pending_plan("用户拒绝业务提案")
+            reply = "已拒绝待确认操作，未执行这些操作。"
+        elif len(pending) != 1:
+            reply = "当前有多个待确认操作，请通过操作 ID 分别确认，不能用一句确认授权全部操作。"
+        else:
+            item = pending[0]
+            boundary = ToolExecutionService(
+                self.tool_registry,
+                event_bus=self.event_bus,
+                redactor=self.guardrails.redact,
+            )
+            try:
+                boundary.confirm(
+                    item["action_id"],
+                    self.tool_execution_context,
+                    item["arguments_hash"],
+                    channel="chat",
+                )
+                if self.pending_plan_execution is not None:
+                    return None  # Resume the pinned plan, with its original tool whitelist.
+                managers = (
+                    [self.tool_manager]
+                    if hasattr(self, "tool_manager")
+                    else [agent.tool_manager for agent in self.agents.values()]
+                )
+                result = boundary.execute(
+                    item["tool_name"],
+                    item["arguments_json"],
+                    self.tool_execution_context,
+                    allowed_tools=set().union(*(tm.tool_names for tm in managers)),
+                    deadline=monotonic() + 30.0,
+                    action_id=item["action_id"],
+                )
+                import json
+
+                outcome = json.loads(result)
+                reply = (
+                    (
+                        "已执行您确认的操作。"
+                        if outcome.get("success")
+                        else "操作未完成，请核对执行结果。"
+                    )
+                    + " 操作 ID："
+                    + item["action_id"]
+                )
+            except ActionError as exc:
+                reply = str(exc)
+        self.raw_messages.extend(
+            [{"role": "user", "content": text}, {"role": "assistant", "content": reply}]
+        )
+        self.save()
+        return CustomerServiceResponse(
+            intent=IntentType.AFTER_SALE, confidence=1.0, reply=reply
         )
 
     def _restore_session(self) -> None:
@@ -428,6 +516,16 @@ class BaseConversationAgent(ABC):
             self.latest_plan_execution = self.plan_lifecycle.get(pending.plan_id)
             self.pending_plan_execution = None
             return
+        actions = self.tool_registry.action_service
+        if actions is not None:
+            actions.revoke_scope(
+                self.config.memory_user_id,
+                self.session_path,
+                [
+                    step.output.get("action", {}).get("action_id", "")
+                    for step in pending.steps
+                ],
+            )
         self.latest_plan_execution = cancelled
         self.pending_plan_execution = None
         self.save()
@@ -477,6 +575,45 @@ class BaseConversationAgent(ABC):
             )
         if requires_human:
             result.requires_human = True
+
+        pending_actions = (
+            self.tool_registry.action_service.pending(
+                self.config.memory_user_id, self.session_path
+            )
+            if self.tool_registry.action_service
+            else []
+        )
+        if pending_actions:
+            import json
+
+            labels = {
+                "create_after_sale_case": "创建售后工单",
+                "execute_after_sale_case": "执行已审批售后工单",
+                "apply_refund": "申请退款",
+            }
+            descriptions = []
+            for item in pending_actions:
+                args = json.loads(item["arguments_json"])
+                details = [
+                    f"{label}：{args[key]}"
+                    for key, label in (
+                        ("order_id", "订单"),
+                        ("case_id", "工单"),
+                        ("reason", "原因"),
+                    )
+                    if args.get(key)
+                ]
+                descriptions.append(
+                    f"{labels.get(item['tool_name'], item['tool_name'])}，"
+                    + "，".join(details)
+                    + f"。操作 ID：{item['action_id']}"
+                )
+            result.reply = self.guardrails.redact(
+                "以下操作尚未执行，需要您确认：\n" + "\n".join(descriptions)
+            )
+            result.follow_up_question = (
+                "回复确认仅授权当前唯一提案；多个提案请按操作 ID 分别确认。"
+            )
 
         self.memory_manager.update_short_term(self.raw_messages[-6:])
         self.raw_messages.append(

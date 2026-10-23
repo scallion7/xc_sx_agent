@@ -4,10 +4,12 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：阶段 22 已完成计划运行治理、Alembic 迁移、OIDC/JWT 认证
-> 端口、业务 Provider 与回调、独立补偿、规则版本、API/运维治理、数据生命周期和
-> 离线质量门禁。当前完整离线回归共 149 项，不访问真实或本地模型、真实 OIDC 或
-> 真实业务供应商。
+> 当前二次开发进度：第 23 期已接入可信业务提案、用户确认记录、证据审核记录与
+> 统一工具执行入口。单/Multi-Agent ReAct、计划执行和手动操作 API 共用执行边界；
+> 模型输出“用户已确认”不能授权写操作。实现与验收见
+> [第23期文档](docs/第23期-可信确认与统一工具执行.md)。本地 182 项离线回归通过，
+> app 语句覆盖率 80%。离线测试不调用真实模型、
+> 真实 OIDC 或真实业务供应商。
 
 ## 项目定位
 
@@ -66,7 +68,9 @@
 14. Alembic 升降级、静态/OIDC 认证端口、Provider 契约、签名回调去重和独立补偿操作；
 15. 风险规则 draft/active/retired、试运行、激活、回滚和工单规则版本留痕；
 16. 统一错误码、请求追踪、cursor 分页、持久化幂等键、分层限流、就绪诊断、备份清理
-    以及 40 条固定计划案例的确定性 CI 门禁。
+    以及 40 条固定计划案例的确定性 CI 门禁；
+17. 绑定用户、会话、规范化参数、业务快照和有效期的可信提案，确认原子消费、
+    已完成结果重放、归属校验后的证据审核及统一工具执行服务。
 
 ## 二次开发架构
 
@@ -93,6 +97,10 @@ Application Factory → TraceContext → Guardrails
                                                   ├──────────────→ PlanRunService
                                                   │              （租约 / fencing / 检查点）
                                                   ▼
+                                         ToolExecutionService
+                                 （契约/权限/提案/确认/截止时间/事件）
+                                      │            └─ ActionService
+                                      ▼                （SQL 确认与证据账本）
                                          实例级 ToolRegistry
                                    （Multi-Agent 使用子 Agent 白名单）
           ┌──────────────┼──────────────┐
@@ -432,7 +440,7 @@ ecom-service-agent/
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
-├── tests/                                # 原有测试和阶段 22 治理回归
+├── tests/                                # 原有测试及阶段 22/23 治理回归
 └── docs/                                 # 第 1–22 期教学与二次开发文档
 ```
 
@@ -673,7 +681,7 @@ Agent：恢复原售后计划，仅执行待确认步骤，不重新路由、规
 
 ## 测试与评估
 
-当前完整离线回归共 149 项，不会调用外部模型或本地模型、OIDC 和 Provider 服务：
+当前完整离线回归包含第 23 期可信确认专项，不会调用外部模型或本地模型、OIDC 和 Provider 服务。最新验收数量见[第23期文档](docs/第23期-可信确认与统一工具执行.md)：
 
 ```bash
 python -m unittest discover -s tests -v
@@ -690,6 +698,9 @@ ruff format --check .
 测试覆盖：
 
 - 未确认不能创建售后工单；
+- 单/Multi-Agent ReAct 伪造确认拦截、计划恢复与手动 API 共用确认账本；
+- 参数/订单/审批/规则/证据变更、跨用户/会话、过期和拒绝确认；
+- 确认跨线程/进程一次性消费、重启恢复、未知结果禁止自动重放、会话重置撤销；
 - 低风险工单自动批准并执行；
 - 高金额工单进入人工审批；
 - 待审工单无法执行；
@@ -735,6 +746,7 @@ python -m unittest tests.test_plan_recovery -v
 python -m unittest tests.test_auth_and_migrations -v
 python -m unittest tests.test_provider_and_policy_governance -v
 python -m unittest tests.test_stage_22_quality_gate -v
+python -m unittest tests.test_trusted_actions -v
 python -m app.scripts.validate_plan_quality
 ```
 
@@ -858,11 +870,16 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第20期：独立计划仓储与审计](docs/第20期-独立计划仓储与审计.md)
 - [第21期：售后副作用可靠执行](docs/第21期-售后副作用可靠执行.md)
 - [第22期：计划执行治理与工程化闭环](docs/第22期-计划执行治理与工程化闭环.md)
+- [第23期：可信确认与统一工具执行](docs/第23期-可信确认与统一工具执行.md)
 - [生产配置检查清单](docs/生产配置检查清单.md)
 
 ## 后续路线
 
-阶段 22 已将当前能够离线开发和验证的二次开发内容收口到四个工作包：
+第 23 期已完成第一版可信确认边界，后续优先推进业务工单创建的并发唯一约束、
+Provider 幂等键与结果对账、运行超时后的外部副作用隔离。确认账本的一次性消费
+不等于外部退款 exactly-once，具体边界见第 23 期文档。
+
+阶段 22 的历史交付包含四个工作包：
 
 1. **计划运行时治理**：完整步骤状态、逐步骤检查点、运行租约、fencing、步骤/计划
    超时、实时取消传播、工具策略、有限重试、熔断、资源预算、背压和崩溃接管；

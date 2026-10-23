@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     model_retry_base_seconds: float = 0.2
     model_requests_per_minute: int = 60
 
+    action_confirmation_ttl_seconds: int = Field(default=900, ge=1, le=86400)
+
     # Agent 执行策略
     max_react_steps: int = 5
     agent_strategy: Literal["react", "plan_execute", "auto"] = "react"

@@ -66,7 +66,8 @@ class CreateAfterSaleArguments(OrderArguments):
         "other",
     ] = "auto"
     evidence_provided: bool = False
-    user_confirmed: bool
+    user_confirmed: bool = False
+    evidence_ids: list[str] = Field(default_factory=list, max_length=20)
 
 
 class CaseArguments(ToolArguments):

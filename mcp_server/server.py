@@ -18,7 +18,6 @@ from app.agent.tools.knowledge import search_knowledge as _search_knowledge
 from app.agent.tools.logistics import query_logistics as _query_logistics
 from app.agent.tools.order import query_order as _query_order
 from app.agent.tools.product import query_product as _query_product
-from app.agent.tools.refund import apply_refund as _apply_refund
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("ecom-tools", host="127.0.0.1", port=9123)
@@ -47,9 +46,15 @@ def query_logistics(order_id: str) -> str:
 
 @mcp.tool()
 def apply_refund(order_id: str, reason: str) -> str:
-    """为指定订单申请退款。注意：这是一个敏感操作，调用前应先与用户确认"""
-    result = _apply_refund(order_id, reason)
-    return json.dumps(result, ensure_ascii=False)
+    """演示 MCP 未接入可信身份；退款须经主应用的提案、确认与执行接口。"""
+    return json.dumps(
+        {
+            "success": False,
+            "error_code": "ACTION_SCOPE_REQUIRED",
+            "error": "MCP 写操作需接入可信用户及会话，请使用主应用的确认接口",
+        },
+        ensure_ascii=False,
+    )
 
 
 @mcp.tool()

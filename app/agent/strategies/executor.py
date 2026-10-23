@@ -333,6 +333,13 @@ class PlanExecutor:
                     lifecycle=lifecycle,
                     token=token,
                     budget=budget,
+                    action_id=(
+                        previous_by_id[step.step_id]
+                        .output.get("action", {})
+                        .get("action_id")
+                        if step.step_id in previous_by_id
+                        else None
+                    ),
                 )
                 lifecycle = self._checkpoint(
                     lifecycle,
@@ -451,6 +458,7 @@ class PlanExecutor:
         lifecycle: PlanExecutionResult,
         token: CancellationToken,
         budget: ExecutionBudget,
+        action_id: str | None = None,
     ) -> PlanStepResult:
         blocked_by = [
             dependency
@@ -469,14 +477,6 @@ class PlanExecutor:
         if token.cancelled:
             return self._cancelled_result(step, lifecycle, token)
         read_only = self.tool_manager.is_read_only(step.tool_name)
-        if not read_only and not confirmed:
-            return self._result(
-                step,
-                status="awaiting_confirmation",
-                error="有副作用的工具必须在用户明确确认后单独执行",
-                error_code="CONFIRMATION_REQUIRED",
-                lifecycle=lifecycle,
-            )
         try:
             arguments = self.references.resolve(step.arguments, previous)
         except PlanReferenceError as exc:
@@ -485,6 +485,20 @@ class PlanExecutor:
                 status="failed",
                 error=str(exc),
                 error_code="INVALID_STEP_REFERENCE",
+                lifecycle=lifecycle,
+            )
+
+        if not read_only and not confirmed:
+            output = {}
+            if hasattr(self.tool_manager, "prepare_action"):
+                output = self.tool_manager.prepare_action(step.tool_name, arguments)
+            needs_confirmation = not output or output.get("confirmation_required")
+            return self._result(
+                step,
+                status="awaiting_confirmation" if needs_confirmation else "failed",
+                output=output,
+                error=output.get("error", "有副作用的工具必须在用户明确确认后单独执行"),
+                error_code=output.get("error_code", "CONFIRMATION_REQUIRED"),
                 lifecycle=lifecycle,
             )
 
@@ -542,6 +556,7 @@ class PlanExecutor:
                 attempt,
                 calls_before,
                 retries_before,
+                action_id,
             )
             if last_result.status == "completed":
                 if policy.circuit_breaker:
@@ -582,6 +597,7 @@ class PlanExecutor:
         attempt: int,
         calls_before: int,
         retries_before: int,
+        action_id: str | None = None,
     ) -> PlanStepResult:
         if token.cancelled:
             return self._cancelled_result(step, lifecycle, token)
@@ -591,6 +607,21 @@ class PlanExecutor:
 
         def invoke() -> str:
             with semaphore:
+                if token.cancelled:
+                    return json.dumps(
+                        {
+                            "success": False,
+                            "error_code": "CANCELLED",
+                            "error": "操作已取消",
+                        }
+                    )
+                if isinstance(self.tool_manager, ToolManager):
+                    return self.tool_manager.execute_tool(
+                        step.tool_name,
+                        arguments,
+                        deadline=deadline,
+                        action_id=action_id,
+                    )
                 return self.tool_manager.execute_tool(step.tool_name, arguments)
 
         self.event_bus.emit(
@@ -606,8 +637,8 @@ class PlanExecutor:
             },
         )
         pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="plan-tool")
-        future = pool.submit(copy_context().run, invoke)
         deadline = monotonic() + timeout
+        future = pool.submit(copy_context().run, invoke)
         try:
             while True:
                 if token.cancelled:
@@ -728,10 +759,16 @@ class PlanExecutor:
         failed = bool(output.get("error")) or output.get("success") is False
         return self._result(
             step,
-            status="failed" if failed else "completed",
+            status="awaiting_confirmation"
+            if output.get("confirmation_required")
+            else "failed"
+            if failed
+            else "completed",
             output=output,
             error=str(output.get("error", "")) if failed else "",
-            error_code="TOOL_REPORTED_FAILURE" if failed else "",
+            error_code=output.get("error_code", "TOOL_REPORTED_FAILURE")
+            if failed
+            else "",
             **common,
         )
 

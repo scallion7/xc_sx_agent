@@ -6,7 +6,7 @@
 
 import json
 from collections.abc import Callable
-from time import perf_counter
+from time import monotonic
 
 from app.agent.tools.registry import (
     ToolExecutionContext,
@@ -15,6 +15,7 @@ from app.agent.tools.registry import (
 )
 from app.config.settings import settings
 from app.observability import EventBus
+from app.services.tool_execution import ToolExecutionService
 
 
 class ToolManager:
@@ -53,6 +54,10 @@ class ToolManager:
         )
         self.event_bus = event_bus or EventBus()
         self.redactor = redactor or (lambda value: value)
+        self.execution_service = ToolExecutionService(
+            self._registry, event_bus=self.event_bus, redactor=self.redactor
+        )
+        self.timeout_seconds = 30.0
 
         if use_mcp and mcp_server_url:
             self._init_mcp(mcp_server_url)
@@ -145,61 +150,34 @@ class ToolManager:
             name
         )
 
-    def execute_tool(self, name: str, arguments: dict) -> str:
-        """根据工具来源分发调用。"""
-        started = perf_counter()
-        source = self._tool_source.get(name)
-        self.event_bus.emit(
-            "tool.started",
-            source="tool_manager",
-            data={
-                "name": name,
-                "arguments": self._redact_value(arguments),
-                "tool_source": source or "unknown",
-            },
+    def execute_tool(
+        self, name: str, arguments, *, deadline=None, action_id=None
+    ) -> str:
+        remote = None
+        if self._tool_source.get(name) == "mcp" and self._mcp_client:
+            remote = self._mcp_client.call_tool
+        return self.execution_service.execute(
+            name,
+            arguments,
+            self._execution_context,
+            allowed_tools=self.tool_names,
+            remote=remote,
+            deadline=monotonic() + self.timeout_seconds
+            if deadline is None
+            else deadline,
+            action_id=action_id,
         )
 
-        required = self._registry.required_permission(name)
-        if required and required not in self._execution_context.permissions:
-            result = json.dumps(
-                {
-                    "success": False,
-                    "error": f"无权执行工具 {name}",
-                    "required_permission": required,
-                },
-                ensure_ascii=False,
-            )
-        elif source == "mcp" and self._mcp_client:
-            result = self._mcp_client.call_tool(name, arguments)
-        elif source == "local":
-            result = self._registry.execute(
+    def prepare_action(self, name: str, arguments: dict) -> dict:
+        return json.loads(
+            self.execution_service.execute(
                 name,
                 arguments,
                 self._execution_context,
+                allowed_tools=self.tool_names,
+                prepare_only=True,
             )
-        else:
-            result = json.dumps(
-                {"error": f"未知工具: {name}"},
-                ensure_ascii=False,
-            )
-
-        try:
-            payload = json.loads(result)
-        except (json.JSONDecodeError, TypeError):
-            payload = {}
-        failed = bool(payload.get("error")) or payload.get("success") is False
-        self.event_bus.emit(
-            "tool.failed" if failed else "tool.completed",
-            source="tool_manager",
-            data={
-                "name": name,
-                "arguments": self._redact_value(arguments),
-                "result": self.redactor(result),
-                "tool_source": source or "unknown",
-                "latency_ms": (perf_counter() - started) * 1000,
-            },
         )
-        return result
 
     def _redact_value(self, value):
         if isinstance(value, str):

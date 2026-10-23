@@ -135,6 +135,9 @@ class MultiAgentOrchestrator(BaseConversationAgent):
             safe_input, blocked = self._prepare_user_input(user_input)
             if blocked is not None:
                 return blocked
+            action_reply = self._handle_action_input(safe_input)
+            if action_reply is not None:
+                return action_reply
             risk_decision = self.risk_router.assess_message(safe_input)
             self.raw_messages.append({"role": "user", "content": safe_input})
 

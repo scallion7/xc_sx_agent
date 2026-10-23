@@ -3,7 +3,6 @@
 SubAgent 封装了一个轻量级 ReAct 循环，由 Orchestrator 调度执行。
 """
 
-import json
 from collections.abc import Callable
 
 from app.agent.tools.manager import ToolManager
@@ -121,7 +120,7 @@ class SubAgent:
 
             for tc in assistant_msg.tool_calls:
                 func_name = tc.function.name
-                func_args = json.loads(tc.function.arguments)
+                func_args = tc.function.arguments
 
                 result_str = self.redactor(
                     self.tool_manager.execute_tool(
