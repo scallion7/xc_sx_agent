@@ -32,6 +32,7 @@ jobs:
       - run: test -f 'docs/第22期-计划执行治理与工程化闭环.md'
       - run: test -f 'docs/第23期-可信确认与统一工具执行.md'
       - run: test -f 'docs/第24期-工单并发唯一约束与业务幂等.md'
+      - run: test -f 'docs/第25期-可恢复的异步Agent任务执行.md'
 
   migrations:
     runs-on: ubuntu-latest
@@ -70,7 +71,7 @@ jobs:
         env:
           DATABASE_URL: ${{ matrix.database }}
         run: alembic check
-      - name: Governance and 50-request case creation smoke
+      - name: Governance, case creation and worker queue smoke
         env:
           DATABASE_URL: ${{ matrix.database }}
           DATABASE_AUTO_CREATE: "false"

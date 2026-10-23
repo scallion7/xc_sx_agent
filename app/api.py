@@ -58,6 +58,7 @@ from app.services.providers import (
 from app.web.actions import register_action_routes
 from app.web.admin import render_admin_page
 from app.web.middleware import install_api_middleware
+from app.web.runs import register_run_routes
 from app.web.schemas import (
     ChatRequest,
     CompensationExecuteRequest,
@@ -226,6 +227,14 @@ def create_app(
     )
     app = FastAPI(title="小夕智能客服 API", version="2.0.0")
     install_api_middleware(app, services.config)
+    from app.repositories.runs import RunError
+
+    @app.exception_handler(RunError)
+    async def run_conflict(request, exc):
+        return JSONResponse(
+            status_code=409, content={"success": False, "error_code": exc.code}
+        )
+
     app.state.runtime = services.runtime
     app.state.after_sale_service = services.after_sale
     app.state.commerce_service = services.commerce
@@ -248,6 +257,7 @@ def create_app(
 
         return dependency
 
+    register_run_routes(app, services, require)
     register_action_routes(app, services, require)
     register_public_routes(app, services, require)
     register_session_routes(app, services, require)
@@ -469,6 +479,21 @@ def register_session_routes(
         context: AuthContext = Depends(require("session:delete")),
     ) -> dict:
         reference = session_reference(services, context, session_id)
+        if services.config.persistence_backend == "sql":
+            from sqlalchemy import select
+
+            from app.infrastructure.database import agent_runs_table, get_engine
+            from app.repositories.runs import ACTIVE, RunError
+
+            with get_engine(services.config.database_url).connect() as conn:
+                if conn.execute(
+                    select(agent_runs_table.c.run_id).where(
+                        agent_runs_table.c.user_id == context.user_id,
+                        agent_runs_table.c.session_key == reference,
+                        agent_runs_table.c.status.in_(ACTIVE),
+                    )
+                ).first():
+                    raise RunError("SESSION_RUN_ACTIVE")
         repository = build_session_repository(
             services.config,
             session_path=reference,

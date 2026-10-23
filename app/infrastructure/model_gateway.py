@@ -121,7 +121,41 @@ class OpenAIModelGateway:
     def client(self) -> Any:
         return self._client
 
-    def complete(
+    def complete(self, *, model, messages, purpose="chat", **kwargs):
+        return self._durable("complete", model, messages, purpose, kwargs)
+
+    def parse(self, *, model, messages, response_format, purpose="extract", **kwargs):
+        return self._durable("parse", model, messages, purpose, kwargs, response_format)
+
+    def _durable(self, method, model, messages, purpose, kwargs, response_format=None):
+        from app.services.run_context import current_run, decode_model, encode
+
+        run = current_run()
+        arguments = dict(model=model, messages=messages, purpose=purpose, **kwargs)
+        invoke_args = arguments | (
+            {"response_format": response_format} if response_format else {}
+        )
+
+        def operation():
+            return getattr(self, "_" + method)(**invoke_args)
+
+        if run is None:
+            return operation()
+        return run.call(
+            "model",
+            method + ":" + purpose,
+            arguments
+            | {
+                "schema": response_format.model_json_schema()
+                if response_format
+                else None
+            },
+            operation,
+            serializer=encode,
+            deserializer=lambda value: decode_model(value, response_format),
+        )
+
+    def _complete(
         self,
         *,
         model: str,
@@ -141,7 +175,7 @@ class OpenAIModelGateway:
             operation_name="complete",
         )
 
-    def parse(
+    def _parse(
         self,
         *,
         model: str,

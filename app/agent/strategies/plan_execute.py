@@ -105,6 +105,36 @@ class PlanExecuteStrategy:
         agent_key: str = "",
         requires_human: bool = False,
     ) -> StrategyResult:
+        from app.services.run_context import current_run
+
+        run = current_run()
+        checkpoint = run.plan_checkpoint(agent_key) if run else None
+        if checkpoint:
+            previous = PlanExecutionResult.model_validate(checkpoint)
+            if previous.status in {
+                "completed",
+                "awaiting_confirmation",
+                "failed",
+                "cancelled",
+                "expired",
+            }:
+                execution = previous
+            else:
+                execution = self.executor.execute(
+                    previous.plan,
+                    previous_execution=previous,
+                    confirmed_step_ids={
+                        step.step_id
+                        for step in previous.steps
+                        if previous.resume_count
+                        and step.status == "awaiting_confirmation"
+                    },
+                )
+            return StrategyResult(
+                text=self.redactor(self._render_result(user_input, execution)),
+                strategy="plan_execute",
+                execution=execution,
+            )
         plan = self._create_plan(user_input, conversation or [])
         execution = self.executor.execute(
             plan,

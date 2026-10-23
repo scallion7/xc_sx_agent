@@ -341,7 +341,18 @@ class BaseConversationAgent(ABC):
         }
         if not confirm and not reject:
             return None
-        pending = actions.pending(self.config.memory_user_id, self.session_path)
+        from app.services.run_context import current_run
+
+        durable = current_run()
+
+        def pending_actions():
+            return actions.pending(self.config.memory_user_id, self.session_path)
+
+        pending = (
+            durable.snapshot("pending_actions", pending_actions)
+            if durable
+            else pending_actions()
+        )
         if not pending:
             return None
         if reject:
@@ -420,6 +431,12 @@ class BaseConversationAgent(ABC):
 
     def _restore_latest_plan(self) -> PlanExecutionResult | None:
         """从独立仓储恢复计划，首次读取时兼容旧会话快照。"""
+        from app.services.run_context import current_run
+
+        run = current_run()
+        if run:
+            value = run.snapshot("initial_plan", self.plan_lifecycle.restore_latest)
+            return PlanExecutionResult.model_validate(value) if value else None
         return self.plan_lifecycle.restore_latest()
 
     def _record_plan(
@@ -427,7 +444,24 @@ class BaseConversationAgent(ABC):
         execution: PlanExecutionResult,
     ) -> PlanExecutionResult:
         """持久化计划新版本并同步会话兼容快照。"""
+        from app.services.run_context import current_run
+
+        durable = current_run()
+        if durable:
+            durable.check()
         saved = self.plan_lifecycle.record(execution)
+        if durable:
+
+            def checkpoint(row):
+                row["payload"].setdefault("plan_checkpoints", {})[saved.agent_key] = (
+                    saved.model_dump(mode="json")
+                )
+                return {"payload": row["payload"]}, {
+                    "plan_id": saved.plan_id,
+                    "status": saved.status,
+                }
+
+            durable.mutate(checkpoint, "plan.checkpoint")
         self.latest_plan_execution = saved
         if saved.status == "awaiting_confirmation":
             self.pending_plan_execution = saved
@@ -442,9 +476,23 @@ class BaseConversationAgent(ABC):
         detail: dict[str, Any],
     ) -> PlanExecutionResult:
         """先校验租约与 fencing，再保存权威计划检查点。"""
+        from app.services.run_context import current_run
+
+        durable = current_run()
+        if durable:
+            durable.check()
         run = self._active_plan_runs.get(execution.run_id)
         if run is None:
             run = self.plan_run_repository.get(execution.run_id)
+        if durable and run and run.worker_id != self.config.plan_worker_id:
+            from uuid import uuid4
+
+            from app.repositories.runs import RunInterrupted
+
+            if run.lease_active():
+                raise RunInterrupted("PLAN_LEASE_PENDING")
+            execution = execution.model_copy(update={"run_id": uuid4().hex})
+            run = None
         if run is None:
             run_kind = "confirmation" if execution.resume_count else "initial"
             run = self.plan_run_service.start(
@@ -475,6 +523,18 @@ class BaseConversationAgent(ABC):
         }:
             run = self.plan_run_service.finish(run, saved)
         self._active_plan_runs[run.run_id] = run
+        if durable:
+
+            def checkpoint(row):
+                row["payload"].setdefault("plan_checkpoints", {})[saved.agent_key] = (
+                    saved.model_dump(mode="json")
+                )
+                return {"payload": row["payload"]}, {
+                    "plan_id": saved.plan_id,
+                    "status": saved.status,
+                }
+
+            durable.mutate(checkpoint, "plan.checkpoint")
         self.latest_plan_execution = saved
         self.pending_plan_execution = (
             saved if saved.status == "awaiting_confirmation" else None

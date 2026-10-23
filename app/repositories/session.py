@@ -65,6 +65,14 @@ class SqlSessionRepository:
         self.user_id = user_id
 
     def load(self) -> dict | None:
+        from app.services.run_context import current_run
+
+        run = current_run()
+        if run and (run.user_id, run.session_key) == (self.user_id, self.session_key):
+            return run.snapshot("session", self._load)
+        return self._load()
+
+    def _load(self) -> dict | None:
         statement = select(sessions_table).where(
             sessions_table.c.session_key == self.session_key,
             sessions_table.c.user_id == self.user_id,
@@ -89,6 +97,18 @@ class SqlSessionRepository:
         summary: str | None,
         short_term_memory: dict | None,
     ) -> None:
+        from app.services.run_context import current_run
+
+        run = current_run()
+        if run and (run.user_id, run.session_key) == (self.user_id, self.session_key):
+            run.save_session(
+                dict(
+                    messages=messages,
+                    summary=summary,
+                    short_term_memory=short_term_memory,
+                )
+            )
+            return
         payload = {
             "session_key": self.session_key,
             "user_id": self.user_id,
@@ -121,7 +141,19 @@ class SqlSessionRepository:
                 connection.execute(insert(sessions_table).values(**payload))
 
     def delete(self) -> None:
+        from app.infrastructure.database import agent_runs_table
+        from app.repositories.runs import ACTIVE, RunError
+
         with self.engine.begin() as connection:
+            busy = connection.execute(
+                select(agent_runs_table.c.run_id).where(
+                    agent_runs_table.c.user_id == self.user_id,
+                    agent_runs_table.c.session_key == self.session_key,
+                    agent_runs_table.c.status.in_(ACTIVE),
+                )
+            ).first()
+            if busy:
+                raise RunError("SESSION_RUN_ACTIVE")
             connection.execute(
                 delete(sessions_table).where(
                     sessions_table.c.session_key == self.session_key,

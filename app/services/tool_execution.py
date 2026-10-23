@@ -41,7 +41,24 @@ class ToolExecutionService:
             parsed["evidence_ids"] = sorted(set(parsed["evidence_ids"]))
         return parsed
 
-    def execute(
+    def execute(self, name, arguments, context, **kwargs):
+        from app.services.run_context import current_run
+
+        run = current_run()
+        if run is None:
+            return self._execute_logged(name, arguments, context, **kwargs)
+        return run.call(
+            "read" if self.registry.is_read_only(name) else "write",
+            name,
+            {
+                "arguments": arguments,
+                "action_id": kwargs.get("action_id"),
+                "prepare_only": kwargs.get("prepare_only", False),
+            },
+            lambda: self._execute_logged(name, arguments, context, **kwargs),
+        )
+
+    def _execute_logged(
         self,
         name,
         arguments,
@@ -116,6 +133,10 @@ class ToolExecutionService:
 
     @staticmethod
     def _check_deadline(deadline):
+        from app.services.run_context import current_run
+
+        if current_run():
+            current_run().check()
         if deadline is not None and monotonic() >= deadline:
             raise ActionError(
                 "TOOL_DEADLINE_EXCEEDED", "调用截止时间已到，未开始新操作"

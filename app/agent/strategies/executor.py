@@ -606,7 +606,9 @@ class PlanExecutor:
         semaphore = self._group_semaphore(policy.concurrency_group)
 
         def invoke() -> str:
-            with semaphore:
+            from app.services.run_context import call_scope
+
+            with semaphore, call_scope(f"{lifecycle.plan_id}:{step.step_id}"):
                 if token.cancelled:
                     return json.dumps(
                         {

@@ -171,7 +171,7 @@ def session_reference(
     return f"{context.user_id}:{session_id}"
 
 
-def invoke_chat(
+def _invoke_chat(
     services: ApiServices,
     request: ChatRequest,
     context: AuthContext,
@@ -180,6 +180,12 @@ def invoke_chat(
     """在用户与追踪上下文中执行一次同步 Agent 对话。"""
     agent_config = services.config.model_copy(deep=True)
     agent_config.memory_user_id = context.user_id
+    from app.services.run_context import current_run
+
+    durable = current_run()
+    if durable:
+        agent_config.plan_worker_id = f"{durable.run_id}:{durable.fence}"
+        agent_config.model_max_retries = 0
     session_ref = session_reference(services, context, request.session_id)
 
     with TraceContext(
@@ -224,3 +230,36 @@ def load_regression_summary(report_path: str | Path) -> dict[str, Any]:
         "summary": report.get("summary", {}),
         "case_count": len(report.get("cases", [])),
     }
+
+
+def invoke_chat(services, request, context, trace_id):
+    """Compatibility adapter: SQL chat uses the same queue and execution journal."""
+    if services.config.persistence_backend != "sql":
+        return _invoke_chat(services, request, context, trace_id)
+    from app.repositories.runs import RunError, RunRepository
+    from app.services.runs import RunWorker
+
+    repository = RunRepository(services.config.database_url)
+    try:
+        row = repository.submit(
+            request.model_dump(mode="json"),
+            context.user_id,
+            session_reference(services, context, request.session_id),
+            trace_id,
+            max_attempts=services.config.run_max_attempts,
+            run_id=trace_id,
+        )
+    except RunError as exc:
+        raise HTTPException(409, detail={"error_code": exc.code}) from exc
+    RunWorker(services, repository=repository).run_once(row["run_id"])
+    row = repository.get(row["run_id"])
+    if row["status"] != "completed":
+        raise HTTPException(
+            409,
+            detail={
+                "error_code": "RUN_NOT_COMPLETED",
+                "run_id": row["run_id"],
+                "status": row["status"],
+            },
+        )
+    return CustomerServiceResponse.model_validate(row["payload"]["result"])

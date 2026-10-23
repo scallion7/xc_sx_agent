@@ -41,7 +41,7 @@ def install_api_middleware(app: FastAPI, config) -> None:
         request.state.trace_id = trace_id
         token = request.headers.get("X-API-Key", "anonymous")
         admin = request.url.path.startswith("/v1/admin")
-        expensive = request.url.path in {"/v1/chat", "/v1/chat/stream"}
+        expensive = request.url.path in {"/v1/chat", "/v1/chat/stream", "/v1/runs"}
         limit = (
             config.api_expensive_requests_per_minute
             if expensive

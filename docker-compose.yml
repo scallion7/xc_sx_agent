@@ -18,7 +18,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
+    environment: &agent_environment
       DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
       DATABASE_AUTO_CREATE: "false"
       PERSISTENCE_BACKEND: sql
@@ -40,6 +40,17 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+  worker:
+    build: .
+    depends_on:
+      api:
+        condition: service_healthy
+    environment: *agent_environment
+    command: ["python", "-m", "app.scripts.run_worker"]
+    healthcheck:
+      disable: true
+    stop_grace_period: 90s
 
 volumes:
   postgres_data:

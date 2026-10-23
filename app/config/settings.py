@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     plan_max_queued_steps: int = Field(default=20, ge=1, le=200)
     plan_read_max_attempts: int = Field(default=2, ge=1, le=5)
 
+    # Durable Agent worker (stage 25)
+    run_lease_seconds: int = Field(default=30, ge=3, le=3600)
+    run_max_attempts: int = Field(default=3, ge=1, le=10)
+    run_poll_seconds: float = Field(default=1.0, gt=0, le=30)
+
     # MCP 配置
     mcp_enabled: bool = False
     mcp_server_url: str = "http://127.0.0.1:9123/mcp"

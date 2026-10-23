@@ -238,6 +238,11 @@ class MultiAgentOrchestrator(BaseConversationAgent):
             self.raw_messages.append({"role": "assistant", "content": result.text})
             return result.text
         except Exception as exc:  # noqa: BLE001 - 规划失败时保留原子 Agent 降级路径
+            from app.services.run_context import current_run
+
+            if current_run():
+                raise
+
             self.event_bus.emit(
                 "strategy.fallback",
                 source="multi_agent_orchestrator",
@@ -264,6 +269,16 @@ class MultiAgentOrchestrator(BaseConversationAgent):
             )
 
         self._emit_agent_route(agent_key, resumed=True)
+        from app.services.run_context import current_run
+
+        durable = current_run()
+        if durable and durable.plan_checkpoint(agent_key):
+            result = self.plan_execute_strategies[agent_key].run(
+                pending.plan.goal, conversation=self.raw_messages, agent_key=agent_key
+            )
+            self._record_plan(result.execution)
+            self.raw_messages.append({"role": "assistant", "content": result.text})
+            return result.text
         try:
             running = pending.begin_resume()
         except PlanExpiredError as exc:

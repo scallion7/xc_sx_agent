@@ -202,6 +202,11 @@ class EcomAgent(BaseConversationAgent):
             self.raw_messages.append({"role": "assistant", "content": result.text})
             return result.text
         except Exception as exc:  # noqa: BLE001 - 策略失败时保留 ReAct 降级路径
+            from app.services.run_context import current_run
+
+            if current_run():
+                raise
+
             self.event_bus.emit(
                 "strategy.fallback",
                 source="ecom_agent",
@@ -224,6 +229,16 @@ class EcomAgent(BaseConversationAgent):
                 "failed",
                 "该计划属于 Multi-Agent 子 Agent，不能切换到单 Agent 恢复",
             )
+        from app.services.run_context import current_run
+
+        durable = current_run()
+        if durable and durable.plan_checkpoint(""):
+            result = self.plan_execute_strategy.run(
+                pending.plan.goal, conversation=self.raw_messages
+            )
+            self._record_plan(result.execution)
+            self.raw_messages.append({"role": "assistant", "content": result.text})
+            return result.text
         try:
             running = pending.begin_resume()
         except PlanExpiredError as exc:

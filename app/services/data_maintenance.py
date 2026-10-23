@@ -15,6 +15,7 @@ from sqlalchemy import and_, delete, insert, or_, select
 
 from app.infrastructure.database import (
     after_sale_operations_table,
+    agent_runs_table,
     api_idempotency_keys_table,
     compensation_operations_table,
     get_engine,
@@ -194,6 +195,19 @@ class DataMaintenanceService:
                     .where(
                         sessions_table.c.updated_at < cutoffs["sessions"],
                         sessions_table.c.session_key.not_in(protected_sessions),
+                        sessions_table.c.session_key.not_in(
+                            select(agent_runs_table.c.session_key).where(
+                                agent_runs_table.c.status.in_(
+                                    [
+                                        "queued",
+                                        "running",
+                                        "retry_wait",
+                                        "dead_letter",
+                                        "needs_reconciliation",
+                                    ]
+                                )
+                            )
+                        ),
                     )
                     .limit(max(1, batch_size))
                 )
