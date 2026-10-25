@@ -1,4 +1,4 @@
-"""Stage 24: concurrent business creation, durable idempotency and schema upgrades."""
+"""concurrent business creation, durable idempotency and schema upgrades."""
 
 from __future__ import annotations
 

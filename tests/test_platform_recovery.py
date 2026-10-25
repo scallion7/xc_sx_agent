@@ -1,4 +1,4 @@
-"""Stage 34 backup, additive migration, old application SQL compatibility."""
+"""backup, additive migration, old application SQL compatibility."""
 
 from pathlib import Path
 
@@ -54,7 +54,7 @@ class RecoveryTests(PlatformTestCase):
         upgrade_database(url)
         self.assertTrue(migration_status(url)["up_to_date"])
 
-    def test_stage26_upgrade_keeps_existing_business_rows(self):
+    def test_refund_delivery_upgrade_keeps_existing_business_rows(self):
         from app.infrastructure.database import orders_table
         from sqlalchemy import create_engine, select
 

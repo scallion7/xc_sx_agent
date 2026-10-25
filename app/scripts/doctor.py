@@ -1,4 +1,4 @@
-"""阶段 22 运行诊断：迁移、认证、Provider、规则和计划租约。"""
+"""运行诊断：迁移、认证、Provider、规则和计划租约。"""
 
 from __future__ import annotations
 

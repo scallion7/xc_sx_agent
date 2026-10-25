@@ -1,4 +1,4 @@
-"""端到端测试：验证第 4 期 MCP (Model Context Protocol) 集成。
+"""端到端测试：验证MCP (Model Context Protocol) 集成。
 
 前提条件：需先在另一个终端启动 MCP Server
   python -m mcp_server.server
@@ -220,7 +220,7 @@ def test_agent_mcp_product():
 
 def main():
     print("=" * 60)
-    print("  第 4 期 MCP 集成 · 端到端测试")
+    print("  MCP 集成 · 端到端测试")
     print("  确保 MCP Server 已启动: python mcp_server/server.py")
     print("=" * 60)
 

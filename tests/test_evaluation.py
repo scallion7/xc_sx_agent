@@ -1,4 +1,4 @@
-"""端到端测试：验证第 9 期 Agent 评估体系（沙箱 + 双层测评）。
+"""端到端测试：验证Agent 评估体系（沙箱 + 双层测评）。
 
 测试场景：
 1. 数据集加载 — load_dataset 解析 cases.json，字段完整
@@ -298,7 +298,7 @@ def test_evaluator_two_tier():
 
 def main():
     print("=" * 60)
-    print("  第 9 期 Agent 评估体系 · 端到端测试")
+    print("  Agent 评估体系 · 端到端测试")
     print("=" * 60)
 
     test_dataset_load()

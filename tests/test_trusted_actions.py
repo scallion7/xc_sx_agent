@@ -1,4 +1,4 @@
-"""Stage 23 behavioral tests: no real model, account, or payment provider."""
+"""behavioral tests: no real model, account, or payment provider."""
 
 from __future__ import annotations
 

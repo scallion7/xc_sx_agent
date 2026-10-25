@@ -111,7 +111,7 @@ def run_refund_delivery_smoke(database_url):
             == 1
         )
         # Only this probe's records are deleted so the following CI downgrade can
-        # check an empty stage26 ledger. Never use this script on a live database.
+        # check an empty refund-delivery ledger. Never use this script on a live database.
         for table in (outbox, jobs):
             conn.execute(delete(table).where(table.c.aggregate_id == suffix))
         conn.execute(delete(inbox).where(inbox.c.operation_id == suffix))

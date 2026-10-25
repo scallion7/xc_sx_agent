@@ -1,4 +1,4 @@
-"""阶段 22 运行租约、fencing、接管与检查点测试。"""
+"""运行租约、fencing、接管与检查点测试。"""
 
 from __future__ import annotations
 

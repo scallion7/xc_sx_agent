@@ -66,12 +66,14 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-最近一次功能与依赖修复验收基线为 [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6cba0a86663524aeae3a5934dd7d9a3b4c)：
+历史功能与依赖修复验收基线为 [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6cba0a86663524aeae3a5934dd7d9a3b4c)：
 
 - 本地完整回归 **345 项通过，语句覆盖率 81%**，包含真实 HTTP/MCP 与 Chromium。
 - [GitHub Actions 7 个作业全部通过](https://github.com/scallion7/xc_sx_agent/actions/runs/40175352228)：Python 3.10–3.12、SQLite/PostgreSQL 迁移、浏览器、依赖审计、镜像构建和安全扫描。
 - 受控 HTTP 模型下完成 540 次两轮任务；它验证工程流程，不代表真实模型效果。
 - 保存 Worker 退出、短暂数据库阻断、隔离备份恢复的证据；原始日志与适用边界见[验收状态](docs/evaluation/acceptance.md)。
+
+第二轮命名整理完成本地 **354 项回归，覆盖率 81%**；旧索引、配置别名和导入入口通过兼容检查，详见[命名与兼容约定](docs/engineering/naming-and-compatibility.md)及[本轮验收](docs/evaluation/acceptance.md)。
 
 [当前分支 CI](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml) 与历史证据分别记录，不用旧提交的成功结果替代新提交验收。
 

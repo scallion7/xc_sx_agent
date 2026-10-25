@@ -1,0 +1,27 @@
+{
+  "baseline_commit": "4ce51601cd3736e2e5a7933d171e6f208ffbb9b4",
+  "scope": "Code and module naming compatibility; no business-schema migration",
+  "python": "Python 3.11.15",
+  "full_suite": {
+    "tests": 354,
+    "passed": true,
+    "skipped": 0,
+    "seconds": 53.262,
+    "browser_enabled": true,
+    "log": "unittest.log"
+  },
+  "statement_coverage_percent": 81,
+  "new_compatibility_tests": 9,
+  "plan_quality_cases": 40,
+  "checks_passed": [
+    "ruff check",
+    "ruff format --check",
+    "compileall app mcp_server tests",
+    "81-path OpenAPI validation and baseline contract equality excluding info",
+    "SQLite upgrade, Alembic drift and platform smoke",
+    "plan quality gate and scheduling benchmark",
+    "legacy python -m tests.test_agent_deepening: 6 tests passed",
+    "Validated 346 local links/images across 71 Markdown files."
+  ],
+  "remote_ci": "Run on the published commit; follow the GitHub Actions link in acceptance.md."
+}

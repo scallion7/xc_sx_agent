@@ -1,4 +1,4 @@
-"""评估 Prompt：LLM-as-judge 对客服表现打分（第9期）。
+"""评估 Prompt：LLM-as-judge 对客服表现打分。
 
 三个 judge 对应需要「理解语义」才能判定、规则代码搞不定的维度：
 - ANSWER_QUALITY_PROMPT：回答质量（结果指标）

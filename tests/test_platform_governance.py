@@ -10,15 +10,15 @@ from unittest.mock import Mock
 from app.api import create_app
 from app.infrastructure.database import platform
 from app.platform.budget import ModelCatalog, SharedBudget
-from app.platform.collaboration import Collaboration
 from app.platform.common import PlatformError, encode
 from app.platform.connector_delivery import InventoryDelivery, InventoryWorker
 from app.platform.connectors import (
     ConnectorRegistry,
-    GovernedRemote,
+    GovernedMCPToolCaller,
     sign_identity,
     verify_identity,
 )
+from app.platform.conversation_handoff import ConversationHandoffService
 from app.platform.evaluation import AgentEvaluationRunner, validate_dataset
 from app.platform.inventory import InventorySandbox
 from app.platform.releases import ConfigurationReleases, tool_schema_hash
@@ -292,11 +292,11 @@ class ReleaseTests(PlatformTestCase):
             self.evaluate(row)
 
 
-class CollaborationTests(PlatformTestCase):
+class ConversationHandoffTests(PlatformTestCase):
     def setUp(self):
         super().setUp()
         self.config = self.config.model_copy(update={"collaboration_enabled": True})
-        self.collab = Collaboration(self.config)
+        self.collab = ConversationHandoffService(self.config)
         self.own = self.collab.ensure("u", "u:s")
         self.actions = ActionService(self.config.database_url)
 
@@ -433,7 +433,7 @@ class ConnectorTests(PlatformTestCase):
         contract = self.register(rpm=1)
         client = Mock()
         client.call_tool.return_value = '{"stock":3,"trusted":true}'
-        call = GovernedRemote(
+        call = GovernedMCPToolCaller(
             self.config,
             client,
             contract,
@@ -445,7 +445,7 @@ class ConnectorTests(PlatformTestCase):
             call("inventory_status", {"sku": "S"})
 
     def test_override_and_unapproved_write_rejected(self):
-        call = GovernedRemote(
+        call = GovernedMCPToolCaller(
             self.config,
             Mock(),
             self.register(),

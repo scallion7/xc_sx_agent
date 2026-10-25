@@ -148,7 +148,7 @@ def _install_openapi_contract(app: FastAPI) -> None:
             title=app.title,
             version=app.version,
             description=(
-                "阶段 22 API：所有 HTTP 响应返回 X-Request-ID、X-Trace-ID 和"
+                "API：所有 HTTP 响应返回 X-Request-ID、X-Trace-ID 和"
                 "限流头；管理写接口使用 Idempotency-Key。"
             ),
             routes=app.routes,

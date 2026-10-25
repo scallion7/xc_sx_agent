@@ -46,3 +46,5 @@ W3C Trace 跨 API/Worker/模型/工具及部分 Provider 传播；业务审计�
 一键演示使用 SQLite 和回环服务；CI 验证 PostgreSQL 的迁移与 SQL 合约。版本化索引为 SQL 快照，适用于当前演示规模，不宣称已实现分布式向量数据库。完整 Compose 服务联调及生产规模验证仍需独立验收。
 
 设计依据见 [ADR](../decisions/0002-knowledge-snapshots-and-governance.md)，实际完成情况见[验收状态](../evaluation/acceptance.md)。
+
+职责名称、旧模块别名及不变的持久化契约见[命名与兼容约定](../engineering/naming-and-compatibility.md)。

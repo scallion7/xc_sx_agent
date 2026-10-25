@@ -224,9 +224,9 @@ class ToolManager:
         if self._tool_source.get(name) == "mcp" and self._mcp_client:
             remote = self._mcp_client.call_tool
             if self._governed_contract:
-                from app.platform.connectors import GovernedRemote
+                from app.platform.connectors import GovernedMCPToolCaller
 
-                remote = GovernedRemote(
+                remote = GovernedMCPToolCaller(
                     self._registry.platform_config,
                     self._mcp_client,
                     self._governed_contract,

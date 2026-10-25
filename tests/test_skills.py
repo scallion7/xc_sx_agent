@@ -1,4 +1,4 @@
-"""端到端测试：验证第 8 期 Skill 可复用能力模块。
+"""端到端测试：验证Skill 可复用能力模块。
 
 测试场景：
 1. Skill 发现 — SkillManager 扫描并解析 SKILL.md frontmatter
@@ -221,7 +221,7 @@ def test_agent_integration():
 
 def main():
     print("=" * 60)
-    print("  第 8 期 Skill 可复用能力模块 · 端到端测试")
+    print("  Skill 可复用能力模块 · 端到端测试")
     print("=" * 60)
 
     try:

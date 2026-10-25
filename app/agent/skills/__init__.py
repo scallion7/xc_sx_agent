@@ -1,4 +1,4 @@
-"""Agent 技能模块（第8期）。
+"""Agent 技能模块。
 
 基于 Anthropic Agent Skills 开放标准（agentskills.io/specification），
 每个 Skill 是一个 SKILL.md 文件（YAML frontmatter + Markdown 指令），

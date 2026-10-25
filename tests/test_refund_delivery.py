@@ -1,4 +1,4 @@
-"""Stage 26 transactional boundaries and network-independent failure tests."""
+"""transactional boundaries and network-independent failure tests."""
 
 from __future__ import annotations
 
@@ -299,7 +299,7 @@ class RefundDeliveryTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    def test_stage26_migration_roundtrip_has_no_drift(self):
+    def test_refund_delivery_migration_roundtrip_has_no_drift(self):
         from alembic import command
         from app.infrastructure.migrations.runtime import alembic_config
         from sqlalchemy import create_engine, inspect

@@ -1,4 +1,4 @@
-"""Frozen stage-26 message schemas, also used by the isolated sandbox database."""
+"""Frozen refund-delivery message schemas, also used by the isolated sandbox database."""
 
 from sqlalchemy import Column, Float, Index, Integer, String, Table, Text
 

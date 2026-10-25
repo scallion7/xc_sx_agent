@@ -207,9 +207,9 @@ class ToolExecutionService:
             and platform_config.collaboration_enabled
             and not self.registry.is_read_only(name)
         ):
-            from app.platform.collaboration import Collaboration
+            from app.platform.conversation_handoff import ConversationHandoffService
 
-            ownership = Collaboration(platform_config)
+            ownership = ConversationHandoffService(platform_config)
             state = ownership.ensure(context.user_id, context.session_id)
             if state["state"] == "human_owned":
                 raise ActionError(

@@ -14,7 +14,7 @@ from app.infrastructure.migrations.runtime import (
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="管理 xc_sx_agent 数据库迁移")
+    parser = argparse.ArgumentParser(description="管理 Ecom Service Agent 数据库迁移")
     parser.add_argument("action", choices=["upgrade", "downgrade", "current", "check"])
     parser.add_argument("--revision", default="head")
     args = parser.parse_args()

@@ -5,7 +5,7 @@
       "id": "plan-001",
       "category": "multi_intent",
       "scenario": "订单与物流多意图",
-      "test": "tests.test_strategy_development.StrategyIntegrationTests.test_selector_keeps_react_default_and_detects_multi_intent",
+      "test": "tests.test_plan_execution.StrategyIntegrationTests.test_selector_keeps_react_default_and_detects_multi_intent",
       "checks": {
         "plan_completion_rate": true
       }
@@ -14,7 +14,7 @@
       "id": "plan-002",
       "category": "dependency",
       "scenario": "三层依赖图",
-      "test": "tests.test_strategy_development.PlanModelTests.test_plan_uses_stable_topological_order",
+      "test": "tests.test_plan_execution.PlanModelTests.test_plan_uses_stable_topological_order",
       "checks": {
         "plan_completion_rate": true
       }
@@ -23,7 +23,7 @@
       "id": "plan-003",
       "category": "reference",
       "scenario": "字符串引用",
-      "test": "tests.test_strategy_development.PlanExecutorTests.test_executor_resolves_typed_output_references",
+      "test": "tests.test_plan_execution.PlanExecutorTests.test_executor_resolves_typed_output_references",
       "checks": {
         "plan_completion_rate": true
       }
@@ -32,7 +32,7 @@
       "id": "plan-004",
       "category": "reference",
       "scenario": "数字引用",
-      "test": "tests.test_strategy_development.PlanExecutorTests.test_executor_requires_explicit_dependency_for_reference",
+      "test": "tests.test_plan_execution.PlanExecutorTests.test_executor_requires_explicit_dependency_for_reference",
       "checks": {
         "plan_completion_rate": true
       }
@@ -41,7 +41,7 @@
       "id": "plan-005",
       "category": "reference",
       "scenario": "列表引用",
-      "test": "tests.test_strategy_development.PlanExecutorTests.test_missing_reference_path_fails_without_calling_mutation",
+      "test": "tests.test_plan_execution.PlanExecutorTests.test_missing_reference_path_fails_without_calling_mutation",
       "checks": {
         "plan_completion_rate": true
       }
@@ -50,7 +50,7 @@
       "id": "plan-006",
       "category": "concurrency",
       "scenario": "同层并发",
-      "test": "tests.test_strategy_development.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
+      "test": "tests.test_plan_execution.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
       "checks": {
         "plan_completion_rate": true
       }
@@ -59,7 +59,7 @@
       "id": "plan-007",
       "category": "concurrency",
       "scenario": "稳定结果顺序",
-      "test": "tests.test_strategy_development.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
+      "test": "tests.test_plan_execution.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order",
       "checks": {
         "route_stability_rate": true
       }
@@ -213,7 +213,7 @@
       "id": "plan-024",
       "category": "recovery",
       "scenario": "重启复用检查点",
-      "test": "tests.test_strategy_development.StrategyIntegrationTests.test_pending_plan_survives_session_reload_and_resumes_exact_step",
+      "test": "tests.test_plan_execution.StrategyIntegrationTests.test_pending_plan_survives_session_reload_and_resumes_exact_step",
       "checks": {
         "checkpoint_reuse_rate": true,
         "recovery_consistency_rate": true
@@ -223,7 +223,7 @@
       "id": "plan-025",
       "category": "routing",
       "scenario": "单多 Agent 工具范围",
-      "test": "tests.test_strategy_development.MultiAgentStrategyTests.test_routed_agent_executes_plan_with_its_tool_scope",
+      "test": "tests.test_plan_execution.MultiAgentStrategyTests.test_routed_agent_executes_plan_with_its_tool_scope",
       "checks": {
         "route_stability_rate": true
       }
@@ -341,7 +341,7 @@
       "id": "plan-038",
       "category": "maintenance",
       "scenario": "清理 dry-run",
-      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_event_log_retention_supports_dry_run_and_apply",
+      "test": "tests.test_operations_quality.DataLifecycleTests.test_event_log_retention_supports_dry_run_and_apply",
       "checks": {
         "plan_completion_rate": true
       }
@@ -350,7 +350,7 @@
       "id": "plan-039",
       "category": "maintenance",
       "scenario": "活跃数据保护",
-      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_json_cleanup_protects_active_plan_run_sidecar",
+      "test": "tests.test_operations_quality.DataLifecycleTests.test_json_cleanup_protects_active_plan_run_sidecar",
       "checks": {
         "recovery_consistency_rate": true
       }
@@ -359,7 +359,7 @@
       "id": "plan-040",
       "category": "maintenance",
       "scenario": "清理审计记录",
-      "test": "tests.test_stage_22_quality_gate.DataLifecycleTests.test_cleanup_dry_run_protects_active_plan",
+      "test": "tests.test_operations_quality.DataLifecycleTests.test_cleanup_dry_run_protects_active_plan",
       "checks": {
         "plan_completion_rate": true
       }

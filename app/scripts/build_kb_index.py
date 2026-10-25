@@ -2,16 +2,15 @@
 
 用法：
   # 默认走 settings.rag_backend
-  python app/scripts/build_kb_index.py
+  python -m app.scripts.build_kb_index
 
-  # 显式指定后端，便于一份知识库同时构建两种后端的索引做对比
-  python app/scripts/build_kb_index.py --backend numpy
-  python app/scripts/build_kb_index.py --backend chroma
+  # 显式指定精确余弦后端（numpy 是兼容别名；chroma 当前暂停）
+  python -m app.scripts.build_kb_index --backend cosine
 
 流程：
   1. 扫描 knowledge/ 下的所有 .md 文件，按二级标题切分。
   2. 调用 OpenAI Embeddings 将每个 chunk 向量化。
-  3. 通过 backend.upsert 持久化索引（NumpyBackend 写 JSON / ChromaBackend 写 PersistentClient）。
+  3. 通过 backend.upsert 持久化索引（CosineBackend 写 JSON）。
 """
 
 import argparse
@@ -28,9 +27,9 @@ from app.config.settings import settings  # noqa: E402
 
 
 def _build_backend(name: str):
-    if name == "numpy":
+    if name in {"cosine", "numpy"}:
         return create_backend(
-            "numpy",
+            name,
             index_path=ROOT / settings.kb_index_path,
         ), str(ROOT / settings.kb_index_path)
     if name == "chroma":
@@ -49,7 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description="构建知识库向量索引")
     parser.add_argument(
         "--backend",
-        choices=["numpy", "chroma"],
+        choices=["cosine", "numpy", "chroma"],
         default=settings.rag_backend,
         help=f"向量后端（默认: {settings.rag_backend}）",
     )

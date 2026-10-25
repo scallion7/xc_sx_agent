@@ -1,4 +1,4 @@
-"""评估执行器：编排 沙箱跑用例 → 双层评分 → 聚合报告（第9期）。
+"""评估执行器：编排 沙箱跑用例 → 双层评分 → 聚合报告。
 
 Evaluator 自己不碰 Agent，只负责：让 Sandbox 跑出 RunTrace，再用 metrics 对轨迹
 打分（过程层 + 结果层，代码规则恒算、LLM judge 受 use_judge 控制），最后聚合。

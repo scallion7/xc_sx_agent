@@ -1,4 +1,4 @@
-"""运行轨迹：沙箱采集的 Agent 运行过程与结果载体（第9期）。
+"""运行轨迹：沙箱采集的 Agent 运行过程与结果载体。
 
 沙箱通过给共享的 OpenAI client 与 ToolManager 插桩，把一次会话里发生的所有
 LLM 调用（token / 被请求的工具 / 延迟）和工具返回都记录到 RunTrace 里。

@@ -1,4 +1,4 @@
-"""Portable SQLite/PostgreSQL stage 27–34 SQL contract smoke, isolated by tenant."""
+"""Portable SQLite/PostgreSQL knowledge and governance SQL contract smoke, isolated by tenant."""
 
 import json
 from uuid import uuid4
@@ -6,7 +6,7 @@ from uuid import uuid4
 from app.config.settings import Settings
 from app.infrastructure.database import configure_database, platform
 from app.platform.budget import SharedBudget
-from app.platform.collaboration import Collaboration
+from app.platform.conversation_handoff import ConversationHandoffService
 from app.platform.knowledge import KnowledgePlatform, KnowledgeWorker
 from app.platform.retrieval import HybridRetrieval
 from sqlalchemy import delete
@@ -36,7 +36,7 @@ def run(config):
     assert HybridRetrieval(config).search("七天退货")["outcome"] == "answerable"
     b = SharedBudget(config)
     b.settle(b.reserve(user_id="ci", model="demo", purpose="smoke", estimated_tokens=1))
-    c = Collaboration(config)
+    c = ConversationHandoffService(config)
     c.ensure("ci", "ci:s")
     c.transition("ci", "ci:s", "ci", 1, take=True)
     with k.engine.begin() as conn:

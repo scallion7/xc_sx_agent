@@ -1,4 +1,4 @@
-"""第 21 期：售后副作用可靠执行的离线验收测试。"""
+"""售后副作用可靠执行的离线验收测试。"""
 
 from __future__ import annotations
 
@@ -124,7 +124,7 @@ def build_service(
 def create_approved_case(
     service: AfterSaleService,
     *,
-    order_id: str = "ORD-STAGE-21",
+    order_id: str = "ORD-RELIABILITY",
 ) -> str:
     result = service.create_case(
         order_id=order_id,
@@ -348,7 +348,7 @@ class ReliabilityApiTests(unittest.TestCase):
             service.execute_case(case_id, "user-1")
             recover_case_id = create_approved_case(
                 service,
-                order_id="ORD-STAGE-21-RECOVER",
+                order_id="ORD-RELIABILITY-RECOVER",
             )
             commerce.outcomes.append({"success": False, "error": "上游暂时不可用"})
             service.execute_case(recover_case_id, "user-1")

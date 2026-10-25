@@ -1,0 +1,13 @@
+{
+  "baseline_commit": "4ce51601cd3736e2e5a7933d171e6f208ffbb9b4",
+  "openapi": {
+    "paths": 81,
+    "contract_unchanged_excluding_info": true,
+    "sha256": "9cabee7f5c59f2f7ab185765262474800b003cf8960111ebc9f102c4e6e0e2b1"
+  },
+  "frozen_files": {
+    "unchanged": 61,
+    "migration_files": 6,
+    "historical_documents_and_evidence": 55
+  }
+}

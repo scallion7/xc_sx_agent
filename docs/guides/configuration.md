@@ -43,7 +43,7 @@ python -m app.scripts.validate_openapi
 | `COLLABORATION_ENABLED` | 启用会话所有权和人工协作 |
 | `TELEMETRY_ENABLED` | W3C Trace 与持久化指标；业务审计独立存在 |
 | `MCP_IDENTITY_SECRET` | 连接器身份签名，真实部署使用独立密钥 |
-| `RAG_BACKEND` | 当前支持 `numpy`；历史 `chroma` 已安全暂停 |
+| `RAG_BACKEND` | 默认 `cosine`；旧 `numpy` 别名兼容；`chroma` 已安全暂停 |
 
 ## 迁移与部署
 
@@ -56,3 +56,5 @@ DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m app.scripts.platfor
 ```
 
 旧库先做一致性备份，再执行迁移并核对业务行；非空新账本拒绝破坏性降级。Docker 构建与扫描已通过 CI，但完整 Compose 服务部署仍须单独验证。操作细节见[部署清单](../operations/deployment-checklist.md)，沙箱参数见[历史 HTTP 沙箱说明](../history/第26期-HTTP业务沙箱与退款对账.md)。
+
+代码入口和配置别名的升级说明见[命名与兼容约定](../engineering/naming-and-compatibility.md)。旧索引、数据库及 `COLLABORATION_ENABLED` 配置键无需因本轮改名迁移。

@@ -1,0 +1,610 @@
+/private/tmp/xc-ci-clean-venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_confirmation_is_mandatory (test_after_sale_policy.AfterSaleWorkflowTests.test_confirmation_is_mandatory) ... ok
+test_critical_message_forces_human_escalation (test_after_sale_policy.AfterSaleWorkflowTests.test_critical_message_forces_human_escalation) ... ok
+test_duplicate_active_case_is_idempotent (test_after_sale_policy.AfterSaleWorkflowTests.test_duplicate_active_case_is_idempotent) ... ok
+test_high_value_case_requires_human (test_after_sale_policy.AfterSaleWorkflowTests.test_high_value_case_requires_human) ... ok
+test_low_risk_case_can_execute (test_after_sale_policy.AfterSaleWorkflowTests.test_low_risk_case_can_execute) ... ok
+test_policy_metadata_is_attached_to_chunks (test_after_sale_policy.PolicyRagMetadataTests.test_policy_metadata_is_attached_to_chunks) ... ok
+test_admin_review_and_guardrail_endpoint (test_application_integration.ApiTests.test_admin_review_and_guardrail_endpoint) ... ok
+test_auth_chat_session_isolation_sse_metrics_and_admin (test_application_integration.ApiTests.test_auth_chat_session_isolation_sse_metrics_and_admin) ... ok
+test_core_modules_have_no_print_calls_or_global_setters (test_application_integration.EvaluationAndPackagingTests.test_core_modules_have_no_print_calls_or_global_setters) ... ok
+test_docker_compose_contains_api_and_postgres (test_application_integration.EvaluationAndPackagingTests.test_docker_compose_contains_api_and_postgres) ... ok
+test_evaluation_uses_events_with_fake_client (test_application_integration.EvaluationAndPackagingTests.test_evaluation_uses_events_with_fake_client) ... ok
+test_prompt_injection_is_blocked_without_model_call (test_application_integration.GuardrailTests.test_prompt_injection_is_blocked_without_model_call) ... ok
+test_sensitive_input_is_redacted_before_model_and_storage (test_application_integration.GuardrailTests.test_sensitive_input_is_redacted_before_model_and_storage) ... ok
+test_gateway_retries_sets_timeout_and_emits_metrics (test_application_integration.ModelGatewayAndEventTests.test_gateway_retries_sets_timeout_and_emits_metrics) ... ok
+test_rate_limiter_enforces_sliding_window (test_application_integration.ModelGatewayAndEventTests.test_rate_limiter_enforces_sliding_window) ... ok
+test_tool_events_are_redacted_and_count_failures (test_application_integration.ModelGatewayAndEventTests.test_tool_events_are_redacted_and_count_failures) ... ok
+test_policy_rag_uses_offline_lexical_fallback (test_application_integration.PolicyAndRulesTests.test_policy_rag_uses_offline_lexical_fallback) ... ok
+test_policy_reranker_filters_expired_and_rewards_overlap (test_application_integration.PolicyAndRulesTests.test_policy_reranker_filters_expired_and_rewards_overlap) ... ok
+test_risk_rules_are_versioned_and_externalized (test_application_integration.PolicyAndRulesTests.test_risk_rules_are_versioned_and_externalized) ... ok
+test_after_sale_sql_repository_and_user_ownership (test_application_integration.SqlPersistenceTests.test_after_sale_sql_repository_and_user_ownership) ... ok
+test_commerce_repository_persists_refund_state (test_application_integration.SqlPersistenceTests.test_commerce_repository_persists_refund_state) ... ok
+test_review_cli_uses_same_sql_repository (test_application_integration.SqlPersistenceTests.test_review_cli_uses_same_sql_repository) ... ok
+test_session_repository_isolates_same_key_by_user (test_application_integration.SqlPersistenceTests.test_session_repository_isolates_same_key_by_user) ... ok
+test_registries_are_instance_isolated_and_user_scoped (test_application_integration.ToolRegistryTests.test_registries_are_instance_isolated_and_user_scoped) ... ok
+test_sensitive_tool_requires_explicit_permission (test_application_integration.ToolRegistryTests.test_sensitive_tool_requires_explicit_permission) ... ok
+test_factory_builds_multi_agent_with_same_runtime_config (test_architecture.ApplicationFactoryTests.test_factory_builds_multi_agent_with_same_runtime_config) ... ok
+test_factory_injects_client_and_config_into_single_agent (test_architecture.ApplicationFactoryTests.test_factory_injects_client_and_config_into_single_agent) ... ok
+test_mode_resolution_does_not_depend_on_global_settings (test_architecture.ApplicationFactoryTests.test_mode_resolution_does_not_depend_on_global_settings) ... ok
+test_missing_key_is_reported_without_starting_an_agent (test_architecture.RuntimeCheckTests.test_missing_key_is_reported_without_starting_an_agent) ... ok
+test_agent_build_uses_config_copy_without_mutating_global_settings (test_architecture.SandboxIsolationTests.test_agent_build_uses_config_copy_without_mutating_global_settings) ... ok
+test_after_sale_mode_is_instance_configurable (test_architecture.ToolConfigurationTests.test_after_sale_mode_is_instance_configurable) ... ok
+test_agent_run_migration_downgrade_and_upgrade (test_async_runs.AsyncRunTests.test_agent_run_migration_downgrade_and_upgrade) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_cancel_during_model_acknowledged_at_boundary (test_async_runs.AsyncRunTests.test_cancel_during_model_acknowledged_at_boundary) ... ok
+test_cancel_during_write_keeps_late_result (test_async_runs.AsyncRunTests.test_cancel_during_write_keeps_late_result) ... ok
+test_cancel_race_before_write_journal_prevents_dispatch (test_async_runs.AsyncRunTests.test_cancel_race_before_write_journal_prevents_dispatch) ... ok
+test_completed_model_response_replayed_without_another_charge (test_async_runs.AsyncRunTests.test_completed_model_response_replayed_without_another_charge) ... ok
+test_completed_write_is_replayed_without_duplicate_effect (test_async_runs.AsyncRunTests.test_completed_write_is_replayed_without_duplicate_effect) ... ok
+test_confirmed_action_result_survives_crash_before_session_commit (test_async_runs.AsyncRunTests.test_confirmed_action_result_survives_crash_before_session_commit) ... ok
+test_event_failure_rolls_back_state (test_async_runs.AsyncRunTests.test_event_failure_rolls_back_state) ... ok
+test_event_sequence_is_atomic_with_state_and_sse_reconnect (test_async_runs.AsyncRunTests.test_event_sequence_is_atomic_with_state_and_sse_reconnect) ... ok
+test_execution_version_mismatch_fails_closed (test_async_runs.AsyncRunTests.test_execution_version_mismatch_fails_closed) ... ok
+test_expired_worker_is_fenced_and_model_retry_is_recorded (test_async_runs.AsyncRunTests.test_expired_worker_is_fenced_and_model_retry_is_recorded) ... ok
+test_failed_terminal_transaction_does_not_save_session (test_async_runs.AsyncRunTests.test_failed_terminal_transaction_does_not_save_session) ... ok
+test_heartbeat_prevents_live_worker_takeover (test_async_runs.AsyncRunTests.test_heartbeat_prevents_live_worker_takeover) ... ok
+test_inflight_write_goes_to_reconciliation_and_cannot_replay (test_async_runs.AsyncRunTests.test_inflight_write_goes_to_reconciliation_and_cannot_replay) ... ok
+test_json_mode_async_endpoint_explicitly_rejected (test_async_runs.AsyncRunTests.test_json_mode_async_endpoint_explicitly_rejected) ... ok
+test_lost_lease_rejects_late_tool_result (test_async_runs.AsyncRunTests.test_lost_lease_rejects_late_tool_result) ... ok
+test_no_external_call_when_journal_begin_fails (test_async_runs.AsyncRunTests.test_no_external_call_when_journal_begin_fails) ... ok
+test_process_crashes_before_dispatch_after_effect_and_after_checkpoint (test_async_runs.AsyncRunTests.test_process_crashes_before_dispatch_after_effect_and_after_checkpoint) ... ok
+test_queued_cancel_is_acknowledged_and_never_executed (test_async_runs.AsyncRunTests.test_queued_cancel_is_acknowledged_and_never_executed) ... ok
+test_real_plan_recovers_completed_checkpoint_without_repeating_read (test_async_runs.AsyncRunTests.test_real_plan_recovers_completed_checkpoint_without_repeating_read) ... ok
+test_real_react_agent_and_gateway_run_offline (test_async_runs.AsyncRunTests.test_real_react_agent_and_gateway_run_offline) ... ok
+test_recovery_after_completed_write_honors_too_late_cancel (test_async_runs.AsyncRunTests.test_recovery_after_completed_write_honors_too_late_cancel) ... ok
+test_retry_backoff_dead_letter_admin_replay (test_async_runs.AsyncRunTests.test_retry_backoff_dead_letter_admin_replay) ... ok
+test_session_and_result_commit_once_after_crash (test_async_runs.AsyncRunTests.test_session_and_result_commit_once_after_crash) ... ok
+test_session_busy_and_user_isolation (test_async_runs.AsyncRunTests.test_session_busy_and_user_isolation) ... ok
+test_session_conflict_rolls_back_completion (test_async_runs.AsyncRunTests.test_session_conflict_rolls_back_completion) ... ok
+test_submit_idempotency_and_conflicting_request (test_async_runs.AsyncRunTests.test_submit_idempotency_and_conflicting_request) ... ok
+test_submit_returns_202_without_running_model (test_async_runs.AsyncRunTests.test_submit_returns_202_without_running_model) ... ok
+test_sync_chat_uses_queue_and_delete_rejects_active_run (test_async_runs.AsyncRunTests.test_sync_chat_uses_queue_and_delete_rejects_active_run) ... ok
+test_two_processes_compete_for_one_run (test_async_runs.AsyncRunTests.test_two_processes_compete_for_one_run) ... ok
+test_two_workers_only_one_claim (test_async_runs.AsyncRunTests.test_two_workers_only_one_claim) ... ok
+test_unknown_tool_result_remains_unsafe (test_async_runs.AsyncRunTests.test_unknown_tool_result_remains_unsafe) ... ok
+test_compatible_upgrade_preserves_existing_table (test_auth_and_migrations.MigrationAndConfigurationTests.test_compatible_upgrade_preserves_existing_table) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_empty_sqlite_upgrade_and_downgrade (test_auth_and_migrations.MigrationAndConfigurationTests.test_empty_sqlite_upgrade_and_downgrade) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_production_defaults_fail_closed (test_auth_and_migrations.MigrationAndConfigurationTests.test_production_defaults_fail_closed) ... ok
+test_safe_summary_excludes_secrets (test_auth_and_migrations.MigrationAndConfigurationTests.test_safe_summary_excludes_secrets) ... ok
+test_admin_role_maps_management_permissions (test_auth_and_migrations.OidcProviderTests.test_admin_role_maps_management_permissions) ... ok
+test_cached_key_degrades_when_refresh_fails (test_auth_and_migrations.OidcProviderTests.test_cached_key_degrades_when_refresh_fails) ... ok
+test_expired_token_is_rejected_with_stable_code (test_auth_and_migrations.OidcProviderTests.test_expired_token_is_rejected_with_stable_code) ... ok
+test_missing_scope_is_rejected (test_auth_and_migrations.OidcProviderTests.test_missing_scope_is_rejected) ... ok
+test_static_provider_remains_compatible (test_auth_and_migrations.OidcProviderTests.test_static_provider_remains_compatible) ... ok
+test_unconfigured_signing_algorithm_is_rejected (test_auth_and_migrations.OidcProviderTests.test_unconfigured_signing_algorithm_is_rejected) ... ok
+test_unknown_kid_triggers_forced_refresh (test_auth_and_migrations.OidcProviderTests.test_unknown_kid_triggers_forced_refresh) ... ok
+test_valid_token_maps_identity_and_permissions (test_auth_and_migrations.OidcProviderTests.test_valid_token_maps_identity_and_permissions) ... ok
+test_changed_payload_under_same_key_is_conflict (test_case_creation.CaseCreationTests.test_changed_payload_under_same_key_is_conflict) ... ok
+test_concurrent_approve_and_reject_have_one_winner (test_case_creation.CaseCreationTests.test_concurrent_approve_and_reject_have_one_winner) ... ok
+test_distinct_trusted_actions_converge_on_business_case (test_case_creation.CaseCreationTests.test_distinct_trusted_actions_converge_on_business_case) ... ok
+test_duplicate_legacy_json_fails_without_repairing_business_data (test_case_creation.CaseCreationTests.test_duplicate_legacy_json_fails_without_repairing_business_data) ... ok
+test_fifty_concurrent_requests_create_one_case_and_fifty_receipts (test_case_creation.CaseCreationTests.test_fifty_concurrent_requests_create_one_case_and_fifty_receipts) ... ok
+test_four_processes_fifty_requests_same_case (test_case_creation.CaseCreationTests.test_four_processes_fifty_requests_same_case) ... ok
+test_json_corruption_never_becomes_empty_successful_store (test_case_creation.CaseCreationTests.test_json_corruption_never_becomes_empty_successful_store) ... ok
+test_json_failed_atomic_replace_preserves_old_data (test_case_creation.CaseCreationTests.test_json_failed_atomic_replace_preserves_old_data) ... ok
+test_legacy_json_data_loads_and_gains_version_on_save (test_case_creation.CaseCreationTests.test_legacy_json_data_loads_and_gains_version_on_save) ... ok
+test_missing_database_unique_constraint_fails_closed (test_case_creation.CaseCreationTests.test_missing_database_unique_constraint_fails_closed) ... ok
+test_model_cannot_supply_creation_idempotency_key (test_case_creation.CaseCreationTests.test_model_cannot_supply_creation_idempotency_key) ... ok
+test_normalized_payload_and_user_scope (test_case_creation.CaseCreationTests.test_normalized_payload_and_user_scope) ... ok
+test_raw_insert_and_save_cannot_bypass_active_uniqueness (test_case_creation.CaseCreationTests.test_raw_insert_and_save_cannot_bypass_active_uniqueness) ... ok
+test_rejected_releases_slot_failed_execution_does_not (test_case_creation.CaseCreationTests.test_rejected_releases_slot_failed_execution_does_not) ... ok
+test_replay_after_restart_does_not_reassess_or_query_provider (test_case_creation.CaseCreationTests.test_replay_after_restart_does_not_reassess_or_query_provider) ... ok
+test_same_key_concurrent_retry_has_one_receipt (test_case_creation.CaseCreationTests.test_same_key_concurrent_retry_has_one_receipt) ... ok
+test_same_key_different_order_race_rolls_back_losing_case (test_case_creation.CaseCreationTests.test_same_key_different_order_race_rolls_back_losing_case) ... ok
+test_sql_case_and_receipt_are_one_transaction (test_case_creation.CaseCreationTests.test_sql_case_and_receipt_are_one_transaction) ... ok
+test_terminal_releases_active_slot_but_old_keys_remain_bound (test_case_creation.CaseCreationTests.test_terminal_releases_active_slot_but_old_keys_remain_bound) ... ok
+test_unconfirmed_and_invalid_requests_create_no_receipt (test_case_creation.CaseCreationTests.test_unconfirmed_and_invalid_requests_create_no_receipt) ... ok
+test_unkeyed_compatibility_preserves_existing_content (test_case_creation.CaseCreationTests.test_unkeyed_compatibility_preserves_existing_content) ... ok
+test_version_cas_and_immutable_owner_block_stale_overwrites (test_case_creation.CaseCreationTests.test_version_cas_and_immutable_owner_block_stale_overwrites) ... ok
+test_auto_create_does_not_partially_upgrade_legacy_database (test_case_creation.CaseMigrationTests.test_auto_create_does_not_partially_upgrade_legacy_database) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_legacy_duplicates_stop_upgrade_before_modifying_data (test_case_creation.CaseMigrationTests.test_legacy_duplicates_stop_upgrade_before_modifying_data) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_multiple_terminal_legacy_cases_do_not_block_upgrade (test_case_creation.CaseMigrationTests.test_multiple_terminal_legacy_cases_do_not_block_upgrade) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_previous_schema_upgrade_preserves_case_and_enforces_index (test_case_creation.CaseMigrationTests.test_previous_schema_upgrade_preserves_case_and_enforces_index) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_cancelled_token_blocks_side_effect (test_execution_governance.ExecutionGovernanceTests.test_cancelled_token_blocks_side_effect) ... ok
+test_checkpoints_include_running_and_terminal_snapshots (test_execution_governance.ExecutionGovernanceTests.test_checkpoints_include_running_and_terminal_snapshots) ... ok
+test_circuit_breaker_reaches_half_open_after_cooldown (test_execution_governance.ExecutionGovernanceTests.test_circuit_breaker_reaches_half_open_after_cooldown) ... ok
+test_concurrency_group_limit_serializes_calls (test_execution_governance.ExecutionGovernanceTests.test_concurrency_group_limit_serializes_calls) ... ok
+test_execution_budget_counts_output_and_queue (test_execution_governance.ExecutionGovernanceTests.test_execution_budget_counts_output_and_queue) ... ok
+test_extended_step_statuses_are_serializable (test_execution_governance.ExecutionGovernanceTests.test_extended_step_statuses_are_serializable) ... ok
+test_failed_dependency_is_persisted_as_skipped (test_execution_governance.ExecutionGovernanceTests.test_failed_dependency_is_persisted_as_skipped) ... ok
+test_plan_total_timeout_has_distinct_error_code (test_execution_governance.ExecutionGovernanceTests.test_plan_total_timeout_has_distinct_error_code) ... ok
+test_read_only_transient_failure_retries (test_execution_governance.ExecutionGovernanceTests.test_read_only_transient_failure_retries) ... ok
+test_retry_budget_stops_additional_attempt (test_execution_governance.ExecutionGovernanceTests.test_retry_budget_stops_additional_attempt) ... ok
+test_running_tool_observes_cancellation_without_waiting_for_completion (test_execution_governance.ExecutionGovernanceTests.test_running_tool_observes_cancellation_without_waiting_for_completion) ... ok
+test_side_effect_never_uses_generic_retry (test_execution_governance.ExecutionGovernanceTests.test_side_effect_never_uses_generic_retry) ... ok
+test_step_output_limit_is_enforced (test_execution_governance.ExecutionGovernanceTests.test_step_output_limit_is_enforced) ... ok
+test_step_timeout_returns_structured_code (test_execution_governance.ExecutionGovernanceTests.test_step_timeout_returns_structured_code) ... ok
+test_tool_call_budget_stops_later_step (test_execution_governance.ExecutionGovernanceTests.test_tool_call_budget_stops_later_step) ... ok
+test_callback_dispatcher_crash_after_delivery_replays_same_event (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_callback_dispatcher_crash_after_delivery_replays_same_event) ... ok
+test_connection_loss_after_commit_converges_by_query (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_connection_loss_after_commit_converges_by_query) ... ok
+test_delayed_success_and_missing_callback_are_reconciled (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_delayed_success_and_missing_callback_are_reconciled) ... ok
+test_dispatcher_process_dies_after_http_acceptance_and_recovers (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_dispatcher_process_dies_after_http_acceptance_and_recovers) ... ok
+test_fault_controls_auth_and_order_ownership (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_fault_controls_auth_and_order_ownership) ... ok
+test_http_timeout_after_provider_commit_reconciles_one_refund (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_http_timeout_after_provider_commit_reconciles_one_refund) ... ok
+test_real_callback_reordering_keeps_newest_success (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_real_callback_reordering_keeps_newest_success) ... ok
+test_real_http_concurrent_submissions_have_one_external_effect (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_real_http_concurrent_submissions_have_one_external_effect) ... ok
+test_sandbox_restart_preserves_idempotency_and_rejects_changed_parameters (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_sandbox_restart_preserves_idempotency_and_rejects_changed_parameters) ... ok
+test_supported_compensation_is_independent_and_idempotent (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_supported_compensation_is_independent_and_idempotent) ... ok
+test_ten_real_callbacks_deduplicate_and_do_not_reapply (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_ten_real_callbacks_deduplicate_and_do_not_reapply) ... ok
+test_trusted_confirmation_http_execution_returns_acceptance_then_final_query (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_trusted_confirmation_http_execution_returns_acceptance_then_final_query) ... ok
+test_unsupported_compensation_is_manual_without_external_effect (test_http_commerce_sandbox.HttpCommerceSandboxTests.test_unsupported_compensation_is_manual_without_external_effect) ... ok
+test_changed_text_reembeds_and_diff_has_locations (test_knowledge_platform.KnowledgeTests.test_changed_text_reembeds_and_diff_has_locations) ... Building prefix dict from the default dictionary ...
+DEBUG [jieba] Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+DEBUG [jieba] Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+Loading model cost 0.179 seconds.
+DEBUG [jieba] Loading model cost 0.179 seconds.
+Prefix dict has been built successfully.
+DEBUG [jieba] Prefix dict has been built successfully.
+ok
+test_chunk_offsets_roundtrip (test_knowledge_platform.KnowledgeTests.test_chunk_offsets_roundtrip) ... ok
+test_concurrent_publish_only_one_winner (test_knowledge_platform.KnowledgeTests.test_concurrent_publish_only_one_winner) ... ok
+test_delete_blocks_pinned_old_release_and_cache (test_knowledge_platform.KnowledgeTests.test_delete_blocks_pinned_old_release_and_cache) ... ok
+test_document_delete_version_conflict (test_knowledge_platform.KnowledgeTests.test_document_delete_version_conflict) ... ok
+test_duplicate_concurrent_imports (test_knowledge_platform.KnowledgeTests.test_duplicate_concurrent_imports) ... ok
+test_full_rebuild_changed_embedding_model (test_knowledge_platform.KnowledgeTests.test_full_rebuild_changed_embedding_model) ... ok
+test_gc_protects_head_and_rejects_expired_rollback (test_knowledge_platform.KnowledgeTests.test_gc_protects_head_and_rejects_expired_rollback) ... ok
+test_ingestion_and_duplicate_are_idempotent (test_knowledge_platform.KnowledgeTests.test_ingestion_and_duplicate_are_idempotent) ... ok
+test_metadata_change_reuses_embedding (test_knowledge_platform.KnowledgeTests.test_metadata_change_reuses_embedding) ... ok
+test_partial_failure_never_publishes (test_knowledge_platform.KnowledgeTests.test_partial_failure_never_publishes) ... ok
+test_pdf_text_layer_and_blank_pdf (test_knowledge_platform.KnowledgeTests.test_pdf_text_layer_and_blank_pdf) ... ok
+test_publish_build_before_atomic_activate (test_knowledge_platform.KnowledgeTests.test_publish_build_before_atomic_activate) ... ok
+test_rollback_within_retention (test_knowledge_platform.KnowledgeTests.test_rollback_within_retention) ... ok
+test_tenant_isolation (test_knowledge_platform.KnowledgeTests.test_tenant_isolation) ... ok
+test_worker_fence_prevents_stale_projection (test_knowledge_platform.KnowledgeTests.test_worker_fence_prevents_stale_projection) ... ok
+test_cache_scope_and_version_isolation (test_knowledge_platform.RetrievalTests.test_cache_scope_and_version_isolation) ... ok
+test_four_retrieval_modes_stable_citations (test_knowledge_platform.RetrievalTests.test_four_retrieval_modes_stable_citations) ... ok
+test_invented_quote_rejected (test_knowledge_platform.RetrievalTests.test_invented_quote_rejected) ... ok
+test_metadata_before_and_after_search (test_knowledge_platform.RetrievalTests.test_metadata_before_and_after_search) ... ok
+test_policy_conflict (test_knowledge_platform.RetrievalTests.test_policy_conflict) ... ok
+test_time_and_unknown_query_no_evidence (test_knowledge_platform.RetrievalTests.test_time_and_unknown_query_no_evidence) ... ok
+test_all_public_import_paths_resolve_to_same_backend (test_naming_compatibility.BackendCompatibilityTests.test_all_public_import_paths_resolve_to_same_backend) ... ok
+test_embedding_model_mismatch_still_fails_closed (test_naming_compatibility.BackendCompatibilityTests.test_embedding_model_mismatch_still_fails_closed) ... ok
+test_environment_alias_and_default_create_equivalent_services (test_naming_compatibility.BackendCompatibilityTests.test_environment_alias_and_default_create_equivalent_services) ... ok
+test_index_builder_accepts_both_names (test_naming_compatibility.BackendCompatibilityTests.test_index_builder_accepts_both_names) ... ok
+test_new_index_remains_readable_through_old_constructor (test_naming_compatibility.BackendCompatibilityTests.test_new_index_remains_readable_through_old_constructor) ... ok
+test_old_json_index_loads_without_rewriting_and_preserves_ranking (test_naming_compatibility.BackendCompatibilityTests.test_old_json_index_loads_without_rewriting_and_preserves_ranking) ... ok
+test_old_similarity_import_keeps_zero_and_dimension_checks (test_naming_compatibility.BackendCompatibilityTests.test_old_similarity_import_keeps_zero_and_dimension_checks) ... ok
+test_governed_service_aliases_preserve_class_identity (test_naming_compatibility.EntryPointCompatibilityTests.test_governed_service_aliases_preserve_class_identity) ... ok
+test_old_test_modules_load_explicitly_without_duplicate_discovery (test_naming_compatibility.EntryPointCompatibilityTests.test_old_test_modules_load_explicitly_without_duplicate_discovery) ... .
+----------------------------------------------------------------------
+Ran 1 test in 0.041s
+
+OK
+ok
+test_admin_diagnostics_is_redacted_and_lists_capabilities (test_operations_quality.ApiGovernanceTests.test_admin_diagnostics_is_redacted_and_lists_capabilities) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_health_and_ready_have_distinct_semantics (test_operations_quality.ApiGovernanceTests.test_health_and_ready_have_distinct_semantics) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_list_pagination_and_legacy_plan_deprecation_headers (test_operations_quality.ApiGovernanceTests.test_list_pagination_and_legacy_plan_deprecation_headers) ... ok
+test_metrics_expose_derived_governance_values (test_operations_quality.ApiGovernanceTests.test_metrics_expose_derived_governance_values) ... ok
+test_rate_limit_returns_stable_error_and_retry_after (test_operations_quality.ApiGovernanceTests.test_rate_limit_returns_stable_error_and_retry_after) ... ok
+test_responses_include_request_trace_and_rate_headers (test_operations_quality.ApiGovernanceTests.test_responses_include_request_trace_and_rate_headers) ... ok
+test_rule_writes_require_idempotency_key (test_operations_quality.ApiGovernanceTests.test_rule_writes_require_idempotency_key) ... ok
+test_ci_declares_matrix_postgres_migration_sbom_and_security (test_operations_quality.DataLifecycleTests.test_ci_declares_matrix_postgres_migration_sbom_and_security) ... ok
+test_cleanup_dry_run_protects_active_plan (test_operations_quality.DataLifecycleTests.test_cleanup_dry_run_protects_active_plan) ... ok
+test_event_log_retention_supports_dry_run_and_apply (test_operations_quality.DataLifecycleTests.test_event_log_retention_supports_dry_run_and_apply) ... ok
+test_json_cleanup_protects_active_plan_run_sidecar (test_operations_quality.DataLifecycleTests.test_json_cleanup_protects_active_plan_run_sidecar) ... ok
+test_restore_requires_explicit_replace_and_verifies_backup (test_operations_quality.DataLifecycleTests.test_restore_requires_explicit_replace_and_verifies_backup) ... ok
+test_sqlite_backup_has_hash_and_passes_integrity_check (test_operations_quality.DataLifecycleTests.test_sqlite_backup_has_hash_and_passes_integrity_check) ... ok
+test_configuration_rejects_step_timeout_over_total (test_operations_quality.EvaluationQualityGateTests.test_configuration_rejects_step_timeout_over_total) ... ok
+test_dataset_covers_all_required_governance_categories (test_operations_quality.EvaluationQualityGateTests.test_dataset_covers_all_required_governance_categories) ... ok
+test_fault_injector_is_deterministic (test_operations_quality.EvaluationQualityGateTests.test_fault_injector_is_deterministic) ... ok
+test_fixed_dataset_passes_deterministic_quality_gate (test_operations_quality.EvaluationQualityGateTests.test_fixed_dataset_passes_deterministic_quality_gate) ... ok
+test_fixed_plan_dataset_has_at_least_thirty_cases (test_operations_quality.EvaluationQualityGateTests.test_fixed_plan_dataset_has_at_least_thirty_cases) ... ok
+test_safety_metric_below_one_fails_gate (test_operations_quality.EvaluationQualityGateTests.test_safety_metric_below_one_fails_gate) ... ok
+test_trivy_report_emits_sorted_actionable_annotations (test_operations_quality.EvaluationQualityGateTests.test_trivy_report_emits_sorted_actionable_annotations) ... ok
+test_confirmation_resumes_same_agent_without_routing_or_replanning (test_plan_execution.MultiAgentStrategyTests.test_confirmation_resumes_same_agent_without_routing_or_replanning) ... ok
+test_confirmed_critical_plan_preserves_human_escalation (test_plan_execution.MultiAgentStrategyTests.test_confirmed_critical_plan_preserves_human_escalation) ... ok
+test_plan_cannot_use_tool_outside_routed_agent_scope (test_plan_execution.MultiAgentStrategyTests.test_plan_cannot_use_tool_outside_routed_agent_scope) ... ok
+test_routed_agent_executes_plan_with_its_tool_scope (test_plan_execution.MultiAgentStrategyTests.test_routed_agent_executes_plan_with_its_tool_scope) ... ok
+test_single_agent_rejects_multi_agent_scoped_plan (test_plan_execution.MultiAgentStrategyTests.test_single_agent_rejects_multi_agent_scoped_plan) ... ok
+test_executor_rejects_unknown_tools (test_plan_execution.PlanExecutorTests.test_executor_rejects_unknown_tools) ... ok
+test_executor_requires_explicit_dependency_for_reference (test_plan_execution.PlanExecutorTests.test_executor_requires_explicit_dependency_for_reference) ... ok
+test_executor_resolves_typed_output_references (test_plan_execution.PlanExecutorTests.test_executor_resolves_typed_output_references) ... ok
+test_executor_runs_reads_and_blocks_mutations (test_plan_execution.PlanExecutorTests.test_executor_runs_reads_and_blocks_mutations) ... ok
+test_independent_reads_run_concurrently_with_stable_result_order (test_plan_execution.PlanExecutorTests.test_independent_reads_run_concurrently_with_stable_result_order) ... ok
+test_lifecycle_preserves_identity_expiry_and_resume_count (test_plan_execution.PlanExecutorTests.test_lifecycle_preserves_identity_expiry_and_resume_count) ... ok
+test_missing_reference_path_fails_without_calling_mutation (test_plan_execution.PlanExecutorTests.test_missing_reference_path_fails_without_calling_mutation) ... ok
+test_plan_rejects_cycles (test_plan_execution.PlanModelTests.test_plan_rejects_cycles) ... ok
+test_plan_uses_stable_topological_order (test_plan_execution.PlanModelTests.test_plan_uses_stable_topological_order) ... ok
+test_evaluation_captures_strategy_and_terminal_plan_steps (test_plan_execution.StrategyEvaluationTests.test_evaluation_captures_strategy_and_terminal_plan_steps) ... ok
+test_api_passes_requested_strategy_to_agent_factory (test_plan_execution.StrategyIntegrationTests.test_api_passes_requested_strategy_to_agent_factory) ... ok
+test_api_reads_and_cancels_user_scoped_plan (test_plan_execution.StrategyIntegrationTests.test_api_reads_and_cancels_user_scoped_plan) ... ok
+test_consumed_confirmation_is_not_replayed_after_reload (test_plan_execution.StrategyIntegrationTests.test_consumed_confirmation_is_not_replayed_after_reload) ... ok
+test_expired_plan_does_not_execute_confirmed_mutation (test_plan_execution.StrategyIntegrationTests.test_expired_plan_does_not_execute_confirmed_mutation) ... ok
+test_new_request_cancels_stale_pending_plan (test_plan_execution.StrategyIntegrationTests.test_new_request_cancels_stale_pending_plan) ... ok
+test_pending_plan_survives_session_reload_and_resumes_exact_step (test_plan_execution.StrategyIntegrationTests.test_pending_plan_survives_session_reload_and_resumes_exact_step) ... ok
+test_selector_keeps_react_default_and_detects_multi_intent (test_plan_execution.StrategyIntegrationTests.test_selector_keeps_react_default_and_detects_multi_intent) ... ok
+test_single_agent_executes_plan_with_offline_gateway (test_plan_execution.StrategyIntegrationTests.test_single_agent_executes_plan_with_offline_gateway) ... ok
+test_contracts_match_model_visible_schemas (test_plan_execution.ToolContractTests.test_contracts_match_model_visible_schemas) ... ok
+test_registry_rejects_invalid_arguments_before_handler (test_plan_execution.ToolContractTests.test_registry_rejects_invalid_arguments_before_handler) ... ok
+test_active_lease_rejects_second_worker (test_plan_recovery.JsonPlanRunRecoveryTests.test_active_lease_rejects_second_worker) ... ok
+test_cancel_request_is_idempotent (test_plan_recovery.JsonPlanRunRecoveryTests.test_cancel_request_is_idempotent) ... ok
+test_checkpoint_and_finish_are_durable (test_plan_recovery.JsonPlanRunRecoveryTests.test_checkpoint_and_finish_are_durable) ... ok
+test_expired_lease_can_be_recovered_with_higher_fencing (test_plan_recovery.JsonPlanRunRecoveryTests.test_expired_lease_can_be_recovered_with_higher_fencing) ... ok
+test_old_worker_is_fenced_after_recovery (test_plan_recovery.JsonPlanRunRecoveryTests.test_old_worker_is_fenced_after_recovery) ... ok
+test_user_scoped_list_hides_other_user (test_plan_recovery.JsonPlanRunRecoveryTests.test_user_scoped_list_hides_other_user) ... ok
+test_renew_extends_lease (test_plan_recovery.SqlPlanRunRecoveryTests.test_renew_extends_lease) ... ok
+test_service_token_observes_persisted_cancellation (test_plan_recovery.SqlPlanRunRecoveryTests.test_service_token_observes_persisted_cancellation) ... ok
+test_sql_checkpoint_appends_step_attempt_evidence (test_plan_recovery.SqlPlanRunRecoveryTests.test_sql_checkpoint_appends_step_attempt_evidence) ... ok
+test_sql_claim_preserves_requested_run_id (test_plan_recovery.SqlPlanRunRecoveryTests.test_sql_claim_preserves_requested_run_id) ... ok
+test_sql_concurrent_claim_allows_only_one_worker (test_plan_recovery.SqlPlanRunRecoveryTests.test_sql_concurrent_claim_allows_only_one_worker) ... ok
+test_legacy_session_snapshot_is_migrated_and_repository_recovers (test_plan_repository.JsonPlanRepositoryTests.test_legacy_session_snapshot_is_migrated_and_repository_recovers) ... ok
+test_versions_history_conflict_and_user_isolation (test_plan_repository.JsonPlanRepositoryTests.test_versions_history_conflict_and_user_isolation) ... ok
+test_list_detail_cancel_admin_timeline_and_isolation (test_plan_repository.PlanApiTests.test_list_detail_cancel_admin_timeline_and_isolation) ... ok
+test_sql_projection_audit_and_optimistic_lock (test_plan_repository.SqlPlanRepositoryTests.test_sql_projection_audit_and_optimistic_lock) ... ok
+test_actual_receipt_reconciles_estimate_exactly_once (test_platform_edges.PlatformEdges.test_actual_receipt_reconciles_estimate_exactly_once) ... ok
+test_cache_tokenizer_key_cannot_reuse_old_results (test_platform_edges.PlatformEdges.test_cache_tokenizer_key_cannot_reuse_old_results) ... ok
+test_disabled_telemetry_does_not_disable_audit (test_platform_edges.PlatformEdges.test_disabled_telemetry_does_not_disable_audit) ... ok
+test_expired_final_ingestion_lease_is_not_stranded (test_platform_edges.PlatformEdges.test_expired_final_ingestion_lease_is_not_stranded) ... ok
+test_inventory_replay_does_not_expose_contract (test_platform_edges.PlatformEdges.test_inventory_replay_does_not_expose_contract) ... ok
+test_quota_shared_across_processes (test_platform_edges.PlatformEdges.test_quota_shared_across_processes) ... ok
+test_attempts_charge_each_retry (test_platform_governance.BudgetTests.test_attempts_charge_each_retry) ... ok
+test_capability_routing_and_context_rejection (test_platform_governance.BudgetTests.test_capability_routing_and_context_rejection) ... ok
+test_concurrency_and_expired_unknown_charge (test_platform_governance.BudgetTests.test_concurrency_and_expired_unknown_charge) ... ok
+test_parallel_budget_cannot_overbook (test_platform_governance.BudgetTests.test_parallel_budget_cannot_overbook) ... ok
+test_shared_rpm_survives_new_service (test_platform_governance.BudgetTests.test_shared_rpm_survives_new_service) ... ok
+test_three_scopes_settle_once (test_platform_governance.BudgetTests.test_three_scopes_settle_once) ... ok
+test_inventory_concurrent_idempotency_and_release (test_platform_governance.ConnectorTests.test_inventory_concurrent_idempotency_and_release) ... ok
+test_inventory_response_loss_queries_before_retry (test_platform_governance.ConnectorTests.test_inventory_response_loss_queries_before_retry) ... ok
+test_override_and_unapproved_write_rejected (test_platform_governance.ConnectorTests.test_override_and_unapproved_write_rejected) ... ok
+test_remote_identity_injection_output_and_rpm (test_platform_governance.ConnectorTests.test_remote_identity_injection_output_and_rpm) ... ok
+test_signed_identity_wrong_tenant_permission_and_expiry (test_platform_governance.ConnectorTests.test_signed_identity_wrong_tenant_permission_and_expiry) ... ok
+test_trace_parent_redaction_and_sampling_independent (test_platform_governance.ConnectorTests.test_trace_parent_redaction_and_sampling_independent) ... ok
+test_unknown_drift_and_pinned_version (test_platform_governance.ConnectorTests.test_unknown_drift_and_pinned_version) ... ok
+test_human_message_idempotency_and_conflict (test_platform_governance.ConversationHandoffTests.test_human_message_idempotency_and_conflict) ... ok
+test_inflight_blocks_takeover (test_platform_governance.ConversationHandoffTests.test_inflight_blocks_takeover) ... ok
+test_ownership_version_and_actor (test_platform_governance.ConversationHandoffTests.test_ownership_version_and_actor) ... ok
+test_take_invalidates_and_blocks_new_writes (test_platform_governance.ConversationHandoffTests.test_take_invalidates_and_blocks_new_writes) ... ok
+test_takeover_suppresses_inflight_agent_reply (test_platform_governance.ConversationHandoffTests.test_takeover_suppresses_inflight_agent_reply) ... ok
+test_workbench_and_customer_auth (test_platform_governance.ConversationHandoffTests.test_workbench_and_customer_auth) ... ok
+test_bad_manifest_and_eval_hash_rejected (test_platform_governance.ReleaseTests.test_bad_manifest_and_eval_hash_rejected) ... ok
+test_config_reference_prevents_gc (test_platform_governance.ReleaseTests.test_config_reference_prevents_gc) ... ok
+test_draft_gate_and_immutability (test_platform_governance.ReleaseTests.test_draft_gate_and_immutability) ... ok
+test_family_leakage_and_no_paid_replay (test_platform_governance.ReleaseTests.test_family_leakage_and_no_paid_replay) ... ok
+test_production_rejects_offline_evidence (test_platform_governance.ReleaseTests.test_production_rejects_offline_evidence) ... ok
+test_sticky_canary_and_rollback (test_platform_governance.ReleaseTests.test_sticky_canary_and_rollback) ... ok
+test_customer_and_operator_real_api (test_platform_http.BrowserTests.test_customer_and_operator_real_api) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+test_real_agent_three_strategies_sse_and_trace (test_platform_http.PlatformHttpTests.test_real_agent_three_strategies_sse_and_trace) ... ok
+test_real_human_takeover_blocks_automatic_reply (test_platform_http.PlatformHttpTests.test_real_human_takeover_blocks_automatic_reply) ... ok
+test_real_mcp_confirmed_inventory (test_platform_http.PlatformHttpTests.test_real_mcp_confirmed_inventory) ... ok
+test_worker_process_crash_recovers_with_higher_fence (test_platform_http.PlatformHttpTests.test_worker_process_crash_recovers_with_higher_fence) ... ok
+test_backup_restore_preserves_audit_state_and_refuses_overwrite (test_platform_recovery.RecoveryTests.test_backup_restore_preserves_audit_state_and_refuses_overwrite) ... /opt/homebrew/Cellar/python@3.11/3.11.15_4/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:693: ResourceWarning: unclosed event loop <_UnixSelectorEventLoop running=False closed=False debug=False>
+  _warn(f"unclosed event loop {self!r}", ResourceWarning, source=self)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_empty_expand_contract_reversible (test_platform_recovery.RecoveryTests.test_empty_expand_contract_reversible) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_migration_refuses_destructive_platform_downgrade (test_platform_recovery.RecoveryTests.test_migration_refuses_destructive_platform_downgrade) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_refund_delivery_upgrade_keeps_existing_business_rows (test_platform_recovery.RecoveryTests.test_refund_delivery_upgrade_keeps_existing_business_rows) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_compensation_provider_executes_exactly_once (test_provider_and_policy_governance.CompensationExecutionTests.test_compensation_provider_executes_exactly_once) ... ok
+test_manual_completion_records_actor (test_provider_and_policy_governance.CompensationExecutionTests.test_manual_completion_records_actor) ... ok
+test_repository_lists_compensations_by_status (test_provider_and_policy_governance.CompensationExecutionTests.test_repository_lists_compensations_by_status) ... ok
+test_transient_failure_can_be_recovered_with_new_lease (test_provider_and_policy_governance.CompensationExecutionTests.test_transient_failure_can_be_recovered_with_new_lease) ... ok
+test_unconfigured_provider_never_fakes_success (test_provider_and_policy_governance.CompensationExecutionTests.test_unconfigured_provider_never_fakes_success) ... ok
+test_api_runtime_injects_provider_and_requires_all_external_ports (test_provider_and_policy_governance.ProviderContractTests.test_api_runtime_injects_provider_and_requires_all_external_ports) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_commerce_adapter_enforces_order_ownership (test_provider_and_policy_governance.ProviderContractTests.test_commerce_adapter_enforces_order_ownership) ... ok
+test_commerce_refund_replays_by_idempotency_key (test_provider_and_policy_governance.ProviderContractTests.test_commerce_refund_replays_by_idempotency_key) ... ok
+test_commerce_service_uses_injected_providers_on_business_path (test_provider_and_policy_governance.ProviderContractTests.test_commerce_service_uses_injected_providers_on_business_path) ... ok
+test_hmac_webhook_verifier_accepts_valid_signature (test_provider_and_policy_governance.ProviderContractTests.test_hmac_webhook_verifier_accepts_valid_signature) ... ok
+test_json_webhook_instances_share_atomic_deduplication (test_provider_and_policy_governance.ProviderContractTests.test_json_webhook_instances_share_atomic_deduplication) ... ok
+test_management_idempotency_replays_and_rejects_key_reuse (test_provider_and_policy_governance.ProviderContractTests.test_management_idempotency_replays_and_rejects_key_reuse) ... ok
+test_provider_error_mapping_is_stable (test_provider_and_policy_governance.ProviderContractTests.test_provider_error_mapping_is_stable) ... ok
+test_provider_executor_retries_queries_but_not_side_effects (test_provider_and_policy_governance.ProviderContractTests.test_provider_executor_retries_queries_but_not_side_effects) ... ok
+test_sql_webhook_concurrent_delivery_is_accepted_once (test_provider_and_policy_governance.ProviderContractTests.test_sql_webhook_concurrent_delivery_is_accepted_once) ... ok
+test_sql_webhook_deduplicates_event (test_provider_and_policy_governance.ProviderContractTests.test_sql_webhook_deduplicates_event) ... ok
+test_webhook_api_verifies_signature_and_replays_duplicate (test_provider_and_policy_governance.ProviderContractTests.test_webhook_api_verifies_signature_and_replays_duplicate) ... ok
+test_active_rule_version_is_loaded_by_runtime_router (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_active_rule_version_is_loaded_by_runtime_router) ... ok
+test_diff_and_dry_run_report_impact (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_diff_and_dry_run_report_impact) ... ok
+test_draft_activate_and_rollback_lifecycle (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_draft_activate_and_rollback_lifecycle) ... ok
+test_json_rule_repository_preserves_concurrent_writers (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_json_rule_repository_preserves_concurrent_writers) ... ok
+test_mock_compensation_provider_raises_structured_failure (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_mock_compensation_provider_raises_structured_failure) ... ok
+test_schema_rejects_invalid_threshold_order (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_schema_rejects_invalid_threshold_order) ... ok
+test_sql_rule_repository_persists_hash_and_active_version (test_provider_and_policy_governance.RiskRuleGovernanceTests.test_sql_rule_repository_persists_hash_and_active_version) ... ok
+test_direct_constructor_cannot_bypass_guard_or_modify_existing_data (test_rag_backend_security.RagBackendSecurityTests.test_direct_constructor_cannot_bypass_guard_or_modify_existing_data) ... ok
+test_factory_rejects_chroma_without_importing_or_creating_data (test_rag_backend_security.RagBackendSecurityTests.test_factory_rejects_chroma_without_importing_or_creating_data) ... ok
+test_numpy_rebuild_and_reload_without_chroma (test_rag_backend_security.RagBackendSecurityTests.test_numpy_rebuild_and_reload_without_chroma) ... ok
+test_admin_reconciliation_only_schedules_query (test_refund_delivery.RefundDeliveryTests.test_admin_reconciliation_only_schedules_query) ... ok
+test_business_reject_is_terminal_and_does_not_dispatch_again (test_refund_delivery.RefundDeliveryTests.test_business_reject_is_terminal_and_does_not_dispatch_again) ... ok
+test_callback_signature_schema_and_identity (test_refund_delivery.RefundDeliveryTests.test_callback_signature_schema_and_identity) ... ok
+test_compensation_concurrent_creation_and_stale_completion (test_refund_delivery.RefundDeliveryTests.test_compensation_concurrent_creation_and_stale_completion) ... ok
+test_concurrent_execute_creates_one_message_and_operation (test_refund_delivery.RefundDeliveryTests.test_concurrent_execute_creates_one_message_and_operation) ... ok
+test_duplicate_event_ten_times_only_updates_once (test_refund_delivery.RefundDeliveryTests.test_duplicate_event_ten_times_only_updates_once) ... ok
+test_enqueue_case_operation_outbox_and_job_atomically (test_refund_delivery.RefundDeliveryTests.test_enqueue_case_operation_outbox_and_job_atomically) ... ok
+test_expired_dispatcher_cannot_ack_new_owner (test_refund_delivery.RefundDeliveryTests.test_expired_dispatcher_cannot_ack_new_owner) ... ok
+test_inbox_and_business_update_rollback_together (test_refund_delivery.RefundDeliveryTests.test_inbox_and_business_update_rollback_together) ... ok
+test_late_failure_even_higher_version_cannot_overwrite_success (test_refund_delivery.RefundDeliveryTests.test_late_failure_even_higher_version_cannot_overwrite_success) ... ok
+test_lost_final_query_lease_goes_to_manual_state (test_refund_delivery.RefundDeliveryTests.test_lost_final_query_lease_goes_to_manual_state) ... ok
+test_manual_state_is_stable_under_repeated_dead_job_sweeps (test_refund_delivery.RefundDeliveryTests.test_manual_state_is_stable_under_repeated_dead_job_sweeps) ... ok
+test_migration_refuses_to_discard_http_ledgers (test_refund_delivery.RefundDeliveryTests.test_migration_refuses_to_discard_http_ledgers) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running stamp_revision  -> 20261025_0006
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+ok
+test_out_of_order_processing_cannot_undo_newer_receipt (test_refund_delivery.RefundDeliveryTests.test_out_of_order_processing_cannot_undo_newer_receipt) ... ok
+test_outbox_failure_rolls_back_case_and_operation (test_refund_delivery.RefundDeliveryTests.test_outbox_failure_rolls_back_case_and_operation) ... ok
+test_query_never_resubmits_missing_refund (test_refund_delivery.RefundDeliveryTests.test_query_never_resubmits_missing_refund) ... ok
+test_refund_delivery_migration_roundtrip_has_no_drift (test_refund_delivery.RefundDeliveryTests.test_refund_delivery_migration_roundtrip_has_no_drift) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_retention_preserves_http_operation_and_delivery_ledgers (test_refund_delivery.RefundDeliveryTests.test_retention_preserves_http_operation_and_delivery_ledgers) ... ok
+test_same_event_id_different_body_is_rejected (test_refund_delivery.RefundDeliveryTests.test_same_event_id_different_body_is_rejected) ... ok
+test_sandbox_configuration_requires_sql_and_secrets (test_refund_delivery.RefundDeliveryTests.test_sandbox_configuration_requires_sql_and_secrets) ... ok
+test_send_timeout_retains_unknown_and_query_converges (test_refund_delivery.RefundDeliveryTests.test_send_timeout_retains_unknown_and_query_converges) ... ok
+test_stale_dispatch_error_cannot_mutate_new_owner (test_refund_delivery.RefundDeliveryTests.test_stale_dispatch_error_cannot_mutate_new_owner) ... ok
+test_two_dispatchers_only_one_valid_claim (test_refund_delivery.RefundDeliveryTests.test_two_dispatchers_only_one_valid_claim) ... ok
+test_user_cannot_request_reconciliation (test_refund_delivery.RefundDeliveryTests.test_user_cannot_request_reconciliation) ... ok
+test_wrong_user_amount_reference_are_rejected_without_inbox (test_refund_delivery.RefundDeliveryTests.test_wrong_user_amount_reference_are_rejected_without_inbox) ... ok
+test_json_claim_is_atomic_and_rejects_parameter_reuse (test_side_effect_reliability.OperationRepositoryTests.test_json_claim_is_atomic_and_rejects_parameter_reuse) ... ok
+test_sql_claim_allows_only_one_concurrent_owner (test_side_effect_reliability.OperationRepositoryTests.test_sql_claim_allows_only_one_concurrent_owner) ... ok
+test_operation_visibility_admin_permissions_and_compensation_api (test_side_effect_reliability.ReliabilityApiTests.test_operation_visibility_admin_permissions_and_compensation_api) ... ok
+test_applied_external_effect_reconciles_as_success (test_side_effect_reliability.ReliableExecutionTests.test_applied_external_effect_reconciles_as_success) ... ok
+test_compensation_state_requires_valid_manual_transitions (test_side_effect_reliability.ReliableExecutionTests.test_compensation_state_requires_valid_manual_transitions) ... ok
+test_expired_lease_can_be_recovered_after_process_restart (test_side_effect_reliability.ReliableExecutionTests.test_expired_lease_can_be_recovered_after_process_restart) ... ok
+test_failed_attempt_retries_once_then_replays_success (test_side_effect_reliability.ReliableExecutionTests.test_failed_attempt_retries_once_then_replays_success) ... ok
+test_retry_exhaustion_moves_case_to_manual_failure (test_side_effect_reliability.ReliableExecutionTests.test_retry_exhaustion_moves_case_to_manual_failure) ... ok
+test_action_hashes_are_preserved_but_free_text_is_redacted (test_trusted_actions.TrustedActionsTests.test_action_hashes_are_preserved_but_free_text_is_redacted) ... ok
+test_action_id_with_phone_digits_survives_confirmation (test_trusted_actions.TrustedActionsTests.test_action_id_with_phone_digits_survives_confirmation) ... ok
+test_agent_reset_revokes_confirmed_action (test_trusted_actions.TrustedActionsTests.test_agent_reset_revokes_confirmed_action) ... ok
+test_ambiguous_chat_confirmation_executes_nothing (test_trusted_actions.TrustedActionsTests.test_ambiguous_chat_confirmation_executes_nothing) ... ok
+test_api_ownership_confirm_execute_and_evidence_permissions (test_trusted_actions.TrustedActionsTests.test_api_ownership_confirm_execute_and_evidence_permissions) ... ok
+test_approval_change_invalidates_execution_proposal (test_trusted_actions.TrustedActionsTests.test_approval_change_invalidates_execution_proposal) ... ok
+test_business_change_after_claim_still_blocks_dispatch (test_trusted_actions.TrustedActionsTests.test_business_change_after_claim_still_blocks_dispatch) ... ok
+test_changed_arguments_require_fresh_confirmation (test_trusted_actions.TrustedActionsTests.test_changed_arguments_require_fresh_confirmation) ... ok
+test_chat_confirmation_cannot_execute_tool_hidden_by_current_config (test_trusted_actions.TrustedActionsTests.test_chat_confirmation_cannot_execute_tool_hidden_by_current_config) ... ok
+test_concurrent_confirmation_creates_one_actor_record (test_trusted_actions.TrustedActionsTests.test_concurrent_confirmation_creates_one_actor_record) ... ok
+test_concurrent_execution_consumes_one_confirmation (test_trusted_actions.TrustedActionsTests.test_concurrent_execution_consumes_one_confirmation) ... ok
+test_confirm_then_execute_and_repeat_replays_once (test_trusted_actions.TrustedActionsTests.test_confirm_then_execute_and_repeat_replays_once) ... ok
+test_confirmation_claim_is_atomic_across_processes (test_trusted_actions.TrustedActionsTests.test_confirmation_claim_is_atomic_across_processes) ... ok
+test_deadline_and_permissions_are_checked_before_side_effects (test_trusted_actions.TrustedActionsTests.test_deadline_and_permissions_are_checked_before_side_effects) ... ok
+test_deleted_session_revokes_unconsumed_confirmations (test_trusted_actions.TrustedActionsTests.test_deleted_session_revokes_unconsumed_confirmations) ... ok
+test_evidence_is_owned_order_bound_and_reviewed (test_trusted_actions.TrustedActionsTests.test_evidence_is_owned_order_bound_and_reviewed) ... ok
+test_exception_marks_unknown_without_reexecution (test_trusted_actions.TrustedActionsTests.test_exception_marks_unknown_without_reexecution) ... ok
+test_expired_confirmation_is_not_consumed (test_trusted_actions.TrustedActionsTests.test_expired_confirmation_is_not_consumed) ... ok
+test_inflight_crash_is_not_automatically_retried (test_trusted_actions.TrustedActionsTests.test_inflight_crash_is_not_automatically_retried) ... ok
+test_json_conversation_backend_still_has_durable_consent (test_trusted_actions.TrustedActionsTests.test_json_conversation_backend_still_has_durable_consent) ... ok
+test_malformed_model_arguments_return_recoverable_errors (test_trusted_actions.TrustedActionsTests.test_malformed_model_arguments_return_recoverable_errors) ... ok
+test_migration_from_previous_revision_preserves_data (test_trusted_actions.TrustedActionsTests.test_migration_from_previous_revision_preserves_data) ... INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+ok
+test_model_claim_is_proposal_not_execution_and_registry_cannot_bypass (test_trusted_actions.TrustedActionsTests.test_model_claim_is_proposal_not_execution_and_registry_cannot_bypass) ... ok
+test_multi_agent_react_cannot_self_confirm (test_trusted_actions.TrustedActionsTests.test_multi_agent_react_cannot_self_confirm) ... ok
+test_order_change_invalidates_proposal (test_trusted_actions.TrustedActionsTests.test_order_change_invalidates_proposal) ... ok
+test_other_user_and_session_cannot_confirm (test_trusted_actions.TrustedActionsTests.test_other_user_and_session_cannot_confirm) ... ok
+test_plan_api_execution_then_resume_replays_original_result (test_trusted_actions.TrustedActionsTests.test_plan_api_execution_then_resume_replays_original_result) ... ok
+test_plan_confirmed_step_flag_cannot_replace_user_consent (test_trusted_actions.TrustedActionsTests.test_plan_confirmed_step_flag_cannot_replace_user_consent) ... ok
+test_plan_resume_checks_original_action_even_after_arguments_change (test_trusted_actions.TrustedActionsTests.test_plan_resume_checks_original_action_even_after_arguments_change) ... ok
+test_real_react_path_needs_distinct_user_confirmation_after_restart (test_trusted_actions.TrustedActionsTests.test_real_react_path_needs_distinct_user_confirmation_after_restart) ... ok
+test_reject_blocks_later_confirmation_and_execution (test_trusted_actions.TrustedActionsTests.test_reject_blocks_later_confirmation_and_execution) ... ok
+test_rule_change_invalidates_confirmed_action (test_trusted_actions.TrustedActionsTests.test_rule_change_invalidates_confirmed_action) ... ok
+test_standalone_mcp_write_requires_authenticated_boundary (test_trusted_actions.TrustedActionsTests.test_standalone_mcp_write_requires_authenticated_boundary) ... ok
+test_verified_evidence_is_used_and_review_change_requires_reconfirmation (test_trusted_actions.TrustedActionsTests.test_verified_evidence_is_used_and_review_change_requires_reconfirmation) ... ok
+
+----------------------------------------------------------------------
+Ran 354 tests in 53.262s
+
+OK
+No new upgrade operations detected.

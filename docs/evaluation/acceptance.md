@@ -47,4 +47,19 @@
 
 ### 本轮 CI 时序问题与补充检查
 
-文档提交 `6fb6658` 的 [运行 40178221025](https://github.com/scallion7/xc_sx_agent/actions/runs/40178221025) 有 6 个作业通过，Python 3.12 在既有退款 HTTP 测试失败：正常请求共用 150ms 超时，返回 `unknown` 而非预期成功。使用 300ms 提交后延迟[复现了原失败](../evidence/docs-round1/timeout-reproduction.log)。正常路径改用 5 秒测试超时；故障用例单独设置 0.5 秒超时与 2 秒响应延迟，成功、单次退款和对账断言保持不变。补充的 [13 项 HTTP 回归全部通过](../evidence/docs-round1/http-regression.log)，21.259 秒。本次仅调整测试时序，不改变生产超时配置；最终远端结果应查看后续修复提交的 Actions。
+文档提交 `6fb6658` 的 [运行 40178221025](https://github.com/scallion7/xc_sx_agent/actions/runs/40178221025) 有 6 个作业通过，Python 3.12 在既有退款 HTTP 测试失败：正常请求共用 150ms 超时，返回 `unknown` 而非预期成功。使用 300ms 提交后延迟[复现了原失败](../evidence/docs-round1/timeout-reproduction.log)。正常路径改用 5 秒测试超时；故障用例单独设置 0.5 秒超时与 2 秒响应延迟，成功、单次退款和对账断言保持不变。补充的 [13 项 HTTP 回归全部通过](../evidence/docs-round1/http-regression.log)，21.259 秒。本次仅调整测试时序，不改变生产超时配置；后续修复提交 `4ce5160` 的 [Actions 运行 40178664536](https://github.com/scallion7/xc_sx_agent/actions/runs/40178664536) 已完成，7/7 作业通过。
+
+## 第二轮代码与模块命名整理
+
+以 `4ce5160` 为基线，将余弦后端、客服接管、MCP 调用器和测试套件改为职责命名，保留兼容入口。新增 9 项兼容回归，完整本地测试 **354 项通过、无跳过、53.262 秒、覆盖率 81%**，Python 3.11，启用 Chromium；旧测试模块在发现模式中不重复计数。
+
+| 检查 | 本轮结果 | 证据 |
+|---|---|---|
+| 全量业务与兼容回归 | 354 项通过，包含真实 HTTP/MCP、浏览器和旧接口兼容 | [测试日志](../evidence/naming-round2/unittest.log) |
+| app 语句覆盖率 | 81%，不包含脚本或独立服务子进程；与历史口径一致 | [覆盖率报告](../evidence/naming-round2/coverage.log) |
+| API 与历史契约 | 81 个路径；除 API 总说明外 OpenAPI 完全一致，已发布迁移和历史记录字节不变 | [兼容审计](../evidence/naming-round2/compatibility-audit.json) |
+| 计划评测映射 | 40 条固定场景通过，已引用新的职责模块 | [计划门禁](../evidence/naming-round2/plan-quality.log) |
+| 计划性能门禁 | 现有阈值检查通过；不作为真实模型或生产性能结果 | [计划基准](../evidence/naming-round2/plan-benchmark.log) |
+| SQLite 迁移与平台 smoke | 升级至 `20261025_0006`、无 schema drift、知识/预算/所有权检查通过 | [迁移日志](../evidence/naming-round2/migration.log) |
+
+Ruff、格式、编译、文档链接及旧模块显式运行检查均已通过。命名兼容策略和保留的历史标识见[说明](../engineering/naming-and-compatibility.md)。本轮远端 Python 多版本、PostgreSQL、浏览器、镜像与安全扫描结果，按本次提交查看 [GitHub Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml)，不以旧 CI 结果代替。

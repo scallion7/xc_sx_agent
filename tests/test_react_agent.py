@@ -1,4 +1,4 @@
-"""端到端测试：验证第 3 期 ReAct Agent + Function Calling 能力。
+"""端到端测试：验证ReAct Agent + Function Calling 能力。
 
 测试场景：
 1. 简单问候（不触发工具调用）
@@ -173,7 +173,7 @@ def test_persistence_with_tools():
 
 def main():
     print("=" * 60)
-    print("  第 3 期 ReAct Agent + Function Calling · 端到端测试")
+    print("  ReAct Agent + Function Calling · 端到端测试")
     print("=" * 60)
 
     try:

@@ -1,4 +1,4 @@
-"""端到端测试：验证第 5 期 RAG 知识库检索（两套后端）。
+"""端到端测试：验证RAG 知识库检索（精确余弦后端；Chroma 安全暂停）。
 
 测试场景（每套后端独立跑一遍）：
 1. Markdown 切分正确性。
@@ -10,9 +10,9 @@
 前提：已配置 OPENAI_API_KEY；Chroma 历史后端已安全暂停。
 
 用法：
-  python tests/test_rag.py                # 跑两套后端
-  python tests/test_rag.py --backend numpy
-  python tests/test_rag.py --backend chroma
+  python tests/test_rag.py                # 默认运行精确余弦后端
+  python tests/test_rag.py --backend cosine
+  # --backend chroma / all 保留旧参数，会触发 Chroma 安全停用错误
 """
 
 import argparse
@@ -57,8 +57,8 @@ def _make_embedder() -> Embedder:
 
 
 def _make_backend(backend_name: str):
-    if backend_name == "numpy":
-        return create_backend("numpy", index_path=ROOT / settings.kb_index_path)
+    if backend_name in {"cosine", "numpy"}:
+        return create_backend(backend_name, index_path=ROOT / settings.kb_index_path)
     if backend_name == "chroma":
         return create_backend(
             "chroma",
@@ -227,15 +227,15 @@ def run_for_backend(backend_name: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--backend", choices=["numpy", "chroma", "all"], default="numpy"
+        "--backend", choices=["cosine", "numpy", "chroma", "all"], default="cosine"
     )
     args = parser.parse_args()
 
     print("=" * 60)
-    print("  第 5 期 RAG · 端到端测试")
+    print("  RAG · 端到端测试")
     print("=" * 60)
 
-    backends = ["numpy", "chroma"] if args.backend == "all" else [args.backend]
+    backends = ["cosine", "chroma"] if args.backend == "all" else [args.backend]
     try:
         for name in backends:
             run_for_backend(name)

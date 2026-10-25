@@ -455,7 +455,7 @@ worker.run_once()
             ),
             execution_context=ToolExecutionContext(
                 user_id="user-1",
-                session_id="user-1:stage26",
+                session_id="user-1:refund-http",
                 permissions=frozenset({"refund:execute", "after_sale:execute"}),
             ),
         )
@@ -469,7 +469,7 @@ worker.run_once()
                 method="POST",
                 headers={"X-API-Key": "user"},
                 payload={
-                    "session_id": "stage26",
+                    "session_id": "refund-http",
                     "arguments_hash": action["arguments_hash"],
                 },
             )
@@ -477,7 +477,7 @@ worker.run_once()
                 self.api + f"/v1/actions/{action['action_id']}/execute",
                 method="POST",
                 headers={"X-API-Key": "user"},
-                payload={"session_id": "stage26"},
+                payload={"session_id": "refund-http"},
             )
 
         created = invoke(

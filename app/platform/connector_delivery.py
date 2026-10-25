@@ -109,9 +109,13 @@ class InventoryDelivery:
                         k: v for k, v in dict(old).items() if k != "contract_json"
                     } | {"result": json.loads(old["result_json"])}
                 if self.config.collaboration_enabled:
-                    from app.platform.collaboration import Collaboration
+                    from app.platform.conversation_handoff import (
+                        ConversationHandoffService,
+                    )
 
-                    Collaboration(self.config).guard_agent(conn, user, session)
+                    ConversationHandoffService(self.config).guard_agent(
+                        conn, user, session
+                    )
                 changed = conn.execute(
                     update(ACTIONS)
                     .where(

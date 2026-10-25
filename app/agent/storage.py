@@ -17,7 +17,7 @@ def save_session(
     """把对话状态原子写入 JSON 文件。
 
     messages 只包含原始 user/assistant 条目（不含 system / summary）。
-    short_term_memory 为短期记忆的序列化数据（第7期）。
+    short_term_memory 为短期记忆的序列化数据。
     """
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)

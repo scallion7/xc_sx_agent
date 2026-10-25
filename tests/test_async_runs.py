@@ -1,4 +1,4 @@
-"""Stage 25: leases, process failure windows, journals, API isolation and SSE."""
+"""leases, process failure windows, journals, API isolation and SSE."""
 
 from __future__ import annotations
 
@@ -483,7 +483,7 @@ with RunContext(repo,row) as ctx:
         self.assertTrue(all(child.returncode == 0 for child in children), outputs)
         self.assertEqual(sum(out.strip() == row["run_id"] for out, _ in outputs), 1)
 
-    def test_stage25_migration_downgrade_and_upgrade(self):
+    def test_agent_run_migration_downgrade_and_upgrade(self):
         url = f"sqlite:///{self.tmp.name}/migration.db"
         upgrade_database(url, "20261023_0003")
         from sqlalchemy import create_engine
@@ -519,7 +519,7 @@ with RunContext(repo,row) as ctx:
         from app.agent.strategies import ExecutionPlan, PlanStep
         from app.infrastructure.database import plan_runs_table
 
-        from tests.test_strategy_development import response_with_parsed
+        from tests.test_plan_execution import response_with_parsed
 
         plan = ExecutionPlan(
             goal="查询两个订单",

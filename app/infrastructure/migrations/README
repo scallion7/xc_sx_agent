@@ -1,1 +1,2 @@
-阶段 22 数据库迁移目录。使用 app/scripts/manage_migrations.py 统一执行。
+数据库迁移目录。使用 python -m app.scripts.manage_migrations 统一执行。
+已发布的迁移文件、revision/down_revision 及错误码保持兼容，不按展示命名重写。

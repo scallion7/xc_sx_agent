@@ -6,7 +6,7 @@
 
 检索组合中文 BM25、余弦相似度和 RRF，可启用词法重排；返回稳定 chunk/version/release 引用。默认本地哈希投影是词法表示，词法 reranker 不是 cross-encoder。未将合成数据上的结果视为真实语义效果。
 
-默认旧知识检索后端仍叫 `NumpyBackend`，实际为标准库精确余弦计算；第一轮文档整理保留此代码名和配置别名。Chroma 已因安全公告暂停，不推荐绕过停用保护。
+本地 JSON 知识检索使用 `CosineBackend`，以标准库进行精确余弦计算；旧 `NumpyBackend` 导入与 `RAG_BACKEND=numpy` 保持兼容，新默认值为 `cosine`。详见[命名与兼容约定](naming-and-compatibility.md)。Chroma 已因安全公告暂停，不推荐绕过停用保护。
 
 ## 模型与配置
 
@@ -19,6 +19,8 @@
 ## MCP 与人工协作
 
 连接器按 allowlist、契约/schema hash、权限、签名身份和输出限制管理；schema 漂移停用。库存写操作经可信确认与专用持久化适配器执行，重试前查单。客服工作台提供会话接管、草稿修订、工单审批和知识发布入口。
+
+人工接管由 [ConversationHandoffService](../../app/platform/conversation_handoff.py) 管理；MCP 只读调用由 `GovernedMCPToolCaller` 执行契约检查。
 
 实现入口：[knowledge.py](../../app/platform/knowledge.py)、[retrieval.py](../../app/platform/retrieval.py)、[budget.py](../../app/platform/budget.py)、[releases.py](../../app/platform/releases.py)、[connectors.py](../../app/platform/connectors.py)。
 

@@ -1,9 +1,9 @@
 """知识库检索器：query → 向量化 → 委托后端检索。
 
 设计上 retriever 只负责"问句怎么变向量""结果怎么聚合"，
-存储和打分都交给 VectorBackend 实现，对应两套：
-- NumpyBackend：手写余弦 + JSON 持久化（教学透明，零依赖）
-- ChromaBackend：嵌入式向量数据库 + HNSW（生产代表性）
+存储和打分都交给 VectorBackend 实现，包括：
+- CosineBackend：标准库精确余弦 + JSON 持久化
+- ChromaBackend：历史嵌入式向量数据库适配器（安全暂停）
 
 校验逻辑：加载后比对 backend 持久化的 embedding_model 与当前 Embedder.model，
 不一致直接报错——避免"换了 embedding 但还在用老索引"这种隐蔽问题。

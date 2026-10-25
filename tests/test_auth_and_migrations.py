@@ -1,4 +1,4 @@
-"""阶段 22 OIDC/JWT、配置分层与 Alembic 测试。"""
+"""OIDC/JWT、配置分层与 Alembic 测试。"""
 
 from __future__ import annotations
 

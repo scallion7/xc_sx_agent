@@ -10,8 +10,8 @@ from sqlalchemy import select
 
 from app.infrastructure.database import action_proposals_table, platform
 from app.platform.budget import SharedBudget
-from app.platform.collaboration import Collaboration
 from app.platform.common import PlatformError
+from app.platform.conversation_handoff import ConversationHandoffService
 from app.platform.knowledge import DocumentMetadata, KnowledgePlatform
 from app.platform.releases import ConfigurationReleases, VersionManifest
 from app.platform.retrieval import HybridRetrieval
@@ -229,14 +229,14 @@ def register_platform_routes(app, services, require):
 
     @app.get("/v1/sessions/{session_id}/ownership")
     def ownership(session_id: str, ctx=Depends(require("session:read"))):
-        return Collaboration(config).ensure(
+        return ConversationHandoffService(config).ensure(
             ctx.user_id, owned_session(ctx.user_id, session_id)
         )
 
     @app.get("/v1/sessions/{session_id}/human-messages")
     def messages(session_id: str, ctx=Depends(require("session:read"))):
         return {
-            "messages": Collaboration(config).messages(
+            "messages": ConversationHandoffService(config).messages(
                 ctx.user_id, owned_session(ctx.user_id, session_id)
             )
         }
@@ -282,7 +282,7 @@ def register_platform_routes(app, services, require):
         body: OwnershipBody,
         ctx=Depends(require("after_sale:review")),
     ):
-        return Collaboration(config).transition(
+        return ConversationHandoffService(config).transition(
             user_id,
             owned_session(user_id, session_id),
             ctx.user_id,
@@ -297,7 +297,7 @@ def register_platform_routes(app, services, require):
         body: OwnershipBody,
         ctx=Depends(require("after_sale:review")),
     ):
-        return Collaboration(config).transition(
+        return ConversationHandoffService(config).transition(
             user_id,
             owned_session(user_id, session_id),
             ctx.user_id,
@@ -315,7 +315,7 @@ def register_platform_routes(app, services, require):
         ),
         ctx=Depends(require("after_sale:review")),
     ):
-        return Collaboration(config).message(
+        return ConversationHandoffService(config).message(
             user_id,
             owned_session(user_id, session_id),
             ctx.user_id,
@@ -327,7 +327,7 @@ def register_platform_routes(app, services, require):
     def revise(
         action_id: str, body: ReviseBody, ctx=Depends(require("after_sale:review"))
     ):
-        return Collaboration(config).revise_action(
+        return ConversationHandoffService(config).revise_action(
             action_id, ctx.user_id, body.arguments
         )
 
@@ -380,7 +380,7 @@ def register_platform_routes(app, services, require):
 
         session = owned_session(ctx.user_id, body.session_id)
         if config.collaboration_enabled:
-            Collaboration(config).ensure(ctx.user_id, session)
+            ConversationHandoffService(config).ensure(ctx.user_id, session)
         return {
             "action": InventoryDelivery(config).propose(
                 body.connector_id,

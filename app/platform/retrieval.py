@@ -12,7 +12,7 @@ from datetime import date
 
 from sqlalchemy import delete, insert, select
 
-from app.agent.rag.backends.numpy_backend import _cosine
+from app.agent.rag.similarity import cosine_similarity
 from app.infrastructure.database import platform
 from app.platform.common import PlatformError, encode
 from app.platform.knowledge import KnowledgePlatform
@@ -221,7 +221,7 @@ class HybridRetrieval:
         lexical = bm25(query, [x["text"] for x in items])
         query_vector = self.service.embedder.encode_one(query) if mode != "bm25" else []
         vector = (
-            [_cosine(query_vector, x["vector"]) for x in items]
+            [cosine_similarity(query_vector, x["vector"]) for x in items]
             if mode != "bm25"
             else [0] * len(items)
         )

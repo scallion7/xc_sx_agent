@@ -39,9 +39,9 @@ class KnowledgeService:
 
     def _create_backend(self):
         name = self.config.rag_backend.lower()
-        if name == "numpy":
+        if name in {"cosine", "numpy"}:
             return create_backend(
-                "numpy",
+                name,
                 index_path=Path(self.config.kb_index_path),
             )
         if name == "chroma":
@@ -51,7 +51,7 @@ class KnowledgeService:
                 collection_name=self.config.chroma_collection,
             )
         raise ValueError(
-            f"未知的 RAG 后端: {self.config.rag_backend}（可选: numpy / chroma）"
+            f"未知的 RAG 后端: {self.config.rag_backend}（可选: cosine；兼容别名: numpy；chroma 已停用）"
         )
 
     def _get_retriever(self) -> KnowledgeRetriever:

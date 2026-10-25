@@ -30,11 +30,6 @@ jobs:
       - run: python -m app.scripts.validate_docs
       - run: python -m app.scripts.validate_plan_quality
       - run: python -m app.scripts.benchmark_plan
-      - run: test -f 'docs/第22期-计划执行治理与工程化闭环.md'
-      - run: test -f 'docs/第23期-可信确认与统一工具执行.md'
-      - run: test -f 'docs/第24期-工单并发唯一约束与业务幂等.md'
-      - run: test -f 'docs/第25期-可恢复的异步Agent任务执行.md'
-      - run: test -f 'docs/第26期-HTTP业务沙箱与退款对账.md'
 
   migrations:
     runs-on: ubuntu-latest
@@ -55,7 +50,7 @@ jobs:
     strategy:
       matrix:
         database:
-          - sqlite:////tmp/xc-stage22.db
+          - sqlite:////tmp/ecom-service-agent-ci.db
           - postgresql+psycopg://xc_agent:xc_agent_test@127.0.0.1:5432/xc_sx_agent
     steps:
       - uses: actions/checkout@v4

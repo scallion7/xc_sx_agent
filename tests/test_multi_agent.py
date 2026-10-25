@@ -1,4 +1,4 @@
-"""端到端测试：验证第 7 期 Multi-Agent 协作能力。
+"""端到端测试：验证Multi-Agent 协作能力。
 
 测试场景：
 1. 路由准确性 — 商品咨询 → presale，订单查询 → postsale，投诉 → complaint
@@ -216,7 +216,7 @@ def test_tool_isolation():
 
 def main():
     print("=" * 60)
-    print("  第 7 期 Multi-Agent 协作 · 端到端测试")
+    print("  Multi-Agent 协作 · 端到端测试")
     print("=" * 60)
 
     try:

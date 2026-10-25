@@ -1,4 +1,4 @@
-"""Stage 24 portable SQLite/PostgreSQL concurrency probe; use an isolated test DB."""
+"""portable SQLite/PostgreSQL concurrency probe; use an isolated test DB."""
 
 from __future__ import annotations
 

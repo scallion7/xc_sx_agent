@@ -1,6 +1,6 @@
 """RAG 模块：知识库切分、向量化、检索。
 
-第 5 期：让 Agent 能基于 FAQ、退换货政策、配送说明、会员权益等
+让 Agent 能基于 FAQ、退换货政策、配送说明、会员权益等
 非结构化知识回答问题，而不只依赖工具返回的结构化数据。
 """
 
@@ -11,6 +11,7 @@ __all__ = [
     "KnowledgeRetriever",
     "RetrievedChunk",
     "VectorBackend",
+    "CosineBackend",
     "NumpyBackend",
     "create_backend",
 ]
@@ -29,7 +30,13 @@ def __getattr__(name: str):
         from app.agent.rag.retriever import KnowledgeRetriever
 
         return KnowledgeRetriever
-    if name in {"NumpyBackend", "RetrievedChunk", "VectorBackend", "create_backend"}:
+    if name in {
+        "CosineBackend",
+        "NumpyBackend",
+        "RetrievedChunk",
+        "VectorBackend",
+        "create_backend",
+    }:
         from app.agent.rag import backends
 
         return getattr(backends, name)

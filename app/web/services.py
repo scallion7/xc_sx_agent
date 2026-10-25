@@ -266,9 +266,9 @@ def runtime_snapshot(services, user_id, session_key):
         "collaboration": services.config.collaboration_enabled,
     }
     if services.config.collaboration_enabled:
-        from app.platform.collaboration import Collaboration
+        from app.platform.conversation_handoff import ConversationHandoffService
 
-        Collaboration(services.config).ensure(user_id, session_key)
+        ConversationHandoffService(services.config).ensure(user_id, session_key)
     if services.config.configuration_releases_enabled:
         from app.platform.releases import ConfigurationReleases
 

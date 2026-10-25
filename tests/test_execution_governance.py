@@ -1,4 +1,4 @@
-"""阶段 22 工作包 A：执行治理离线测试。"""
+"""执行治理离线测试。"""
 
 from __future__ import annotations
 

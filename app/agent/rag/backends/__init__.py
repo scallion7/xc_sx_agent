@@ -1,27 +1,27 @@
-"""向量后端：Numpy 与历史 Chroma 适配器（Chroma 当前安全暂停）。
+"""Exact cosine retrieval and the disabled historical Chroma adapter.
 
-教学目的：同一份知识库可在两种后端间切换，便于直观对比
-- 手写余弦（教学透明，零依赖，适合 < 1k chunks）
-- 向量数据库（本项目使用 Chroma/HNSW，支持持久化、近似检索和元数据过滤）
-
-通过 settings.rag_backend 选择，对上层 KnowledgeRetriever / search_knowledge 透明。
+``cosine`` is canonical; ``numpy`` remains a configuration/import alias.
 """
 
 from app.agent.rag.backends.base import RetrievedChunk, VectorBackend
-from app.agent.rag.backends.numpy_backend import NumpyBackend
+from app.agent.rag.backends.cosine_backend import CosineBackend
 
-__all__ = ["RetrievedChunk", "VectorBackend", "NumpyBackend", "create_backend"]
+NumpyBackend = CosineBackend
+
+__all__ = [
+    "RetrievedChunk",
+    "VectorBackend",
+    "CosineBackend",
+    "NumpyBackend",
+    "create_backend",
+]
 
 
 def create_backend(name: str, **kwargs) -> VectorBackend:
-    """工厂方法：根据名称创建对应后端。
-
-    name: "numpy" | "chroma"
-    kwargs: 后端特定参数（index_path / persist_dir / collection 等）
-    """
-    name = (name or "numpy").lower()
-    if name == "numpy":
-        return NumpyBackend(index_path=kwargs["index_path"])
+    """Create a cosine backend (legacy alias: numpy), or reject disabled Chroma."""
+    name = (name or "cosine").lower()
+    if name in {"cosine", "numpy"}:
+        return CosineBackend(index_path=kwargs["index_path"])
     if name == "chroma":
         from app.agent.rag.backends.chroma_backend import ChromaBackend
 
@@ -29,4 +29,6 @@ def create_backend(name: str, **kwargs) -> VectorBackend:
             persist_dir=kwargs["persist_dir"],
             collection_name=kwargs.get("collection_name", "ecom_kb"),
         )
-    raise ValueError(f"未知的 RAG 后端: {name}（可选: numpy / chroma）")
+    raise ValueError(
+        f"未知的 RAG 后端: {name}（可选: cosine；兼容别名: numpy；chroma 已停用）"
+    )

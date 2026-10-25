@@ -9,6 +9,7 @@
 | 服务与模块如何协作 | [架构概览](architecture/overview.md) |
 | 如何运行和配置 | [配置与运行](guides/configuration.md) |
 | 如何防止重复执行、如何恢复 | [可信执行与一致性](engineering/reliable-execution.md) |
+| 如何使用新旧模块和配置名称 | [命名与兼容约定](engineering/naming-and-compatibility.md) |
 | 如何管理政策、模型和发布 | [知识与治理](engineering/knowledge-and-governance.md) |
 | 哪些结果已经验证 | [验收状态与证据](evaluation/acceptance.md) |
 | 个人工程扩展如何说明 | [贡献说明](CONTRIBUTIONS.md) |
@@ -22,5 +23,5 @@
 - `history/` 记录当时情况，`evidence/` 保存原始结果；不把旧报告中的测试数改成最新测试数。
 - 根目录的旧分期文档路径作为兼容入口保留，正文已归档；新增功能文档优先按主题命名。
 - 展示名称使用 Ecom Service Agent，页面副标题为客户服务、客服工作台、运行管理台。历史示例中的“并夕夕/小夕”不作为当前产品名。
-- 不因文档改名修改数据库、迁移版本、接口路径或会话文件格式。`NumpyBackend` 等代码命名重构另行安排。
+- 不因文档改名修改数据库、迁移版本、接口路径或会话文件格式。代码重命名的别名与升级方式见[命名与兼容约定](engineering/naming-and-compatibility.md)。
 - 演示截图位于 `assets/`；历史截图/录像仍在 `evidence/platform/`，不得把它们标成新界面验收。

@@ -340,7 +340,7 @@ api_idempotency_keys_table = Table(
 Index("ix_api_idempotency_updated", api_idempotency_keys_table.c.updated_at)
 
 
-# Stage 23: durable confirmation ledger, including for JSON conversation storage.
+# Durable confirmation ledger, including for JSON conversation storage.
 action_proposals_table = Table(
     "action_proposals",
     metadata,
@@ -386,7 +386,7 @@ evidence_records_table = Table(
 )
 
 
-# Stage 25: durable queue and monotonically sequenced per-run events.
+# Durable queue and monotonically sequenced per-run events.
 agent_runs_table = Table(
     "agent_runs",
     metadata,
@@ -435,7 +435,7 @@ run_events_table = Table(
 )
 
 
-# Stage 26 uses a frozen schema shared with its migration.
+# Refund delivery uses a frozen schema shared with its migration.
 
 outbox_events_table = queue_table(metadata, "outbox_events")
 inbox_events_table = inbox_table(metadata)

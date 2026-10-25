@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     plan_max_queued_steps: int = Field(default=20, ge=1, le=200)
     plan_read_max_attempts: int = Field(default=2, ge=1, le=5)
 
-    # Durable Agent worker (stage 25)
+    # Durable Agent worker
     run_lease_seconds: int = Field(default=30, ge=3, le=3600)
     run_max_attempts: int = Field(default=3, ge=1, le=10)
     run_poll_seconds: float = Field(default=1.0, gt=0, le=30)
@@ -67,12 +67,12 @@ class Settings(BaseSettings):
     mcp_enabled: bool = False
     mcp_server_url: str = "http://127.0.0.1:9123/mcp"
 
-    # RAG 配置（第5期）
+    # RAG 配置
     embedding_model: str = "text-embedding-3-small"
     kb_dir: str = "app/agent/rag/knowledge"
-    # 向量后端默认 numpy；历史 chroma 因未修复安全公告暂时停用
-    rag_backend: str = "numpy"
-    # NumpyBackend 的 JSON 索引路径
+    # 向量后端默认 cosine（兼容 numpy 别名）；历史 chroma 因未修复安全公告暂时停用
+    rag_backend: str = "cosine"
+    # CosineBackend 的 JSON 索引路径
     kb_index_path: str = "app/sessions/kb_index.json"
     # ChromaBackend 的持久化目录与 collection 名
     chroma_persist_dir: str = "app/sessions/chroma"
@@ -90,20 +90,20 @@ class Settings(BaseSettings):
     risk_rules_path: str = "app/config/risk_rules.json"
     risk_rule_versions_path: str = "app/sessions/risk_rule_versions.json"
 
-    # Multi-Agent 配置（第6期）
+    # Multi-Agent 配置
     multi_agent_enabled: bool = False
 
-    # Memory 配置（第7期）
+    # Memory 配置
     memory_enabled: bool = True
     memory_dir: str = "app/sessions/memory"
     memory_user_id: str = "default"
     max_ltm_facts: int = 50
 
-    # Skill 配置（第8期）
+    # Skill 配置
     skills_enabled: bool = True
     skills_dir: str = "app/agent/skills/definitions"
 
-    # Evaluation 配置（第9期，离线评估工具，无聊天开关）
+    # Evaluation 配置（离线评估工具，无聊天开关）
     eval_dataset_path: str = "app/evaluation/cases.json"
     eval_report_path: str = "app/sessions/eval_report.json"
     eval_use_judge: bool = True  # 是否启用 LLM-as-judge（质量/幻觉/过程合理性）

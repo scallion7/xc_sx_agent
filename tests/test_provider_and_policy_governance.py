@@ -1,4 +1,4 @@
-"""阶段 22 Provider、补偿与规则版本治理测试。"""
+"""Provider、补偿与规则版本治理测试。"""
 
 from __future__ import annotations
 

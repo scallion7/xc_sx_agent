@@ -5,7 +5,7 @@
   实现需把 embedding_model 持久化，下次加载时校验一致性（防止跨模型混用）。
 - search：在线检索时调用，输入 query 向量，返回 Top-K 命中。
 - size：当前已索引的 chunk 数量；首次访问可触发懒加载。
-- load：从持久化路径加载索引；NumpyBackend 是读 JSON，ChromaBackend 是连 client。
+- load：从持久化路径加载索引；CosineBackend 是读 JSON，ChromaBackend 是连 client。
 
 不在接口里抽象 query 文本→向量这一步，是因为 embedder 由 KnowledgeRetriever 持有，
 让后端只关心"向量怎么存、怎么搜"这一件事，职责更纯粹。
@@ -37,7 +37,7 @@ class VectorBackend(ABC):
     ) -> None:
         """全量重建索引（覆盖式）。
 
-        每次调用都会清空既有数据再写入，避免脏数据。增量更新不在第 5 期范围。
+        每次调用都会清空既有数据再写入，避免脏数据。此接口不提供增量更新。
         """
 
     @abstractmethod

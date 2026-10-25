@@ -10,7 +10,7 @@ Chroma 向量数据库后端：嵌入式持久化 + 内置 HNSW 近似检索。
 - 可与 LangChain / LlamaIndex 等框架集成，工程代表性较强
 - 内置 HNSW 近似索引；实际查询性能取决于数据量、索引参数、硬件和过滤条件
 
-与 NumpyBackend 的关键差异（讲给学生听）：
+与 CosineBackend 的实现差异：
 1. 索引结构：使用 HNSW 图做近似最近邻检索，避免逐条精确扫描
 2. 元数据原生支持：可按 doc/section 等字段过滤后再向量召回
 3. 增量写入：由 Chroma 管理持久化；并发与多进程能力仍应按所用版本和部署方式验证
@@ -46,9 +46,9 @@ class ChromaBackend(VectorBackend):
     def _require_supported_release():
         raise RuntimeError(
             "CHROMA_BACKEND_DISABLED: Chroma 后端因未修复的安全公告暂时停用；"
-            "请使用 RAG_BACKEND=numpy 或版本化 SQL 知识平台。"
+            "请使用 RAG_BACKEND=cosine（兼容 RAG_BACKEND=numpy） 或版本化 SQL 知识平台。"
             "保留原 Chroma 数据目录，从源文档重新构建新的索引；"
-            "详见 docs/CI-第27-34期上传修复.md。"
+            "详见 docs/engineering/knowledge-and-governance.md。"
         )
 
     def _ensure_client(self):
@@ -58,7 +58,7 @@ class ChromaBackend(VectorBackend):
             import chromadb
         except ImportError as e:
             raise ImportError(
-                "Chroma 后端已安全暂停，请使用 RAG_BACKEND=numpy。"
+                "Chroma 后端已安全暂停，请使用 RAG_BACKEND=cosine（兼容 RAG_BACKEND=numpy）。"
             ) from e
 
         self._persist_dir.mkdir(parents=True, exist_ok=True)
@@ -167,7 +167,7 @@ class ChromaBackend(VectorBackend):
             raise FileNotFoundError(
                 f"Chroma collection '{self._collection_name}' 不存在于 "
                 f"{self._persist_dir}。请先运行 "
-                f"`python scripts/build_kb_index.py --backend chroma` 构建索引。"
+                f"`python -m app.scripts.build_kb_index --backend chroma` 构建索引。"
             ) from e
 
         meta = self._collection.metadata or {}

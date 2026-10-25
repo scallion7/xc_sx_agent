@@ -233,7 +233,7 @@ class ConnectorRegistry:
         return row
 
 
-class GovernedRemote:
+class GovernedMCPToolCaller:
     governed = True
 
     def __init__(self, config, client, contract, context):
@@ -312,3 +312,7 @@ class GovernedRemote:
         ]:
             value.pop(key, None)
         return encode(value)
+
+
+# Compatibility alias; new callers name the MCP tool invocation explicitly.
+GovernedRemote = GovernedMCPToolCaller

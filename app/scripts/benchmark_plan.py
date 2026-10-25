@@ -103,8 +103,7 @@ def main() -> None:
     }
     if failures:
         raise SystemExit(
-            "阶段 22 性能基准回退: "
-            + json.dumps(failures, ensure_ascii=False, sort_keys=True)
+            "性能基准回退: " + json.dumps(failures, ensure_ascii=False, sort_keys=True)
         )
     print(json.dumps(metrics, ensure_ascii=False, sort_keys=True))
 
