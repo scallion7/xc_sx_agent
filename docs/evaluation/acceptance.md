@@ -44,3 +44,7 @@
 第一轮整理当前说明、历史归档、页面/CLI/API 展示名称及 CI 产物名称；本地 30 项相关回归通过（11.580 秒，含 Chromium），README 的 smoke 命令与迁移/drift/smoke 命令已实际执行，81 路由 OpenAPI 校验、Ruff 和编译检查通过。[本轮检查记录](../evidence/docs-round1/checks.json)与[测试日志](../evidence/docs-round1/targeted-tests.log)单独保存。对应提交继续执行相同质量门禁；通过 [当前分支 Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml) 查看该提交结果，不沿用旧提交的成功状态。
 
 当前展示截图见 [客户服务](../assets/workspace.png) 与 [客服工作台](../assets/workbench.png)；历史截图与录像继续保留在 `evidence/platform/`，不覆盖原始哈希证据。
+
+### 本轮 CI 时序问题与补充检查
+
+文档提交 `6fb6658` 的 [运行 40178221025](https://github.com/scallion7/xc_sx_agent/actions/runs/40178221025) 有 6 个作业通过，Python 3.12 在既有退款 HTTP 测试失败：正常请求共用 150ms 超时，返回 `unknown` 而非预期成功。使用 300ms 提交后延迟[复现了原失败](../evidence/docs-round1/timeout-reproduction.log)。正常路径改用 5 秒测试超时；故障用例单独设置 0.5 秒超时与 2 秒响应延迟，成功、单次退款和对账断言保持不变。补充的 [13 项 HTTP 回归全部通过](../evidence/docs-round1/http-regression.log)，21.259 秒。本次仅调整测试时序，不改变生产超时配置；最终远端结果应查看后续修复提交的 Actions。

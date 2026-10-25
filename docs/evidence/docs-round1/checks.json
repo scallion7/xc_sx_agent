@@ -19,5 +19,15 @@
   "screenshots": {
     "workspace.png": "36e3c40ec1902e3f18d50abd0b2e2e68b555831e5db37c57feeb253e9f130e46",
     "workbench.png": "9c0d831129fd66ed9e41faf4838b238ff70fbcd7afbcd051fe900336c8b47006"
+  },
+  "http_ci_followup": {
+    "failed_run": 40178221025,
+    "failure": "Python 3.12: shared 150ms happy-path timeout produced unknown",
+    "reproduced_with_post_commit_delay_ms": 300,
+    "normal_test_timeout_seconds": 5,
+    "fault_test_timeout_seconds": 0.5,
+    "fault_response_delay_seconds": 2,
+    "tests_passed": 13,
+    "seconds": 21.259
   }
 }

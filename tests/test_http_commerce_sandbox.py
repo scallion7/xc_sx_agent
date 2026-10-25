@@ -11,6 +11,7 @@ import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from unittest.mock import patch
 
 from app.config.settings import Settings
 from app.infrastructure.database import (
@@ -70,7 +71,8 @@ class HttpCommerceSandboxTests(unittest.TestCase):
             sandbox_base_url=self.url,
             sandbox_api_token="test-key",
             provider_webhook_secret="secret",
-            provider_timeout_seconds=0.15,
+            # Healthy requests must tolerate shared-runner scheduling and SQL I/O.
+            provider_timeout_seconds=5,
             openai_api_key="offline",
             memory_enabled=False,
             skills_enabled=False,
@@ -190,9 +192,11 @@ class HttpCommerceSandboxTests(unittest.TestCase):
         self.fail(self.op())
 
     def test_http_timeout_after_provider_commit_reconciles_one_refund(self):
-        self.fault(mode="timeout_after_commit", delay_seconds=0.8, drop_callback=True)
+        self.fault(mode="timeout_after_commit", delay_seconds=2, drop_callback=True)
         op = self.enqueue()
-        self.worker.dispatch_once()
+        # Only this injected-timeout request uses a short deadline.
+        with patch.object(self.provider, "timeout", 0.5):
+            self.worker.dispatch_once()
         self.assertEqual(self.op()["status"], "unknown")
         self.assertEqual(self.stats()["refunds"], 1)
         self.due(reconciliation_jobs_table)
@@ -485,6 +489,8 @@ worker.run_once()
         self.assertTrue(queued["accepted"])
         self.assertEqual(queued["operation"]["status"], "pending")
         self.assertEqual(self.stats()["refunds"], 0)
+        # Reproduce a healthy response slower than the former global 150ms limit.
+        self.fault(mode="timeout_after_commit", delay_seconds=0.3, drop_callback=True)
         self.worker.dispatch_once()
         final = http_json(
             self.api + f"/v1/after-sales/{self.case_id}/operation",

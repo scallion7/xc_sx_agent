@@ -1,0 +1,18 @@
+test_callback_dispatcher_crash_after_delivery_replays_same_event (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_callback_dispatcher_crash_after_delivery_replays_same_event) ... ok
+test_connection_loss_after_commit_converges_by_query (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_connection_loss_after_commit_converges_by_query) ... ok
+test_delayed_success_and_missing_callback_are_reconciled (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_delayed_success_and_missing_callback_are_reconciled) ... ok
+test_dispatcher_process_dies_after_http_acceptance_and_recovers (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_dispatcher_process_dies_after_http_acceptance_and_recovers) ... ok
+test_fault_controls_auth_and_order_ownership (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_fault_controls_auth_and_order_ownership) ... ok
+test_http_timeout_after_provider_commit_reconciles_one_refund (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_http_timeout_after_provider_commit_reconciles_one_refund) ... ok
+test_real_callback_reordering_keeps_newest_success (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_real_callback_reordering_keeps_newest_success) ... ok
+test_real_http_concurrent_submissions_have_one_external_effect (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_real_http_concurrent_submissions_have_one_external_effect) ... ok
+test_sandbox_restart_preserves_idempotency_and_rejects_changed_parameters (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_sandbox_restart_preserves_idempotency_and_rejects_changed_parameters) ... ok
+test_supported_compensation_is_independent_and_idempotent (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_supported_compensation_is_independent_and_idempotent) ... ok
+test_ten_real_callbacks_deduplicate_and_do_not_reapply (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_ten_real_callbacks_deduplicate_and_do_not_reapply) ... ok
+test_trusted_confirmation_http_execution_returns_acceptance_then_final_query (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_trusted_confirmation_http_execution_returns_acceptance_then_final_query) ... ok
+test_unsupported_compensation_is_manual_without_external_effect (tests.test_http_commerce_sandbox.HttpCommerceSandboxTests.test_unsupported_compensation_is_manual_without_external_effect) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 21.259s
+
+OK
