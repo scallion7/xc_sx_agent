@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     # RAG 配置（第5期）
     embedding_model: str = "text-embedding-3-small"
     kb_dir: str = "app/agent/rag/knowledge"
-    # 向量后端：numpy（手写余弦，教学透明，零依赖，默认）/ chroma（向量数据库，生产代表，需 pip install chromadb）
+    # 向量后端默认 numpy；历史 chroma 因未修复安全公告暂时停用
     rag_backend: str = "numpy"
     # NumpyBackend 的 JSON 索引路径
     kb_index_path: str = "app/sessions/kb_index.json"

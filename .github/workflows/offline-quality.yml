@@ -98,8 +98,11 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: python -m pip install -r requirements-dev.txt pip-audit cyclonedx-bom
-      - run: pip-audit -r requirements.txt
-      - run: cyclonedx-py requirements requirements.txt --output-file sbom.json
+      - name: Audit supported dependency ranges
+        run: pip-audit -r requirements.txt
+      - name: Audit exact deployment dependencies
+        run: pip-audit -r requirements-lock.txt
+      - run: cyclonedx-py requirements requirements-lock.txt --output-file sbom.json
       - uses: actions/upload-artifact@v4
         with:
           name: stage22-sbom

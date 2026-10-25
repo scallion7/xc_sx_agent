@@ -1,4 +1,9 @@
-"""Chroma 向量数据库后端：嵌入式持久化 + 内置 HNSW 近似检索。
+"""历史 Chroma 教学实现（安全暂停，不再随默认依赖分发）。
+
+2026-10-25：PYSEC-2026-3813/3814/3815 尚无可用安全版本；构造时失败关闭。
+恢复前必须审核上游修复、更新锁文件并通过依赖与镜像审计。
+
+Chroma 向量数据库后端：嵌入式持久化 + 内置 HNSW 近似检索。
 
 为什么选 Chroma：
 - 嵌入式模式（PersistentClient）开箱即用，无需 Docker，便于教学
@@ -29,12 +34,22 @@ class ChromaBackend(VectorBackend):
     """Chroma 嵌入式向量数据库后端。"""
 
     def __init__(self, persist_dir: Path, collection_name: str = "ecom_kb"):
+        self._require_supported_release()
         self._persist_dir = Path(persist_dir)
         self._collection_name = collection_name
         self._client = None
         self._collection = None
         self._embedding_model: str = ""
         self._size_cache: int | None = None
+
+    @staticmethod
+    def _require_supported_release():
+        raise RuntimeError(
+            "CHROMA_BACKEND_DISABLED: Chroma 后端因未修复的安全公告暂时停用；"
+            "请使用 RAG_BACKEND=numpy 或版本化 SQL 知识平台。"
+            "保留原 Chroma 数据目录，从源文档重新构建新的索引；"
+            "详见 docs/CI-第27-34期上传修复.md。"
+        )
 
     def _ensure_client(self):
         if self._client is not None:
@@ -43,8 +58,7 @@ class ChromaBackend(VectorBackend):
             import chromadb
         except ImportError as e:
             raise ImportError(
-                "chromadb 未安装。请运行 `pip install chromadb` 或 "
-                "`pip install -r requirements.txt`。"
+                "Chroma 后端已安全暂停，请使用 RAG_BACKEND=numpy。"
             ) from e
 
         self._persist_dir.mkdir(parents=True, exist_ok=True)

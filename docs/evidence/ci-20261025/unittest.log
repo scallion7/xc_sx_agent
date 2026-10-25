@@ -1,0 +1,251 @@
+/private/tmp/xc-ci-clean-venv/lib/python3.11/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+.....................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.......INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.............................Building prefix dict from the default dictionary ...
+DEBUG [jieba] Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+DEBUG [jieba] Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+Loading model cost 0.186 seconds.
+DEBUG [jieba] Loading model cost 0.186 seconds.
+Prefix dict has been built successfully.
+DEBUG [jieba] Prefix dict has been built successfully.
+....................................................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+..../opt/homebrew/Cellar/python@3.11/3.11.15_4/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:693: ResourceWarning: unclosed event loop <_UnixSelectorEventLoop running=False closed=False debug=False>
+  _warn(f"unclosed event loop {self!r}", ResourceWarning, source=self)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+......INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+..................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running stamp_revision  -> 20261025_0006
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+........INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+.................................................................INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+.............
+----------------------------------------------------------------------
+Ran 345 tests in 53.113s
+
+OK
+No new upgrade operations detected.

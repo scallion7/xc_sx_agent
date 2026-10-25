@@ -7,7 +7,7 @@
 4. search_knowledge 工具返回结构。
 5. Agent 端到端：政策类问题触发 search_knowledge。
 
-前提：已配置 OPENAI_API_KEY；chroma 后端需要 `pip install chromadb`。
+前提：已配置 OPENAI_API_KEY；Chroma 历史后端已安全暂停。
 
 用法：
   python tests/test_rag.py                # 跑两套后端
@@ -226,7 +226,9 @@ def run_for_backend(backend_name: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backend", choices=["numpy", "chroma", "all"], default="all")
+    parser.add_argument(
+        "--backend", choices=["numpy", "chroma", "all"], default="numpy"
+    )
     args = parser.parse_args()
 
     print("=" * 60)

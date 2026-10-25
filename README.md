@@ -519,11 +519,10 @@ PROVIDER_READ_MAX_ATTEMPTS=2
 python app/scripts/build_kb_index.py --backend numpy
 ```
 
-使用 Chroma 后端：
-
-```powershell
-python app/scripts/build_kb_index.py --backend chroma
-```
+Chroma 教学后端因上游未修复安全公告暂时停用，不再安装到默认环境或镜像。
+原 Chroma 数据目录保留；切换到 `RAG_BACKEND=numpy` 后从源文档重新构建索引，
+不要把旧 Chroma 文件当成 JSON 索引读取。第 27–34 期版本化 SQL 知识平台不依赖 Chroma。
+详见 [CI 修复与验证记录](docs/CI-第27-34期上传修复.md)。
 
 知识文档或政策元数据发生变化后，需要重新构建索引。
 
