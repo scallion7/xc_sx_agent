@@ -442,6 +442,12 @@ inbox_events_table = inbox_table(metadata)
 reconciliation_jobs_table = queue_table(metadata, "reconciliation_jobs")
 
 
+# Frozen expand-only platform schema; exported by logical table name.
+from app.infrastructure.platform_schema import platform_tables  # noqa: E402
+
+platform = platform_tables(metadata)
+
+
 def _prepare_sqlite_path(database_url: str) -> None:
     prefix = "sqlite:///"
     if not database_url.startswith(prefix):

@@ -10,18 +10,18 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY requirements.txt requirements-lock.txt ./
 RUN python -m pip install --no-cache-dir --upgrade \
         "setuptools>=84.0.0" \
         "wheel>=0.46.2" \
         "jaraco.context>=6.1.0" \
-    && python -m pip install --no-cache-dir -r requirements.txt
+    && python -m pip install --no-cache-dir -r requirements-lock.txt
 
 COPY . .
 
 RUN useradd --create-home --uid 10001 appuser \
-    && mkdir -p /app/app/sessions \
-    && chown -R appuser:appuser /app
+    && mkdir -p /app/app/sessions /inventory \
+    && chown -R appuser:appuser /app /inventory
 
 USER appuser
 

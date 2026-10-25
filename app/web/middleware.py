@@ -71,7 +71,24 @@ def install_api_middleware(app: FastAPI, config) -> None:
                     "X-Trace-ID": trace_id,
                 },
             )
-        response = await call_next(request)
+        from app.platform.telemetry import telemetry
+
+        tracing = telemetry(config)
+        if tracing:
+            with tracing.span(
+                "api.request",
+                carrier=dict(request.headers),
+                attributes={"http.method": request.method},
+            ) as current:
+                request.state.trace_id = f"{current.get_span_context().trace_id:032x}"
+                trace_id = request.state.trace_id
+                response = await call_next(request)
+                current.set_attribute("http.status_code", response.status_code)
+                response.headers["traceparent"] = tracing.carrier().get(
+                    "traceparent", ""
+                )
+        else:
+            response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Trace-ID"] = trace_id
         response.headers["X-RateLimit-Limit"] = str(limit)

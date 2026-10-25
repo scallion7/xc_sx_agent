@@ -40,6 +40,29 @@ class Settings(BaseSettings):
     run_max_attempts: int = Field(default=3, ge=1, le=10)
     run_poll_seconds: float = Field(default=1.0, gt=0, le=30)
 
+    # Stages 27–34: trusted deployment scope and opt-in platform integration.
+    tenant_id: str = Field(default="default", pattern=r"^[A-Za-z0-9_-]{1,80}$")
+    knowledge_versioned_enabled: bool = False
+    knowledge_embedding_mode: Literal["local_hash", "openai"] = "local_hash"
+    knowledge_release_id: str = ""
+    knowledge_retention_days: int = Field(default=30, ge=1, le=3650)
+    model_budget_enabled: bool = False
+    model_catalog_snapshot: dict = Field(default_factory=dict)
+    model_catalog_path: str = "app/config/model_catalog.json"
+    model_shared_rpm: int = Field(default=60, ge=1)
+    model_shared_concurrency: int = Field(default=4, ge=1)
+    model_token_budget: int = Field(default=100000, ge=1)
+    model_max_output_tokens: int = Field(default=1024, ge=1)
+    configuration_releases_enabled: bool = False
+    collaboration_enabled: bool = False
+    telemetry_enabled: bool = False
+    telemetry_sample_rate: float = Field(default=1.0, ge=0, le=1)
+    mcp_governance_enabled: bool = True
+    mcp_connector_id: str = "inventory"
+    mcp_identity_secret: str = ""
+    prompt_version: str = "builtin-v1"
+    system_prompt_override: str = ""
+
     # MCP 配置
     mcp_enabled: bool = False
     mcp_server_url: str = "http://127.0.0.1:9123/mcp"
@@ -146,6 +169,21 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment(self) -> "Settings":
+        if (
+            any(
+                (
+                    self.knowledge_versioned_enabled,
+                    self.model_budget_enabled,
+                    self.configuration_releases_enabled,
+                    self.collaboration_enabled,
+                    self.telemetry_enabled,
+                )
+            )
+            and self.persistence_backend != "sql"
+        ):
+            raise ValueError("Platform features require SQL persistence")
+        if self.mcp_identity_secret and len(self.mcp_identity_secret) < 16:
+            raise ValueError("MCP identity secret must contain at least 16 characters")
         if self.plan_step_timeout_seconds > self.plan_total_timeout_seconds:
             raise ValueError("单步骤超时不能大于计划总超时")
         if self.auth_mode == "oidc" and (

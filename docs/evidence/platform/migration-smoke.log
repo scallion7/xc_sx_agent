@@ -1,0 +1,26 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+{"current": "20261025_0006", "head": "20261025_0006", "up_to_date": true}
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+No new upgrade operations detected.
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+Loading model cost 0.182 seconds.
+Prefix dict has been built successfully.
+{"knowledge": true, "budget": true, "ownership": true, "tenant": "smoke-68edc6d9a63d48c69110fa17281eae6d"}

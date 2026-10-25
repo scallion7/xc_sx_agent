@@ -246,6 +246,9 @@ class ActionService:
 
     def claim(self, row: dict) -> bool:
         with self.engine.begin() as connection:
+            guard = getattr(self, "claim_guard", None)
+            if guard:
+                guard(connection, row)
             changed = connection.execute(
                 update(proposals)
                 .where(

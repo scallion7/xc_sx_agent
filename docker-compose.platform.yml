@@ -1,0 +1,64 @@
+# Add to docker-compose.yml. Core API/worker remain default services.
+# docker compose -f docker-compose.yml -f docker-compose.platform.yml --profile integration up --build
+services:
+  postgres:
+    profiles: [core, integration, observability]
+  api:
+    profiles: [core, integration, observability]
+    environment: &platform
+      KNOWLEDGE_VERSIONED_ENABLED: "true"
+      MODEL_BUDGET_ENABLED: "true"
+      COLLABORATION_ENABLED: "true"
+      TELEMETRY_ENABLED: "${TELEMETRY_ENABLED:-false}"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-offline-demo}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-http://model:9126/v1}
+      MCP_IDENTITY_SECRET: ${MCP_IDENTITY_SECRET:-local-demo-secret-change-before-deploy}
+      MODEL_CATALOG_PATH: ${MODEL_CATALOG_PATH:-app/config/model_catalog.json}
+  worker:
+    profiles: [core, integration, observability]
+    environment: *platform
+    stop_grace_period: 360s
+  model:
+    profiles: [integration]
+    build: .
+    command: [python, -m, uvicorn, "app.scripts.demo_model:app", --host, 0.0.0.0, --port, "9126"]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9126/health')"]
+  inventory:
+    profiles: [integration]
+    build: .
+    environment:
+      MCP_IDENTITY_SECRET: ${MCP_IDENTITY_SECRET:-local-demo-secret-change-before-deploy}
+      INVENTORY_DATABASE_URL: sqlite:////inventory/inventory.db
+      INVENTORY_HOST: 0.0.0.0
+    command: [python, -m, mcp_server.inventory_server]
+    volumes: ["inventory_data:/inventory"]
+    # RPC readiness is verified by smoke; main image API healthcheck is inapplicable.
+    healthcheck: {disable: true}
+  seed:
+    profiles: [integration]
+    build: .
+    depends_on:
+      api: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
+      DATABASE_AUTO_CREATE: "false"
+      KNOWLEDGE_VERSIONED_ENABLED: "true"
+    command: [python, -m, app.scripts.seed_platform]
+    healthcheck: {disable: true}
+  trace-workbench:
+    profiles: [observability]
+    build: .
+    depends_on:
+      api: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql+psycopg://xc_agent:xc_agent_dev@postgres:5432/xc_sx_agent
+      DATABASE_AUTO_CREATE: "false"
+      COMMERCE_SEED_DEMO_DATA: "false"
+      TELEMETRY_ENABLED: "true"
+      API_USER_TOKENS: ${API_USER_TOKENS:-dev-user-token:user-1}
+      API_ADMIN_TOKENS: ${API_ADMIN_TOKENS:-dev-admin-token:admin}
+    command: [python, -m, uvicorn, "app.api:app", --host, 0.0.0.0, --port, "8000"]
+    ports: ["127.0.0.1:8001:8000"]
+volumes:
+  inventory_data:

@@ -1,0 +1,113 @@
+[
+  {
+    "document_id": "returns",
+    "text": "七天退货支持申请",
+    "metadata": {
+      "title": "returns",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01"
+    }
+  },
+  {
+    "document_id": "shipping",
+    "text": "快递配送三天送达",
+    "metadata": {
+      "title": "shipping",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01"
+    }
+  },
+  {
+    "document_id": "member",
+    "text": "会员积分有效一年",
+    "metadata": {
+      "title": "member",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01"
+    }
+  },
+  {
+    "document_id": "warranty",
+    "text": "耳机保修服务一年",
+    "metadata": {
+      "title": "warranty",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01"
+    }
+  },
+  {
+    "document_id": "invoice",
+    "text": "电子发票申请开具",
+    "metadata": {
+      "title": "invoice",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01"
+    }
+  },
+  {
+    "document_id": "expiry",
+    "text": "过期活动已停止",
+    "metadata": {
+      "title": "expiry",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01",
+      "expires_at": "2020-02-01"
+    }
+  },
+  {
+    "document_id": "region",
+    "text": "区域补贴仅上海适用",
+    "metadata": {
+      "title": "region",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01",
+      "regions": [
+        "上海"
+      ]
+    }
+  },
+  {
+    "document_id": "channel",
+    "text": "商城渠道优惠活动",
+    "metadata": {
+      "title": "channel",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01",
+      "channels": [
+        "app"
+      ]
+    }
+  },
+  {
+    "document_id": "conflict",
+    "text": "产品售后争议政策",
+    "metadata": {
+      "title": "conflict",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01",
+      "policy_key": "conflict",
+      "decision": "allow"
+    }
+  },
+  {
+    "document_id": "conflict-deny",
+    "text": "产品售后争议政策 不支持",
+    "metadata": {
+      "title": "conflict",
+      "source": "synthetic-corpus-v1",
+      "version": "1",
+      "effective_date": "2020-01-01",
+      "policy_key": "conflict",
+      "decision": "deny"
+    }
+  }
+]

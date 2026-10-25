@@ -24,6 +24,7 @@ class ReviewRequest(BaseModel):
 
     decision: Literal["approve", "reject"]
     note: str = ""
+    expected_version: int | None = Field(default=None, ge=0)
 
 
 class CompensationRequest(BaseModel):

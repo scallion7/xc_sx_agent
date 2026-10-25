@@ -7,6 +7,7 @@ import threading
 from app.config.settings import Settings
 from app.services.refund_delivery import RefundDeliveryWorker
 from app.web.services import build_api_services
+from sqlalchemy.exc import OperationalError
 
 
 def main():
@@ -22,17 +23,25 @@ def main():
     if workflow is None:
         parser.error("Refund worker requires PROVIDER_MODE=sandbox and SQL persistence")
     worker = RefundDeliveryWorker(
-        workflow, lease_seconds=max(30, config.provider_timeout_seconds + 5)
+        workflow,
+        lease_seconds=max(30, config.provider_timeout_seconds + 5),
+        config=config,
     )
     stop = threading.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
         signal.signal(sig, lambda *_: stop.set())
     while not stop.is_set():
-        worked = False
-        if args.mode in {"dispatch", "both"}:
-            worked = worker.dispatch_once() or worked
-        if args.mode in {"reconcile", "both"}:
-            worked = worker.reconcile_once() or worked
+        try:
+            worked = False
+            if args.mode in {"dispatch", "both"}:
+                worked = worker.dispatch_once() or worked
+            if args.mode in {"reconcile", "both"}:
+                worked = worker.reconcile_once() or worked
+        except OperationalError:
+            if args.once:
+                raise
+            stop.wait(min(5, config.run_poll_seconds * 5))
+            continue
         if args.once:
             return
         if not worked:

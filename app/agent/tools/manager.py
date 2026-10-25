@@ -46,6 +46,7 @@ class ToolManager:
         redactor: Callable[[str], str] | None = None,
     ) -> None:
         self._mcp_client = None
+        self._governed_contract = None
         self._tool_source: dict[str, str] = {}
         self._tool_defs: list[dict] = []
         self._registry = registry or create_default_tool_registry()
@@ -91,6 +92,9 @@ class ToolManager:
         """连接 MCP Server 加载工具；失败时降级到本地工具。"""
         from app.mcp_client import MCPClient
 
+        approved = None
+        mcp_tools = []
+        config = getattr(self._registry, "platform_config", None)
         try:
             self._mcp_client = MCPClient(server_url)
             mcp_tools = self._mcp_client.connect()
@@ -103,6 +107,44 @@ class ToolManager:
                 },
             )
 
+            config = getattr(self._registry, "platform_config", None)
+            if config and config.mcp_governance_enabled:
+                from app.platform.connectors import ConnectorRegistry
+
+                registry = ConnectorRegistry(config)
+                from app.services.run_context import current_run
+
+                run = current_run()
+                approved = (
+                    run.snapshot(
+                        "mcp_contract:" + config.mcp_connector_id,
+                        lambda: registry.get(config.mcp_connector_id),
+                    )
+                    if run
+                    else registry.get(config.mcp_connector_id)
+                )
+                if approved["url"] != server_url:
+                    raise ValueError("CONNECTOR_URL_MISMATCH")
+                self._governed_contract = registry.verify(
+                    config.mcp_connector_id, mcp_tools, approved["version"]
+                )
+                policies = self._governed_contract["contract"]["policies"]
+                mcp_tools = [
+                    item
+                    for item in mcp_tools
+                    if policies[item["function"]["name"]]["read_only"]
+                    and policies[item["function"]["name"]]["permission"]
+                    in self._execution_context.permissions
+                ]
+                mcp_tools = json.loads(json.dumps(mcp_tools))
+                for item in mcp_tools:
+                    params = item["function"]["parameters"]
+                    params.get("properties", {}).pop("identity_token", None)
+                    params["required"] = [
+                        key
+                        for key in params.get("required", [])
+                        if key != "identity_token"
+                    ]
             definitions = {item["function"]["name"]: item for item in mcp_tools}
             for td in mcp_tools:
                 name = td["function"]["name"]
@@ -128,6 +170,25 @@ class ToolManager:
                 self._mcp_client.close()
                 self._mcp_client = None
             self._init_local()
+            if config and config.mcp_governance_enabled:
+                policies = (approved or {}).get("contract", {}).get("policies", {})
+                collisions = {
+                    d["function"]["name"] for d in mcp_tools
+                } & self._registry.names
+                blocked = {
+                    name
+                    for name in collisions
+                    if not (
+                        policies.get(name, {}).get("equivalent_local") == name
+                        and policies.get(name, {}).get("data_source")
+                        == "local-commerce"
+                    )
+                }
+                self._tool_defs = [
+                    d for d in self._tool_defs if d["function"]["name"] not in blocked
+                ]
+                for name in blocked:
+                    self._tool_source.pop(name, None)
 
     def _filter_tools(self, allowed: set):
         """只保留白名单中的工具，用于子 Agent 工具隔离。"""
@@ -146,6 +207,12 @@ class ToolManager:
 
     def is_read_only(self, name: str) -> bool:
         """只有显式标记的本地只读工具可由计划执行器自动调用。"""
+        if self._tool_source.get(name) == "mcp" and self._governed_contract:
+            return (
+                self._governed_contract["contract"]["policies"]
+                .get(name, {})
+                .get("read_only", False)
+            )
         return self._tool_source.get(name) == "local" and self._registry.is_read_only(
             name
         )
@@ -156,6 +223,15 @@ class ToolManager:
         remote = None
         if self._tool_source.get(name) == "mcp" and self._mcp_client:
             remote = self._mcp_client.call_tool
+            if self._governed_contract:
+                from app.platform.connectors import GovernedRemote
+
+                remote = GovernedRemote(
+                    self._registry.platform_config,
+                    self._mcp_client,
+                    self._governed_contract,
+                    self._execution_context,
+                )
         return self.execution_service.execute(
             name,
             arguments,

@@ -1,0 +1,25 @@
+{
+  "mode": "local-real-processes-controlled-model",
+  "drills": [
+    {
+      "fault": "worker_killed_after_lease_claim",
+      "injected_at": 1792909467.600769,
+      "detected_at": 1792909467.600937,
+      "recovered_at": 1792909469.648422,
+      "final_status": "completed",
+      "attempts": 2
+    },
+    {
+      "fault": "sqlite_exclusive_lock",
+      "injected_at": 1792909469.6485498,
+      "detected_at": 1792909480.4606478,
+      "recovered_at": 1792909480.714297,
+      "during_fault_http_status": 500,
+      "final_status": "completed",
+      "durable_request_count": 1,
+      "worker_survived": true
+    }
+  ],
+  "redis": "not_applicable_SQL_shared_quota",
+  "provider_timeout_and_duplicate_callback": "covered_by_tests.test_http_commerce_sandbox; see validation report"
+}

@@ -103,10 +103,13 @@ class OpenAIModelGateway:
         rate_limiter: SlidingWindowRateLimiter | None = None,
     ) -> OpenAIModelGateway:
         raw_client = client or OpenAI(
+            max_retries=0,
             api_key=config.openai_api_key,
             base_url=config.openai_base_url,
         )
-        return cls(
+        if isinstance(raw_client, OpenAI):
+            raw_client = raw_client.with_options(max_retries=0)
+        gateway = cls(
             raw_client,
             event_bus=event_bus,
             timeout_seconds=config.model_timeout_seconds,
@@ -116,6 +119,8 @@ class OpenAIModelGateway:
             redactor=redactor,
             rate_limiter=rate_limiter,
         )
+        gateway.platform_config = config
+        return gateway
 
     @property
     def client(self) -> Any:
@@ -131,6 +136,33 @@ class OpenAIModelGateway:
         from app.services.run_context import current_run, decode_model, encode
 
         run = current_run()
+        config = getattr(self, "platform_config", None)
+        if config and config.model_budget_enabled:
+            import json
+
+            from app.platform.budget import ModelCatalog
+
+            estimate = (
+                len(json.dumps([messages, kwargs], ensure_ascii=False).encode())
+                + config.model_max_output_tokens
+            )
+            spec = ModelCatalog(
+                config.model_catalog_snapshot or config.model_catalog_path
+            ).select(
+                purpose,
+                needs_tools=bool(kwargs.get("tools")),
+                structured=response_format is not None,
+                tokens=estimate,
+            )
+            model = spec.model
+            kwargs = {
+                **kwargs,
+                "max_tokens": min(
+                    kwargs.get("max_tokens", config.model_max_output_tokens),
+                    config.model_max_output_tokens,
+                ),
+            }
+            self.timeout_seconds = spec.timeout_seconds
         arguments = dict(model=model, messages=messages, purpose=purpose, **kwargs)
         invoke_args = arguments | (
             {"response_format": response_format} if response_format else {}
@@ -173,6 +205,7 @@ class OpenAIModelGateway:
             model=model,
             purpose=purpose,
             operation_name="complete",
+            request_data=[messages, kwargs],
         )
 
     def _parse(
@@ -195,6 +228,7 @@ class OpenAIModelGateway:
             model=model,
             purpose=purpose,
             operation_name="parse",
+            request_data=[messages, kwargs, response_format.model_json_schema()],
         )
 
     def _invoke(
@@ -204,8 +238,8 @@ class OpenAIModelGateway:
         model: str,
         purpose: str,
         operation_name: str,
+        request_data=None,
     ) -> Any:
-        self.rate_limiter.acquire()
         started = time.perf_counter()
         self.event_bus.emit(
             "llm.started",
@@ -218,8 +252,45 @@ class OpenAIModelGateway:
         )
 
         for attempt in range(self.max_retries + 1):
+            self.rate_limiter.acquire()
+            config = getattr(self, "platform_config", None)
+            budget = None
+            call_id = None
+            if config and config.model_budget_enabled:
+                import json
+
+                from app.platform.budget import ModelCatalog, SharedBudget
+                from app.services.run_context import current_run
+
+                budget = SharedBudget(config)
+                budget.expire()
+                spec = next(
+                    x
+                    for x in ModelCatalog(
+                        config.model_catalog_snapshot or config.model_catalog_path
+                    ).models.values()
+                    if x.model == model
+                )
+                reservation = (
+                    len(json.dumps(request_data or [], ensure_ascii=False).encode())
+                    + config.model_max_output_tokens
+                )
+                run = current_run()
+                call_id = budget.reserve(
+                    user_id=config.memory_user_id,
+                    model=model,
+                    purpose=purpose,
+                    estimated_tokens=reservation,
+                    run_id=run.run_id if run else "",
+                    spec=spec,
+                )
             try:
-                response = operation()
+                from app.platform.telemetry import span
+
+                with span("model.call", model=model, operation=purpose):
+                    response = operation()
+                if budget:
+                    budget.settle(call_id, getattr(response, "usage", None))
                 latency_ms = (time.perf_counter() - started) * 1000
                 usage = getattr(response, "usage", None)
                 self.event_bus.emit(
@@ -254,6 +325,8 @@ class OpenAIModelGateway:
                 )
                 return response
             except Exception as exc:  # noqa: BLE001 - SDK 异常统一处理
+                if budget:
+                    budget.settle(call_id, failed=True)
                 if attempt >= self.max_retries:
                     self.event_bus.emit(
                         "llm.failed",

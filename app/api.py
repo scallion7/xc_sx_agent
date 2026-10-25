@@ -257,6 +257,9 @@ def create_app(
 
         return dependency
 
+    from app.web.platform import register_platform_routes
+
+    register_platform_routes(app, services, require)
     register_run_routes(app, services, require)
     register_action_routes(app, services, require)
     register_public_routes(app, services, require)
@@ -1033,12 +1036,18 @@ def register_admin_routes(
         request: ReviewRequest,
         context: AuthContext = Depends(require("after_sale:review")),
     ) -> dict:
-        return services.after_sale.review_case(
+        if services.config.collaboration_enabled and request.expected_version is None:
+            raise HTTPException(422, detail="expected_version is required")
+        result = services.after_sale.review_case(
             case_id,
             request.decision,
             context.user_id,
             request.note,
+            expected_version=request.expected_version,
         )
+        if result.get("error_code") == "CASE_VERSION_CONFLICT":
+            raise HTTPException(409, detail=result)
+        return result
 
     @app.get("/v1/admin/metrics")
     def metrics(

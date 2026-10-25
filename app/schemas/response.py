@@ -20,6 +20,11 @@ class IntentType(str, Enum):
 class CustomerServiceResponse(BaseModel):
     """客服回复的结构化输出"""
 
+    citations: list[dict] = Field(
+        default_factory=list,
+        description="仅列出工具返回的 release_id/chunk_id/version_id/quote；没有证据时留空",
+    )
+    evidence_state: str = Field(default="not_requested", description="证据状态")
     intent: IntentType = Field(description="识别到的用户意图类型")
     confidence: float = Field(description="意图识别的置信度，0.0-1.0", ge=0.0, le=1.0)
     reply: str = Field(description="给用户的回复内容")

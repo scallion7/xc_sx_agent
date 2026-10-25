@@ -32,6 +32,7 @@ class KnowledgeService:
         reranker: PolicyReranker | None = None,
     ):
         self.config = config
+        self.last_result = None
         self._retriever = retriever
         self._reranker = reranker or PolicyReranker()
         self._lock = threading.Lock()
@@ -100,6 +101,18 @@ class KnowledgeService:
         top_k: int = 3,
         policy_type: str = "",
     ) -> dict:
+        if self.config.knowledge_versioned_enabled:
+            from app.platform.retrieval import HybridRetrieval
+
+            self.last_result = HybridRetrieval(self.config).search(
+                query,
+                top_k=top_k,
+                rerank=self.config.rag_rerank_enabled,
+                context={"policy_type": policy_type} if policy_type else {},
+            )
+
+            return self.last_result
+
         if not query or not query.strip():
             return {
                 "success": False,

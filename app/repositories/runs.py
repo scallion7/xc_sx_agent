@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from app.infrastructure.database import agent_runs_table as runs
 from app.infrastructure.database import get_engine, sessions_table
 from app.infrastructure.database import run_events_table as events
+from app.platform.telemetry import traced
 from app.services.actions import digest
 
 TERMINAL = {"completed", "cancelled", "dead_letter", "needs_reconciliation"}
@@ -74,7 +75,15 @@ class RunRepository:
         } | {"result": row["payload"].get("result"), "last_event_id": row["version"]}
 
     def submit(
-        self, request, user_id, session_key, key, *, max_attempts=3, run_id=None
+        self,
+        request,
+        user_id,
+        session_key,
+        key,
+        *,
+        max_attempts=3,
+        run_id=None,
+        runtime_snapshot=None,
     ):
         if not key or len(key) > 128:
             raise RunError("INVALID_IDEMPOTENCY_KEY")
@@ -98,7 +107,14 @@ class RunRepository:
             error_code="",
             created_at=now,
             updated_at=now,
-            payload_json=json.dumps({"request": request, "calls": {}, "snapshots": {}}),
+            payload_json=json.dumps(
+                {
+                    "request": request,
+                    "calls": {},
+                    "snapshots": {},
+                    "runtime": runtime_snapshot or {},
+                }
+            ),
         )
         try:
             with self.engine.begin() as conn:
@@ -145,6 +161,7 @@ class RunRepository:
             )
         )
 
+    @traced("database.run.checkpoint")
     def change(self, row, changes, event_type, detail=None, *, session=None):
         values = dict(changes)
         if "payload" in values:
@@ -153,6 +170,42 @@ class RunRepository:
             )
         values.update(version=row["version"] + 1, updated_at=self.clock())
         with self.engine.begin() as conn:
+            if values.get("status") == "completed" and row["payload"].get(
+                "runtime", {}
+            ).get("collaboration"):
+                from app.infrastructure.database import platform
+
+                own = platform["conversation_ownership"]
+                tenant = row["payload"]["runtime"]["tenant_id"]
+                criteria = (
+                    own.c.tenant_id == tenant,
+                    own.c.user_id == row["user_id"],
+                    own.c.session_key == row["session_key"],
+                )
+                # Serialize delivery with takeover. Suppress generated external
+                # replies after takeover; preserve only an internal draft in the
+                # protected run payload and do not append it to user history.
+                conn.execute(update(own).where(*criteria).values(version=own.c.version))
+                ownership = (
+                    conn.execute(select(own).where(*criteria)).mappings().first()
+                )
+                if ownership and ownership["state"] == "human_owned":
+                    payload = (
+                        json.loads(values["payload_json"])
+                        if "payload_json" in values
+                        else dict(row["payload"])
+                    )
+                    payload["internal_draft"] = payload.get("result")
+                    result_payload = dict(payload.get("result") or {})
+                    result_payload.update(
+                        reply="",
+                        requires_human=True,
+                        follow_up_question=None,
+                        citations=[],
+                    )
+                    payload["result"] = result_payload
+                    values["payload_json"] = json.dumps(payload, ensure_ascii=False)
+                    session = None
             result = conn.execute(
                 update(runs)
                 .where(

@@ -33,3 +33,7 @@ env/
 
 # 会话持久化文件
 app/sessions/
+
+# Isolated test dependencies and browser artifacts
+.stage-deps/
+test-results/

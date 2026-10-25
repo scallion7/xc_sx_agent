@@ -130,6 +130,11 @@ class RefundWorkflow:
                         .mappings()
                         .first()
                     )
+                    if row and row["status"] in {"processing", "completed"}:
+                        # READ COMMITTED can observe no operation, then the case
+                        # changed by a concurrent enqueue. Restart the transaction
+                        # so its durable idempotency receipt is read first.
+                        raise DeliveryConflict("ENQUEUE_RECEIPT_RACE")
                     if not row or row["status"] != "approved":
                         raise RefundWorkflowError("CASE_NOT_APPROVED")
                     case = AfterSaleCase.from_dict(json.loads(row["payload_json"]))
@@ -152,6 +157,20 @@ class RefundWorkflow:
                             **SqlAfterSaleOperationRepository._values(operation)
                         )
                     )
+                    from app.platform.telemetry import carrier
+
+                    trace_context = carrier()
+                    if trace_context:
+                        from app.platform.common import audit
+
+                        audit(
+                            conn,
+                            "default",
+                            actor,
+                            "refund.trace",
+                            operation.operation_id,
+                            trace_context,
+                        )
                     case.status = "processing"
                     case.add_audit("refund_queued", actor, operation.operation_id)
                     self._save_case(conn, row, case)

@@ -16,7 +16,10 @@ from app.services.refund_workflow import RefundWorkflowError
 
 
 class RefundDeliveryWorker:
-    def __init__(self, workflow, *, owner=None, lease_seconds=30, clock=None):
+    def __init__(
+        self, workflow, *, owner=None, lease_seconds=30, clock=None, config=None
+    ):
+        self.config = config
         self.workflow, self.provider = workflow, workflow.provider
         self.owner = owner or "refund-" + uuid4().hex
         self.lease_seconds = lease_seconds
@@ -28,6 +31,12 @@ class RefundDeliveryWorker:
         claim = self.outbox.claim(self.owner, lease_seconds=self.lease_seconds)
         if claim is None:
             return False
+        from app.platform.telemetry import operation_span
+
+        with operation_span(self.config, claim["aggregate_id"], "refund.dispatch"):
+            return self._dispatch(claim)
+
+    def _dispatch(self, claim):
         try:
             if claim["schema_version"] != 1 or claim["event_type"] != "refund.submit":
                 raise RefundWorkflowError("OUTBOX_SCHEMA_UNSUPPORTED")

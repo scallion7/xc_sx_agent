@@ -47,7 +47,8 @@ class MCPClient:
     async def _run(self, tool_definitions: list[dict], error_holder: list[Exception]):
         """后台协程：建立连接 → 发现工具 → 保持存活等待调用。"""
         try:
-            async with streamable_http_client(self._server_url) as (read, write, _):
+            async with streamable_http_client(self._server_url) as streams:
+                read, write = streams[:2]
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     self._session = session
@@ -62,7 +63,7 @@ class MCPClient:
             error_holder.append(e)
             self._connected.set()
 
-    def call_tool(self, name: str, arguments: dict) -> str:
+    def call_tool(self, name: str, arguments: dict, *, timeout: float = 30) -> str:
         """调用 MCP 工具，返回 JSON 字符串结果。"""
         if not self._session or not self._loop:
             return json.dumps({"error": "MCP 客户端未连接"}, ensure_ascii=False)
@@ -71,9 +72,12 @@ class MCPClient:
             self._session.call_tool(name, arguments), self._loop
         )
         try:
-            result = future.result(timeout=30)
+            result = future.result(timeout=timeout)
         except Exception as e:
-            return json.dumps({"error": f"MCP 工具调用出错: {e}"}, ensure_ascii=False)
+            future.cancel()
+            return json.dumps(
+                {"error": f"MCP 工具调用出错: {type(e).__name__}"}, ensure_ascii=False
+            )
 
         if result.isError:
             text = result.content[0].text if result.content else "未知错误"

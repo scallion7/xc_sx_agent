@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+from contextlib import nullcontext
 from uuid import uuid4
 
 from openai import APIConnectionError, InternalServerError, RateLimitError
@@ -54,8 +55,25 @@ class RunWorker:
         if self.heartbeat:
             thread.start()
         unsubscribe = self.services.runtime.event_bus.subscribe(context.observe)
+        from app.platform.telemetry import telemetry
+
+        tracing = telemetry(self.services.config)
+        carrier = row["payload"].get("runtime", {}).get("trace", {})
+        scope = (
+            tracing.span(
+                "run.execute",
+                carrier=carrier,
+                attributes={
+                    "queue_wait_ms": max(
+                        0, (self.repository.clock() - row["created_at"]) * 1000
+                    )
+                },
+            )
+            if tracing
+            else nullcontext()
+        )
         try:
-            with context:
+            with scope, context:
                 from app.repositories.session import SqlSessionRepository
 
                 SqlSessionRepository(
@@ -91,7 +109,7 @@ class RunWorker:
                         RateLimitError,
                     ),
                 )
-                else "EXECUTION_ERROR",
+                else getattr(exc, "code", "EXECUTION_ERROR"),
             )
         finally:
             stopped.set()

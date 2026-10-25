@@ -5,3 +5,6 @@ __pycache__
 .env
 app/sessions
 .pytest_cache
+.stage-deps
+test-results
+docs/evidence/platform/*.png

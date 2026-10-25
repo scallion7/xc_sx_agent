@@ -4,11 +4,13 @@
 
 项目先完成了从 Prompt、ReAct、Function Calling 到 MCP、RAG、Multi-Agent、Memory、Skills 和 Agent Evaluation 的渐进式教学实现，随后完成面向工程实践的二次开发：把已有能力组合成具备确定性业务流程、持久化、服务接口、安全边界、可观测性和人工协作机制的完整演示系统。
 
-> 当前二次开发进度：第 26 期已实现独立 HTTP 业务沙箱、事务 Outbox/Inbox、
-> 退款结果查询对账、重复/乱序回调处理及独立补偿能力检查。沙箱真实运行 HTTP 与
-> 独立持久化，不接真实资金；验收与启动见
-> [第26期文档](docs/第26期-HTTP业务沙箱与退款对账.md)。本地 280 项测试通过，
-> app 语句覆盖率 80%（未聚合 HTTP 子进程）；PostgreSQL/Compose 待实际运行核验。
+> 当前二次开发进度：第 27–34 期已实现知识导入与发布、中文混合检索、共享模型预算、
+> 配置灰度、客户/人工工作台、W3C Trace、MCP 库存治理及可复现验收工具。
+> [八期实现与启动文档](docs/第27-34期-知识平台与工程交付.md) ·
+> [验收证据](docs/evidence/platform/validation.md) ·
+> [架构决策](docs/ADR-002-知识快照与共享治理.md)。
+> 一键本地演示：`python -m app.scripts.demo_stack --smoke`。
+> 使用受控模型与合成数据；真实模型效果、Docker/PostgreSQL 干净环境验收尚未实跑。
 
 ## 项目定位
 
@@ -417,6 +419,7 @@ ecom-service-agent/
 │   │   │   └── plan_execute.py           # 规划、持久化与结果合成
 │   │   ├── rag/                          # Chunk、Embedding、Retriever、双后端
 │   │   └── memory/                       # 短期和长期记忆
+│   ├── platform/                         # 知识、预算、发布、人工协作、Trace 与连接器治理
 │   ├── api.py                            # REST 与 WebSocket 路由注册
 │   ├── web/                              # Web 请求模型、服务组装、SSE 和静态页
 │   ├── infrastructure/                   # 模型网关、数据库、Alembic 与 SQL 适配器
@@ -444,8 +447,8 @@ ecom-service-agent/
 ├── mcp_server/server.py                  # Streamable HTTP MCP Server
 ├── Dockerfile
 ├── docker-compose.yml                    # API + PostgreSQL
-├── tests/                                # 原有测试及阶段 22–26 治理与真实 HTTP 回归
-└── docs/                                 # 第 1–22 期教学与二次开发文档
+├── tests/                                # 原有测试及阶段 22–34 治理、HTTP/MCP 与浏览器回归
+└── docs/                                 # 第 1–34 期教学、二次开发与验收证据
 ```
 
 ## 快速开始
@@ -879,6 +882,14 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 | 第 24 期 | 工单并发唯一约束与业务幂等 | 已完成 |
 | 第 25 期 | 可恢复的异步 Agent 任务执行 | 已完成 |
 | 第 26 期 | HTTP 业务沙箱、Outbox/Inbox 与退款对账 | 已完成 |
+| 第 27 期 | 知识导入、版本发布与索引生命周期 | 已实现；验收边界见八期文档 |
+| 第 28 期 | 中文混合检索、证据引用与消融评测 | 已实现；验收边界见八期文档 |
+| 第 29 期 | 模型路由、共享配额与调用账本 | 已实现；验收边界见八期文档 |
+| 第 30 期 | 配置评测门禁、灰度与回滚 | 已实现；验收边界见八期文档 |
+| 第 31 期 | 客户界面、人工工作台与接管 | 已实现；验收边界见八期文档 |
+| 第 32 期 | 分布式 Trace、容量与故障演练 | 已实现；验收边界见八期文档 |
+| 第 33 期 | MCP 契约治理与库存沙箱 | 已实现；验收边界见八期文档 |
+| 第 34 期 | 依赖锁、部署、备份恢复与交付证据 | 已实现；验收边界见八期文档 |
 
 ## 相关文档
 
@@ -907,13 +918,17 @@ python app/scripts/run_eval.py --mode multi --output app/sessions/eval_report.js
 - [第24期：工单并发唯一约束与业务幂等](docs/第24期-工单并发唯一约束与业务幂等.md)
 - [第25期：可恢复的异步 Agent 任务执行](docs/第25期-可恢复的异步Agent任务执行.md)
 - [第26期：HTTP 业务沙箱与退款对账](docs/第26期-HTTP业务沙箱与退款对账.md)
+- [第27–34期：知识平台与工程交付](docs/第27-34期-知识平台与工程交付.md)
+- [架构决策：知识快照与共享治理](docs/ADR-002-知识快照与共享治理.md)
 - [生产配置检查清单](docs/生产配置检查清单.md)
 
 ## 后续路线
 
-第 23–26 期已完成可信确认、工单并发创建约束、可恢复异步任务，以及 HTTP
-沙箱、Outbox/Inbox 与退款对账。第 27 期按原路线推进知识导入、版本发布与索引
-生命周期。第 25 期历史未知工具写仍不会自动重放；本期仍未引入 tenant_id。
+第 23–34 期已完成可信确认、可恢复业务执行、知识版本治理、模型预算、配置发布、
+人工协作、可观测性和 MCP 治理的代码与本地验收。后续重点是独立人工复核数据集、
+有预算的真实模型评测，以及 Docker/PostgreSQL 干净环境演练。新增平台表有租户
+作用域，旧订单/售后业务表仍需部署隔离，不宣称整个系统已支持共享数据库 SaaS。
+第 25 期历史未知工具写仍不会自动重放。
 
 阶段 22 的历史交付包含四个工作包：
 

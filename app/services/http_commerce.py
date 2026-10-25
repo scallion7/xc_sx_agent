@@ -18,6 +18,19 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 def http_json(url, *, method="GET", payload=None, headers=None, timeout=5):
+    from app.platform.telemetry import carrier, span
+
+    with span("provider.http", provider="commerce-sandbox", operation=method):
+        return _http_json(
+            url,
+            method=method,
+            payload=payload,
+            headers={**carrier(), **(headers or {})},
+            timeout=timeout,
+        )
+
+
+def _http_json(url, *, method="GET", payload=None, headers=None, timeout=5):
     request = Request(
         url,
         data=json.dumps(payload, ensure_ascii=False).encode()

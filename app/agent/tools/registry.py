@@ -268,6 +268,16 @@ def create_default_tool_registry(
         ttl_seconds=runtime_config.action_confirmation_ttl_seconds,
     )
 
+    registry.platform_config = runtime_config
+    registry.knowledge_service = knowledge
+    if runtime_config.collaboration_enabled:
+        from app.platform.collaboration import Collaboration
+
+        ownership = Collaboration(runtime_config)
+        registry.action_service.claim_guard = lambda conn, row: ownership.guard_agent(
+            conn, row["user_id"], row["session_id"]
+        )
+
     def business_snapshot(name, arguments, context):
         if name not in {
             "create_after_sale_case",

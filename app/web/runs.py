@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 
 from app.repositories.runs import TERMINAL, RunError, RunRepository
 from app.web.schemas import ChatRequest
-from app.web.services import session_reference
+from app.web.services import runtime_snapshot, session_reference
 
 
 def register_run_routes(app, services, require):
@@ -48,6 +48,11 @@ def register_run_routes(app, services, require):
                 session_reference(services, context, request.session_id),
                 idempotency_key,
                 max_attempts=services.config.run_max_attempts,
+                runtime_snapshot=runtime_snapshot(
+                    services,
+                    context.user_id,
+                    session_reference(services, context, request.session_id),
+                ),
             )
             return repo.public(row)
         except RunError as exc:

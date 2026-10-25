@@ -1,0 +1,16 @@
+{
+  "capacity-and-restore.json": "8b2c041e412833735d9f5f12418d324628e6850a4e024b5397a6bfb17e31b2d4",
+  "configuration-publish.log": "06b3bca190d7496af5f7d09fff1fcbfc3eb402a5a027420693d67e8fcf702e77",
+  "customer-demo.webm": "63fed8e822c208ae3f2fa8a0a935f28561cb345ef9ba202acd35852a6452a7f2",
+  "evaluation.json": "e4c69045c7266aa1ceade0906bb6752dc180d3fa1c0212f657759a43350ab64b",
+  "evaluation.raw.json.gz": "38bd4c4a46810899f0b606a4591a98c9c9dcb513b8e8d6c4eb03211f5f506507",
+  "failure-drills.json": "3e7af8bfa7c8b70ff5c79341f4955ab90642754540844d950e47dc721846db13",
+  "migration-smoke.log": "8ebaf2f05649972fc6e7df6331ed8c799af35327ba876fd5cfad6fca3d64c844",
+  "openapi.json": "5a2d9662631ef5942be2ffbfa33d4ea3f2e3e6bd4e3279f578e679741f7393ea",
+  "operator-demo.webm": "bf32e7fd19227b5b757c0981a2df6462306bf4767cb622440e26dbfcf9e0c73e",
+  "plan-quality.log": "f0e234ebd1f0346037eaeee3826231c8398ff6e5fb9c5463e9f40f224b134176",
+  "unittest.log": "0db0cd1f06b9259e90a1e8480b9a999c88be68db31aa7eee4410bc68b54db2b0",
+  "validation.md": "4add888ebe62fe3b522d2525ec5909eb3b943f5e6ffbecf84a46c6c3867cbaa5",
+  "workbench.png": "0bbb946846692cfd427cc3aa6ea50909929da5a8cd7059f3c052bdb024d78ba2",
+  "workspace.png": "d2f3c8f427c1870580648fef30eead7cb804f69309a5ee38f477a8450001df0e"
+}

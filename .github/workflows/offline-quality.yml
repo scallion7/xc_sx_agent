@@ -77,6 +77,11 @@ jobs:
           DATABASE_URL: ${{ matrix.database }}
           DATABASE_AUTO_CREATE: "false"
         run: python -m app.scripts.database_smoke
+      - name: Platform SQL contracts
+        env:
+          DATABASE_URL: ${{ matrix.database }}
+          DATABASE_AUTO_CREATE: "false"
+        run: python -m app.scripts.platform_smoke
       - name: Reversible downgrade and re-upgrade
         env:
           DATABASE_URL: ${{ matrix.database }}
@@ -109,3 +114,21 @@ jobs:
           output: trivy-results.json
           exit-code: "0"
       - run: python -m app.scripts.validate_trivy_report trivy-results.json
+
+  platform-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements-lock.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: RUN_BROWSER_E2E=1 python -m unittest tests.test_platform_http
+      - run: python -m app.scripts.benchmark_platform --output test-results/capacity.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: platform-acceptance
+          path: test-results/

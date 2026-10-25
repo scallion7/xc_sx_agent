@@ -1,0 +1,7 @@
+{
+  "models": {
+    "small": {"model":"demo-small","tools":true,"structured":true,"context_tokens":32768,"timeout_seconds":30,"input_per_million":"0","output_per_million":"0","price_version":"offline-demo-zero-v1","currency":"USD"},
+    "planner": {"model":"demo-planner","tools":true,"structured":true,"context_tokens":65536,"timeout_seconds":60,"input_per_million":"0","output_per_million":"0","price_version":"offline-demo-zero-v1","currency":"USD"}
+  },
+  "routes": {"default":["small","planner"],"plan":["planner"],"router":["small"],"extract":["small"]}
+}

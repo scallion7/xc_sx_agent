@@ -9,6 +9,7 @@ from time import monotonic
 
 from pydantic import ValidationError
 
+from app.platform.common import PlatformError
 from app.services.actions import ActionError, digest
 
 
@@ -43,13 +44,22 @@ class ToolExecutionService:
         return parsed
 
     def execute(self, name, arguments, context, **kwargs):
+        from app.platform.telemetry import span
+
+        with span("tool.execute", operation=name):
+            return self._execute_traced(name, arguments, context, **kwargs)
+
+    def _execute_traced(self, name, arguments, context, **kwargs):
         from app.services.run_context import current_run
 
         run = current_run()
         if run is None:
             return self._execute_logged(name, arguments, context, **kwargs)
         return run.call(
-            "read" if self.registry.is_read_only(name) else "write",
+            "read"
+            if self.registry.is_read_only(name)
+            or getattr(kwargs.get("remote"), "governed", False)
+            else "write",
             name,
             {
                 "arguments": arguments,
@@ -100,7 +110,7 @@ class ToolExecutionService:
                 prepare_only=prepare_only,
                 action_id=action_id,
             )
-        except ActionError as exc:
+        except (ActionError, PlatformError) as exc:
             result = {"success": False, "error_code": exc.code, "error": str(exc)}
         except Exception:
             result = {
@@ -179,6 +189,8 @@ class ToolExecutionService:
         if required and required not in context.permissions:
             raise ActionError("PERMISSION_DENIED", f"无权执行工具 {name}")
         if remote is not None:
+            if getattr(remote, "governed", False):
+                return json.loads(remote(name, arguments))
             if name not in self.registry.names or not self.registry.is_read_only(name):
                 raise ActionError(
                     "REMOTE_TOOL_UNGOVERNED", "远端工具需注册本地契约与执行适配器"
@@ -189,6 +201,20 @@ class ToolExecutionService:
                 raise ActionError("INVALID_TOOL_OUTPUT", "远端工具返回结果必须是对象")
             return output
         parsed = self._arguments(name, arguments)
+        platform_config = getattr(self.registry, "platform_config", None)
+        if (
+            platform_config
+            and platform_config.collaboration_enabled
+            and not self.registry.is_read_only(name)
+        ):
+            from app.platform.collaboration import Collaboration
+
+            ownership = Collaboration(platform_config)
+            state = ownership.ensure(context.user_id, context.session_id)
+            if state["state"] == "human_owned":
+                raise ActionError(
+                    "SESSION_HUMAN_OWNED", "会话已由人工接管，自动业务写已暂停"
+                )
         if self.registry.is_read_only(name):
             raw = self.registry.execute(name, parsed, context)
             return json.loads(raw)

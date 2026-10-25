@@ -1,0 +1,1272 @@
+[
+  {
+    "id": "r-0-0",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-1",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请怎么办",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-2",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请请说明",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-3",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请适用规则",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-4",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请条件",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-5",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-6",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请怎么办",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-7",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请请说明",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-8",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请适用规则",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-0-9",
+    "family": "returns",
+    "order_family": "retrieval-returns",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "七天退货支持申请条件",
+    "gold_documents": [
+      "returns"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-0",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-1",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达怎么办",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-2",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达请说明",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-3",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达适用规则",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-4",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达条件",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-5",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-6",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达怎么办",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-7",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达请说明",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-8",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达适用规则",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-1-9",
+    "family": "shipping",
+    "order_family": "retrieval-shipping",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "快递配送三天送达条件",
+    "gold_documents": [
+      "shipping"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-0",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-1",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年怎么办",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-2",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年请说明",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-3",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年适用规则",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-4",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年条件",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-5",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-6",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年怎么办",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-7",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年请说明",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-8",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年适用规则",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-2-9",
+    "family": "member",
+    "order_family": "retrieval-member",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "会员积分有效一年条件",
+    "gold_documents": [
+      "member"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-0",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-1",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年怎么办",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-2",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年请说明",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-3",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年适用规则",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-4",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年条件",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-5",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-6",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年怎么办",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-7",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年请说明",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-8",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年适用规则",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-3-9",
+    "family": "warranty",
+    "order_family": "retrieval-warranty",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "耳机保修服务一年条件",
+    "gold_documents": [
+      "warranty"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-0",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-1",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具怎么办",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-2",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具请说明",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-3",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具适用规则",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-4",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具条件",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-5",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-6",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具怎么办",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-7",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具请说明",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-8",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具适用规则",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-4-9",
+    "family": "invoice",
+    "order_family": "retrieval-invoice",
+    "split": "development",
+    "review_status": "synthetic_unreviewed",
+    "query": "电子发票申请开具条件",
+    "gold_documents": [
+      "invoice"
+    ],
+    "outcome": "answerable",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-0",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-1",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止怎么办",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-2",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止请说明",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-3",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止适用规则",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-4",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止条件",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-5",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-6",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止怎么办",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-7",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止请说明",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-8",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止适用规则",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-5-9",
+    "family": "expiry",
+    "order_family": "retrieval-expiry",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "过期活动已停止条件",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-0",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-1",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用怎么办",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-2",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用请说明",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-3",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用适用规则",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-4",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用条件",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-5",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-6",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用怎么办",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-7",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用请说明",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-8",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用适用规则",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-6-9",
+    "family": "region",
+    "order_family": "retrieval-region",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "区域补贴仅上海适用条件",
+    "gold_documents": [
+      "region"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-0",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-1",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动怎么办",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-2",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动请说明",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-3",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动适用规则",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-4",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动条件",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-5",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-6",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动怎么办",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-7",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动请说明",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-8",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动适用规则",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-7-9",
+    "family": "channel",
+    "order_family": "retrieval-channel",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "商城渠道优惠活动条件",
+    "gold_documents": [
+      "channel"
+    ],
+    "outcome": "needs_clarification",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-0",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-1",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策怎么办",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-2",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策请说明",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-3",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策适用规则",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-4",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策条件",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-5",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-6",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策怎么办",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-7",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策请说明",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-8",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策适用规则",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-8-9",
+    "family": "conflict",
+    "order_family": "retrieval-conflict",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "产品售后争议政策条件",
+    "gold_documents": [
+      "conflict",
+      "conflict-deny"
+    ],
+    "outcome": "policy_conflict",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-0",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-1",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在怎么办",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-2",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在请说明",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-3",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在适用规则",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-4",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在条件",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-5",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-6",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在怎么办",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-7",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在请说明",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-8",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在适用规则",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  },
+  {
+    "id": "r-9-9",
+    "family": "unknown",
+    "order_family": "retrieval-unknown",
+    "split": "holdout",
+    "review_status": "synthetic_unreviewed",
+    "query": "火星信号不存在条件",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "day": "2026-10-25"
+  }
+]

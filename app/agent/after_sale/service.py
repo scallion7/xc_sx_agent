@@ -288,10 +288,17 @@ class AfterSaleService:
         decision: str,
         reviewer: str,
         note: str = "",
+        expected_version: int | None = None,
     ) -> dict:
         case = self.repository.get(case_id)
         if not case:
             return {"success": False, "error": f"未找到售后工单 {case_id}"}
+        if expected_version is not None and case.version != expected_version:
+            return {
+                "success": False,
+                "error_code": "CASE_VERSION_CONFLICT",
+                "error": "工单已更新，请刷新后审批",
+            }
         if case.status != CaseStatus.PENDING_REVIEW.value:
             return {"success": False, "error": f"工单当前状态 {case.status} 不允许审批"}
         if decision not in {"approve", "reject"}:

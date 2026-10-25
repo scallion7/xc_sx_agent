@@ -202,7 +202,9 @@ class BaseConversationAgent(ABC):
             user_id=self.config.memory_user_id,
             role="agent",
             session_id=self.session_path,
-            permissions=frozenset({"refund:execute", "after_sale:execute"}),
+            permissions=frozenset(
+                {"refund:execute", "after_sale:execute", "inventory:read"}
+            ),
         )
 
         self.raw_messages: list[dict] = []
@@ -613,7 +615,7 @@ class BaseConversationAgent(ABC):
         )
 
     def _build_messages(self, system_prompt: str) -> list[dict]:
-        system_content = system_prompt
+        system_content = self.config.system_prompt_override or system_prompt
         if self.skill_manager.enabled:
             system_content += self.skill_manager.build_catalog_prompt()
 
@@ -641,6 +643,35 @@ class BaseConversationAgent(ABC):
     ) -> CustomerServiceResponse:
         safe_text = self.guardrails.redact(final_text)
         result = self._extract_structured_response(safe_text)
+        if self.config.knowledge_versioned_enabled:
+            from app.platform.common import PlatformError
+            from app.platform.retrieval import HybridRetrieval
+
+            knowledge = getattr(self.tool_registry, "knowledge_service", None)
+            evidence = getattr(knowledge, "last_result", None)
+            if evidence:
+                result.citations = evidence["citations"]
+                result.evidence_state = evidence["outcome"]
+                if evidence["outcome"] != "answerable":
+                    result.requires_human = True
+                    result.reply = {
+                        "no_evidence": "未找到适用政策证据，请人工核实。",
+                        "needs_clarification": "请补充适用地域、渠道或商品信息后再核实政策。",
+                        "policy_conflict": "政策证据存在冲突，已建议转人工核实。",
+                    }[evidence["outcome"]]
+                knowledge.last_result = None
+            try:
+                for citation in result.citations:
+                    HybridRetrieval(self.config).validate_citations(
+                        citation.get("release_id", ""), [citation]
+                    )
+            except PlatformError:
+                result.citations = []
+                result.evidence_state = "invalid_evidence"
+                result.requires_human = True
+                result.reply = "引用的政策证据已失效，请重新检索或转人工核实。"
+        else:
+            result.citations = []
         result.reply = self.guardrails.redact(result.reply)
         if result.follow_up_question:
             result.follow_up_question = self.guardrails.redact(

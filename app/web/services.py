@@ -187,6 +187,31 @@ def _invoke_chat(
         agent_config.plan_worker_id = f"{durable.run_id}:{durable.fence}"
         agent_config.model_max_retries = 0
     session_ref = session_reference(services, context, request.session_id)
+    snapshot = (
+        durable.check()["payload"].get("runtime", {})
+        if durable
+        else runtime_snapshot(services, context.user_id, session_ref)
+    )
+    selected = snapshot.get("configuration")
+    after_sale = services.after_sale
+    if selected:
+        manifest = selected["manifest"]
+
+        from app.platform.common import PlatformError
+        from app.platform.releases import pinned_after_sale, tool_schema_hash
+
+        if tool_schema_hash() != manifest["tool_schema_hash"]:
+            raise PlatformError("TOOL_CONFIGURATION_HASH_MISMATCH")
+        agent_config.model_catalog_snapshot = manifest["model_catalog"]
+        agent_config.model_budget_enabled = True
+        after_sale = pinned_after_sale(services.after_sale, manifest)
+        agent_config.knowledge_versioned_enabled = True
+        agent_config.knowledge_release_id = manifest["knowledge_release_id"]
+        agent_config.prompt_version = manifest["prompt_version"]
+        agent_config.system_prompt_override = manifest["prompt"]
+        request = request.model_copy(
+            update={"strategy": manifest["strategy"], "mode": manifest["mode"]}
+        )
 
     with TraceContext(
         trace_id,
@@ -202,7 +227,7 @@ def _invoke_chat(
             strategy=request.strategy,
             circuit_breakers=services.runtime.circuit_breakers,
             commerce_service=services.commerce,
-            after_sale_service=services.after_sale,
+            after_sale_service=after_sale,
         )
         try:
             return agent.chat(request.message)
@@ -232,6 +257,29 @@ def load_regression_summary(report_path: str | Path) -> dict[str, Any]:
     }
 
 
+def runtime_snapshot(services, user_id, session_key):
+    from app.platform.telemetry import carrier
+
+    snapshot = {
+        "tenant_id": services.config.tenant_id,
+        "trace": carrier(),
+        "collaboration": services.config.collaboration_enabled,
+    }
+    if services.config.collaboration_enabled:
+        from app.platform.collaboration import Collaboration
+
+        Collaboration(services.config).ensure(user_id, session_key)
+    if services.config.configuration_releases_enabled:
+        from app.platform.releases import ConfigurationReleases
+
+        selected = ConfigurationReleases(services.config).assign(user_id, session_key)
+        snapshot["configuration"] = {
+            "release_id": selected["release_id"],
+            "manifest": selected["manifest"],
+        }
+    return snapshot
+
+
 def invoke_chat(services, request, context, trace_id):
     """Compatibility adapter: SQL chat uses the same queue and execution journal."""
     if services.config.persistence_backend != "sql":
@@ -248,6 +296,11 @@ def invoke_chat(services, request, context, trace_id):
             trace_id,
             max_attempts=services.config.run_max_attempts,
             run_id=trace_id,
+            runtime_snapshot=runtime_snapshot(
+                services,
+                context.user_id,
+                session_reference(services, context, request.session_id),
+            ),
         )
     except RunError as exc:
         raise HTTPException(409, detail={"error_code": exc.code}) from exc
