@@ -31,6 +31,7 @@ def main():
         ],
         [sys.executable, "-m", "coverage", "report", "--fail-under=65"],
         [sys.executable, "-m", "app.scripts.validate_openapi"],
+        [sys.executable, "-m", "app.scripts.validate_docs"],
         [sys.executable, "-m", "app.scripts.validate_plan_quality"],
     ]
     if args.database:

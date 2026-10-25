@@ -26,7 +26,9 @@ INTENT_LABELS = {
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="并夕夕智能客服 Agent")
+    parser = argparse.ArgumentParser(
+        description="Ecom Service Agent · 电商售后智能体平台"
+    )
     parser.add_argument(
         "--mode",
         choices=("auto", "single", "multi"),
@@ -84,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = "Multi-Agent 协作模式" if resolved_mode == "multi" else "ReAct + MCP + RAG"
 
     print("=" * 50)
-    print(f"  并夕夕 · 智能客服「小夕」({mode})")
+    print(f"  Ecom Service Agent · 客户服务({mode})")
     print("  支持工具调用 + 政策检索 + 用户记忆 + 技能编排")
     print(
         "  输入 quit/exit 退出, reset 重置, memory 查看记忆, "
@@ -165,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
             response = agent.chat(user_input)
 
             # 打印客服回复
-            print(f"\n🤖 小夕: {response.reply}")
+            print(f"\n🤖 客服助手: {response.reply}")
 
             # 打印结构化元信息
             intent_label = INTENT_LABELS.get(response.intent, response.intent)

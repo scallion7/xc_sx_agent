@@ -1,0 +1,18 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+Building prefix dict from the default dictionary ...
+DEBUG [jieba] Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+DEBUG [jieba] Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+Loading model cost 0.180 seconds.
+DEBUG [jieba] Loading model cost 0.180 seconds.
+Prefix dict has been built successfully.
+DEBUG [jieba] Prefix dict has been built successfully.
+{"workspace": "http://127.0.0.1:56136/workspace", "workbench": "http://127.0.0.1:56136/workbench", "user_token": "demo-user", "admin_token": "demo-admin"}
+{"run_id": "e36feb83cd914de0b9bb05569a352521", "status": "completed", "attempt": 1, "max_attempts": 3, "execution_version": 1, "cancel_state": "none", "error_code": "", "created_at": 1792918145.4493089, "updated_at": 1792918146.340578, "next_retry_at": 1792918145.4493089, "result": {"citations": [{"chunk_id": "93ddedb7f5c5a623280ee0fd8df7ce92c88bb937f803c06de63f3eff5ee99128", "version_id": "4711554cbf8a90fb0914cd292f67929ff6a6d5ad7cb82a146e910c7e428ad0d0", "release_id": "277f130b6ced456aa0e51d3a27af5f8d", "quote": "七天退货支持申请", "page": 1, "start": 0, "end": 8}], "evidence_state": "answerable", "intent": "greeting", "confidence": 1.0, "reply": "您好，这是受控离线模型的演示回复。", "requires_human": false, "follow_up_question": null}, "last_event_id": 16}

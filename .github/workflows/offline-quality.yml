@@ -27,6 +27,7 @@ jobs:
       - run: coverage run -m unittest discover -s tests -v
       - run: coverage report --fail-under=65
       - run: python -m app.scripts.validate_openapi
+      - run: python -m app.scripts.validate_docs
       - run: python -m app.scripts.validate_plan_quality
       - run: python -m app.scripts.benchmark_plan
       - run: test -f 'docs/第22期-计划执行治理与工程化闭环.md'
@@ -105,12 +106,12 @@ jobs:
       - run: cyclonedx-py requirements requirements-lock.txt --output-file sbom.json
       - uses: actions/upload-artifact@v4
         with:
-          name: stage22-sbom
+          name: dependency-sbom
           path: sbom.json
-      - run: docker build -t xc-sx-agent:stage22 .
+      - run: docker build -t ecom-service-agent:ci .
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: xc-sx-agent:stage22
+          image-ref: ecom-service-agent:ci
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           format: json

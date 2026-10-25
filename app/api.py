@@ -225,7 +225,7 @@ def create_app(
         commerce_service=commerce_service,
         auth_provider=auth_provider,
     )
-    app = FastAPI(title="小夕智能客服 API", version="2.0.0")
+    app = FastAPI(title="Ecom Service Agent API", version="2.0.0")
     install_api_middleware(app, services.config)
     from app.repositories.runs import RunError
 

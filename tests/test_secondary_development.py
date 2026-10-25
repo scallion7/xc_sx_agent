@@ -600,7 +600,7 @@ class ApiTests(unittest.TestCase):
             0,
         )
         self.assertIn(
-            "小夕客服管理台",
+            "Ecom Service Agent · 运行管理台",
             self.client.get("/admin").text,
         )
         orders = self.client.get(

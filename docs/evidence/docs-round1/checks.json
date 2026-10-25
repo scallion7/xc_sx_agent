@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-25",
+  "base_commit": "7d720b6cba0a86663524aeae3a5934dd7d9a3b4c",
+  "scope": "documentation and display naming",
+  "targeted_tests": {
+    "count": 30,
+    "seconds": 11.58,
+    "passed": true,
+    "includes_chromium": true
+  },
+  "openapi": {
+    "paths": 81,
+    "title": "Ecom Service Agent API",
+    "version": "2.0.0"
+  },
+  "demo_cli_smoke": "passed",
+  "migration_drift_smoke": "passed",
+  "prior_evidence_unchanged": true,
+  "screenshots": {
+    "workspace.png": "36e3c40ec1902e3f18d50abd0b2e2e68b555831e5db37c57feeb253e9f130e46",
+    "workbench.png": "9c0d831129fd66ed9e41faf4838b238ff70fbcd7afbcd051fe900336c8b47006"
+  }
+}
