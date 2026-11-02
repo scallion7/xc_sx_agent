@@ -13,6 +13,19 @@ python -m app.scripts.review_evaluation --review-template --output test-results/
 
 第一条只比较 development 上的 vector、BM25、hybrid、rerank；其中 vector 仍为本地哈希投影。查看[本轮原始结果](../evidence/reliability/offline-development.json)，包括逐题结果、Recall/MRR/排序指标和拒答状态。不要仅摘录最好模式或将其叫作真实模型准确率。第二条创建待填写材料，拒绝覆盖已有文件。
 
+## 本次开发集诊断结果
+
+16 题使用初始待复核标签；Recall 仅对有 gold 的题求平均，MRR 按现有脚本口径包含无证据题。
+
+| 模式 | Recall@K | MRR | 状态判断准确率 | 引用正确率 |
+|---|---:|---:|---:|---:|
+| 本地哈希向量 | 42.9% | 0.375 | 50.0% | 50.0% |
+| BM25 | 42.9% | 0.375 | 50.0% | 50.0% |
+| Hybrid | 42.9% | 0.375 | 50.0% | 50.0% |
+| Hybrid + rerank | 42.9% | 0.375 | 50.0% | 50.0% |
+
+此数据未显示混合检索增益，也不支持“检索质量已达标”的结论。后续先复核 gold、适用性条件和拒答原因，再只使用 development 诊断分词、过滤与排序；保留集维持冻结。真实语义模型效果仍未验证。
+
 ## 人工复核步骤
 
 1. 将 cases.json 的题目与 documents.json 对照，独立判断用户约束（地域、渠道、商品、时效）是否明确。先判断再看原始建议标签，避免锚定。

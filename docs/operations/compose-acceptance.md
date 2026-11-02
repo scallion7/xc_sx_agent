@@ -23,4 +23,4 @@ python -m app.scripts.accept_deployment --output test-results/deployment.json
 
 这覆盖停写后的逻辑快照恢复，不覆盖生产持续写入、跨机时钟/网络、真实支付系统、时间点恢复或灾难恢复 SLA。恢复应用备份后仍需按原业务键核对外部效果；不得通过回滚本地账本再次发起已发生的退款。
 
-CI 显式配置 [PostgreSQL 官方 PGDG 源](https://www.postgresql.org/download/linux/ubuntu/) 安装 17 客户端，避免使用 Ubuntu 默认仓库中的不同主版本。
+CI 通过 `container_pg_client` 适配器调用同一 `postgres:17-alpine` 镜像中的真实 pg_dump/pg_restore，以只读挂载临时 passfile 传递密码，使用当前 UID 写备份；不额外依赖发行版软件源。本地 Linux/macOS 原生运行时仍可安装 17 客户端，Ubuntu 安装方式见 [PostgreSQL 官方说明](https://www.postgresql.org/download/linux/ubuntu/)。

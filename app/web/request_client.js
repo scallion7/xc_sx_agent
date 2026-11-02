@@ -5,8 +5,8 @@ export class RequestClient {
     this.inflight = new Map();
   }
 
-  async scopeKey(scope) {
-    const bytes = new TextEncoder().encode(this.token());
+  async scopeKey(scope, token = this.token()) {
+    const bytes = new TextEncoder().encode(token);
     const digest = await crypto.subtle.digest('SHA-256', bytes);
     const identity = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
     return `ecom:${identity}:${scope}`;
@@ -31,9 +31,8 @@ export class RequestClient {
     return data;
   }
 
-  async write(path, body, scope) {
-    const token = this.token();
-    const slot = await this.scopeKey(`pending:${scope}:${path}`);
+  async write(path, body, scope, token = this.token()) {
+    const slot = await this.scopeKey(`pending:${scope}:${path}`, token);
     const payload = JSON.stringify(body);
     const current = this.inflight.get(slot);
     if (current) {

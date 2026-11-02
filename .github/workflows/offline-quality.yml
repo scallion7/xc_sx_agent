@@ -144,16 +144,17 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: python -m pip install -r requirements-lock.txt
-      - name: PostgreSQL 17 recovery client
+      - name: Matching PostgreSQL 17 clients from the database image
         run: |
-          # PGDG provides the matching client; Ubuntu's default repository may only ship 16.
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
-          . /etc/os-release
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client-17
-          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+          mkdir -p "$RUNNER_TEMP/pg-clients"
+          for tool in pg_dump pg_restore; do
+            cat > "$RUNNER_TEMP/pg-clients/$tool" <<EOF
+          #!/usr/bin/env bash
+          exec python -m app.scripts.container_pg_client $tool "\$@"
+          EOF
+            chmod 700 "$RUNNER_TEMP/pg-clients/$tool"
+          done
+          echo "$RUNNER_TEMP/pg-clients" >> "$GITHUB_PATH"
       - name: Full isolated deployment and recovery
         run: python -m app.scripts.accept_deployment --output test-results/deployment.json
       - uses: actions/upload-artifact@v4

@@ -134,8 +134,11 @@ async function watch() {
   const watchedRun = runId;
   if (!watchedRun) return;
   const token = $('token').value;
-  const slot = await runSlot();
+  const sessionId = $('session').value;
+  const slot = await client.scopeKey('run:' + sessionId, token);
+  if (token !== $('token').value || sessionId !== $('session').value) return;
   const complete = await stream.watch(watchedRun, token, slot + ':cursor:' + watchedRun, event => {
+    if (token !== $('token').value || sessionId !== $('session').value) return;
     $('events').textContent += event.event_type + '\n';
     status('执行进度：' + event.event_type);
   });
@@ -161,13 +164,14 @@ $('send').onclick = handle(async () => {
   if ($('send').disabled) return;
   const text = $('message').value;
   const sessionId = $('session').value;
+  const token = $('token').value;
   $('send').disabled = true;
   try {
-    const slot = await runSlot();
+    const slot = await client.scopeKey('run:' + sessionId, token);
     const result = await client.write('/v1/runs', {
       message: text,
       session_id: sessionId
-    }, sessionId);
+    }, sessionId, token);
     sessionStorage.setItem(slot, result.run_id);
     if (slot !== await runSlot()) return;
     bubble('你：' + text);
