@@ -2,8 +2,10 @@
 
 from copy import deepcopy
 
-from app.platform.common import PlatformError
+from app.platform.common import PlatformError, encode
 from app.platform.evaluation import AgentEvaluationRunner
+from app.platform.releases import RELEASE, ConfigurationReleases
+from sqlalchemy import update
 
 from tests import test_platform_governance as governance
 from tests.test_knowledge_platform import PlatformTestCase
@@ -72,3 +74,33 @@ class EvidenceGateTests(PlatformTestCase):
         self.assertFalse(result["passed"])
         self.assertEqual(result["cases"][0]["id"], "gate-a")
         self.assertFalse(result["cases"][0]["passed"])
+
+    def test_deploy_rechecks_historical_reports_and_production_review(self):
+        row = self.setup_release()
+        report = release_report(row)
+        self.releases.evaluate(row["release_id"], report, "admin")
+        for change in (
+            {"complete": False},
+            {"manifest_hash": "wrong"},
+            {"dataset_hash": "wrong"},
+        ):
+            with self.releases.engine.begin() as conn:
+                conn.execute(
+                    update(RELEASE)
+                    .where(RELEASE.c.release_id == row["release_id"])
+                    .values(evaluation_json=encode(report | change))
+                )
+            with self.assertRaisesRegex(PlatformError, "EVALUATION_GATE_FAILED"):
+                self.releases.deploy(row["release_id"], 0, "admin")
+            self.assertEqual(self.releases.head()["active_id"], "")
+        with self.releases.engine.begin() as conn:
+            conn.execute(
+                update(RELEASE)
+                .where(RELEASE.c.release_id == row["release_id"])
+                .values(evaluation_json=encode(report))
+            )
+        production = ConfigurationReleases(
+            self.config.model_copy(update={"environment": "production"})
+        )
+        with self.assertRaisesRegex(PlatformError, "LIVE_REVIEW_REQUIRED"):
+            production.deploy(row["release_id"], 0, "admin")

@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import httpx
 from app.config.settings import Settings
+from app.infrastructure.database import configure_database
 from app.infrastructure.migrations.runtime import upgrade_database
 from app.mcp_client import MCPClient
 from app.platform.connector_delivery import InventoryDelivery
@@ -248,6 +249,7 @@ class Acceptance:
     def execute(self, report):
         assert not self.compose("ps", "-aq", capture=True).strip()
         self.compose("up", "-d", "--wait", "postgres")
+        configure_database(SOURCE, auto_create=False)
         upgrade_database(SOURCE, "20261023_0005")
         proposal = ActionService(SOURCE).propose(
             "upgrade-user", "upgrade-session", "upgrade-probe", {"value": 1}, "v1"

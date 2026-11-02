@@ -157,6 +157,11 @@ class ConfigurationReleases:
                 raise PlatformError("CONFIGURATION_NOT_EVALUATED")
             # Historical releases remain readable, but every new deployment needs complete evidence.
             validate_release_report(release["evaluation"], release["manifest"])
+            if self.config.environment == "production" and (
+                release["evaluation"].get("execution_mode") != "live"
+                or release["evaluation"].get("review_status") != "human_reviewed"
+            ):
+                raise PlatformError("LIVE_REVIEW_REQUIRED")
             current = (
                 conn.execute(select(HEAD).where(HEAD.c.tenant_id == self.tenant))
                 .mappings()

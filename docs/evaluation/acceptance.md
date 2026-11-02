@@ -4,7 +4,7 @@
 
 ## 当前可靠性改进
 
-本地 Python 3.11、锁定依赖、Chromium：**369 项测试通过，无跳过，58.585 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
+本地 Python 3.11、锁定依赖、Chromium：**370 项测试通过，无跳过，58.273 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
 
 - [容量门禁](../evidence/reliability/capacity.json)：1/10/50 并发共 61 请求成功；零错误、Worker 正常退出、恢复指纹匹配。P95 只作本机测量，未设生产延迟 SLA。
 - [故障演练](../evidence/reliability/drills.json)：强制退出后的租约接管与 firing/resolved 告警闭环，SQLite 锁释放后的原键重试收敛。

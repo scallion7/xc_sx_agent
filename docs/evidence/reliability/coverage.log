@@ -100,7 +100,7 @@ app/platform/connector_delivery.py                                           150
 app/platform/connectors.py                                                   152     24    84%   30, 52, 58, 115, 118, 125, 127, 146-156, 183, 196, 215, 217, 254, 257, 261, 279-280, 296, 299-300, 302, 304
 app/platform/conversation_handoff.py                                          99     32    68%   44-45, 76-91, 119, 150, 155, 168, 205, 208-209, 226-267
 app/platform/evaluation.py                                                    90     23    74%   23, 27, 37-104, 122, 138, 157, 235
-app/platform/evaluation_contract.py                                           37      2    95%   25, 41
+app/platform/evaluation_contract.py                                           38      2    95%   26, 42
 app/platform/inventory.py                                                     60      8    87%   31-32, 46, 66, 101, 115, 131, 144
 app/platform/knowledge.py                                                     70      6    91%   43, 90, 96, 99, 123-124
 app/platform/knowledge_documents.py                                           87     12    86%   32, 61-63, 80, 85-88, 92, 94, 96, 123
@@ -108,7 +108,7 @@ app/platform/knowledge_ingestion.py                                          106
 app/platform/knowledge_releases.py                                           135     10    93%   23, 28, 75, 95, 100, 115, 130, 143-144, 186
 app/platform/knowledge_tables.py                                               9      0   100%
 app/platform/recovery.py                                                      91     18    80%   98, 100, 113, 115-154, 157
-app/platform/releases.py                                                     136     21    85%   56, 73, 75, 85, 127, 153, 166, 168, 186, 189-190, 238, 262-264, 275-281
+app/platform/releases.py                                                     138     21    85%   56, 73, 75, 85, 127, 153, 171, 173, 191, 194-195, 243, 267-269, 280-286
 app/platform/retrieval.py                                                    160     10    94%   76, 137-138, 153-154, 172, 174, 195, 198, 200
 app/platform/telemetry.py                                                    121     42    65%   71-73, 99-104, 130-145, 155-156, 168-172, 179-180, 206-238, 247-255
 app/prompts/__init__.py                                                        0      0   100%
@@ -139,7 +139,7 @@ app/security/providers.py                                                    109
 app/services/__init__.py                                                       2      0   100%
 app/services/actions.py                                                      127      7    94%   112, 133, 194, 233, 251, 294, 304
 app/services/commerce.py                                                      56     12    79%   46, 65-66, 111, 114, 125-126, 128, 144, 146, 158-159
-app/services/compensations.py                                                140     11    92%   85, 94, 107, 116, 118, 142-144, 196, 308, 352
+app/services/compensations.py                                                140     14    90%   85, 92-95, 107, 116, 118, 142-144, 196, 308, 352
 app/services/data_maintenance.py                                             157     38    76%   108, 239, 245, 251, 257, 263, 267, 275, 283, 290, 309, 317-319, 343-345, 372-376, 388, 414-449, 459, 463-466
 app/services/http_commerce.py                                                 81     16    80%   17, 46, 65-66, 83, 85, 105, 108-109, 130-131, 137, 146-149
 app/services/idempotency.py                                                   85     31    64%   72-76, 79-88, 123, 139-155, 158-161, 164-170
@@ -167,4 +167,4 @@ app/web/services.py                                                          129
 app/web/session_routes.py                                                    139     25    82%   154-161, 170, 173-174, 224-225, 254-255, 274, 280-287, 295-298, 328-343
 app/web/streaming.py                                                          44      7    84%   42-43, 60, 66-67, 69-73
 --------------------------------------------------------------------------------------------------------
-TOTAL                                                                      11085   2060    81%
+TOTAL                                                                      11088   2063    81%

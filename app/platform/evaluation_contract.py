@@ -1,10 +1,11 @@
 """Fail-closed release evidence contract, bound to the manifest's planned matrix."""
 
+import hashlib
 from itertools import product
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from app.platform.common import PlatformError
+from app.platform.common import PlatformError, encode
 
 
 class EvaluationPlan(BaseModel):
@@ -44,7 +45,10 @@ def validate_release_report(report, manifest):
         reported_plan = EvaluationPlan.model_validate(report.get("evaluation_plan"))
         rows = report["cases"]
         if (
-            report.get("schema_version") != 2
+            report.get("manifest_hash")
+            != hashlib.sha256(encode(manifest).encode()).hexdigest()
+            or report.get("dataset_hash") != manifest["dataset_hash"]
+            or report.get("schema_version") != 2
             or report.get("complete") is not True
             or report.get("passed") is not True
             or report.get("split_leakage") is not False
