@@ -17,6 +17,7 @@ from app.platform.evaluation import (
     evaluate_retrieval,
     validate_dataset,
 )
+from app.platform.evaluation_contract import planned_matrix
 from app.platform.retrieval import HybridRetrieval
 from app.scripts.seed_platform import seed
 from sqlalchemy import func, select
@@ -84,6 +85,9 @@ def main():
             dataset_hash=validate_dataset(tasks),
             strategy="react",
             mode="single",
+            evaluation_plan=planned_matrix(
+                tasks, ("react", "plan_execute", "multi"), a.repeats
+            ),
         ).model_dump()
     )
     config = config.model_copy(

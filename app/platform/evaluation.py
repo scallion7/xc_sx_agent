@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 from app.platform.common import PlatformError, encode
+from app.platform.evaluation_contract import planned_matrix
 
 
 def percentile(values, p):
@@ -117,6 +118,8 @@ class AgentEvaluationRunner:
     """Runner calls a supplied actual Agent/sandbox driver; never replays writes."""
 
     def __init__(self, driver, *, max_runs=10, token_budget=10000):
+        if max_runs < 1 or token_budget < 1:
+            raise ValueError("Evaluation limits must be positive")
         self.driver = driver
         self.max_runs = max_runs
         self.token_budget = token_budget
@@ -133,6 +136,12 @@ class AgentEvaluationRunner:
         dataset_hash = validate_dataset(cases)
         if manifest["dataset_hash"] != dataset_hash:
             raise PlatformError("EVALUATION_VERSION_MISMATCH")
+        plan = planned_matrix(cases, strategies, repeats)
+        if (
+            manifest.get("evaluation_plan")
+            and plan.model_dump() != manifest["evaluation_plan"]
+        ):
+            raise PlatformError("EVALUATION_PLAN_MISMATCH")
         rows = []
         used = 0
         for case in cases:
@@ -156,6 +165,8 @@ class AgentEvaluationRunner:
                     )
                     rows.append(
                         {
+                            **result,
+                            "expected_outcome": expected,
                             "id": case["id"],
                             "family": case["family"],
                             "split": case["split"],
@@ -163,7 +174,6 @@ class AgentEvaluationRunner:
                             "repeat": repeat,
                             "passed": passed,
                             "latency_ms": (time.perf_counter() - started) * 1000,
-                            **result,
                         }
                     )
         unsafe = sum(r.get("unsafe_actions", 0) for r in rows)
@@ -197,12 +207,16 @@ class AgentEvaluationRunner:
                     ),
                 }
         return {
+            "schema_version": 2,
+            "evaluation_plan": plan.model_dump(),
             "manifest_hash": hashlib.sha256(encode(manifest).encode()).hexdigest(),
             "dataset_hash": dataset_hash,
             "sample_count": n,
             "tokens": used,
             "unsafe_actions": unsafe,
-            "passed": bool(rows) and unsafe == 0 and all(r["passed"] for r in rows),
+            "passed": n == len(plan.keys())
+            and unsafe == 0
+            and all(r["passed"] for r in rows),
             "execution_mode": execution_mode,
             "review_status": "human_reviewed"
             if all(c.get("review_status") == "human_reviewed" for c in cases)

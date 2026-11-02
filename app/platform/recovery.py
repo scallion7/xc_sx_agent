@@ -1,15 +1,67 @@
 """Consistent backup/restore to a distinct database, with row/state/audit hashes."""
 
 import hashlib
+import os
 import sqlite3
 import subprocess
+import tempfile
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 from sqlalchemy import MetaData, create_engine, select
 from sqlalchemy.engine import make_url
 
 from app.platform.common import PlatformError, encode
+
+
+@contextmanager
+def postgres_environment(url):
+    """Use libpq env + an ephemeral passfile, remove inherited credential variables."""
+    url = make_url(url)
+    with tempfile.TemporaryDirectory(prefix="ecom-pg-") as directory:
+        env = {k: v for k, v in os.environ.items() if not k.startswith("PG")}
+        env.update(
+            PGHOST=url.host or "localhost",
+            PGPORT=str(url.port or 5432),
+            PGDATABASE=url.database or "",
+            PGUSER=url.username or "",
+        )
+        for key in ("sslmode", "sslrootcert", "sslcert", "sslkey", "connect_timeout"):
+            if key in url.query:
+                env["PG" + key.upper()] = str(url.query[key])
+        if url.password is not None:
+
+            def escape(value):
+                return str(value).replace("\\", "\\\\").replace(":", "\\:")
+
+            passfile = Path(directory) / "pgpass"
+            fd = os.open(passfile, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w") as handle:
+                handle.write(
+                    ":".join(
+                        escape(x)
+                        for x in (
+                            env["PGHOST"],
+                            env["PGPORT"],
+                            env["PGDATABASE"],
+                            env["PGUSER"],
+                            url.password,
+                        )
+                    )
+                    + "\n"
+                )
+            env["PGPASSFILE"] = str(passfile)
+        yield env
+
+
+def postgres_command(url, arguments, error_code):
+    with postgres_environment(url) as env:
+        try:
+            subprocess.run(arguments, env=env, check=True, capture_output=True)
+        except (OSError, subprocess.SubprocessError):
+            # libpq diagnostics may contain connection details: emit only a stable code.
+            raise PlatformError(error_code) from None
 
 
 def fingerprint(url):
@@ -74,34 +126,26 @@ def backup_restore(source_url, backup_path, restore_url):
         if fingerprint(restore_url)["row_counts"]:
             raise PlatformError("RESTORE_TARGET_NOT_EMPTY")
 
-        def cli_url(url):
-            return url.set(drivername="postgresql").render_as_string(
-                hide_password=False
-            )
-
-        import os
-
+        path.parent.mkdir(parents=True, exist_ok=True)
         start = time.perf_counter()
-        # Connection URI stays out of argv/logs. pg_dump obtains a consistent MVCC snapshot.
-        subprocess.run(
+        postgres_command(
+            source,
             ["pg_dump", "--format=custom", "--file", str(path)],
-            env=dict(os.environ, PGDATABASE=cli_url(source)),
-            check=True,
-            capture_output=True,
+            "POSTGRES_BACKUP_FAILED",
         )
         backup_seconds = time.perf_counter() - start
         start = time.perf_counter()
-        subprocess.run(
+        postgres_command(
+            target,
             [
                 "pg_restore",
                 "--exit-on-error",
                 "--no-owner",
                 "--dbname",
-                cli_url(target),
+                target.database,
                 str(path),
             ],
-            check=True,
-            capture_output=True,
+            "POSTGRES_RESTORE_FAILED",
         )
         restore_seconds = time.perf_counter() - start
         # Run with writes quiesced for equality against the source (documented gate).

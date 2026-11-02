@@ -1,6 +1,15 @@
 # 验收状态与证据
 
-更新日期：2026-10-25。此页是当前状态汇总；历史报告保留其原提交、样本和测量值。文档、界面名称整理不把历史报告重新标成新业务实验。
+更新日期：2026-11-03。此页是当前状态汇总；历史报告保留其原提交、样本和测量值。文档、界面名称整理不把历史报告重新标成新业务实验。
+
+## 当前可靠性改进
+
+本地 Python 3.11、锁定依赖、Chromium：**369 项测试通过，无跳过，60.035 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
+
+- [容量门禁](../evidence/reliability/capacity.json)：1/10/50 并发共 61 请求成功；零错误、Worker 正常退出、恢复指纹匹配。P95 只作本机测量，未设生产延迟 SLA。
+- [故障演练](../evidence/reliability/drills.json)：强制退出后的租约接管与 firing/resolved 告警闭环，SQLite 锁释放后的原键重试收敛。
+- [离线复核材料](offline-review.md)：新 32 题冻结，16 题 development 完成四模式比较，16 题 holdout 未运行，人工复核未完成，付费模型调用为零。
+- [部署验收](../operations/compose-acceptance.md)：新增双 Worker、服务重启、旧库升级、真实 HTTP/MCP 和三个独立数据库恢复的 CI 作业；本机没有 Docker，远端结果待本次运行核验，不能用旧 smoke 代替。
 
 ## 已完成的功能与依赖验收基线
 
@@ -33,8 +42,8 @@
 
 ## 仍未完成的验收
 
-- 完整 Compose 服务集在干净环境中的端到端部署、启动顺序和运行联调。
-- PostgreSQL 的 pg_dump/pg_restore 备份恢复与跨服务一致恢复点演练；已通过的 SQL smoke 不能替代它。
+- 完整 Compose 与 PostgreSQL 恢复新增独立 CI 流程，当前运行结果见本页顶部；上线部署仍须复验。
+- 生产持续写入下的 PostgreSQL PITR、跨区域和真实供应商一致恢复点演练。
 - 真实模型效果、人工金标准复核、语义 embedding 质量及真实费用验证。
 - 真实组织身份系统、订单/支付供应商与生产资金联调。
 - 持续高负载、饱和点、跨机数据库和生产 SLA；新增平台表作用域也不证明整个系统已完成 SaaS 多租户改造。

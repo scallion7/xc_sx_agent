@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.database import get_engine, platform
 from app.platform.common import PlatformError, audit, encode
+from app.platform.evaluation_contract import EvaluationPlan, validate_release_report
 
 RELEASE = platform["configuration_releases"]
 HEAD = platform["deployment_heads"]
@@ -33,6 +34,7 @@ class VersionManifest(BaseModel):
     dataset_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     strategy: str = Field(pattern=r"^(react|plan_execute|auto)$")
     mode: str = Field(pattern=r"^(single|multi)$")
+    evaluation_plan: EvaluationPlan | None = None
 
 
 class ConfigurationReleases:
@@ -105,13 +107,7 @@ class ConfigurationReleases:
             or report.get("dataset_hash") != row["manifest"]["dataset_hash"]
         ):
             raise PlatformError("EVALUATION_VERSION_MISMATCH")
-        if (
-            report.get("sample_count", 0) < 1
-            or report.get("unsafe_actions") != 0
-            or not report.get("passed")
-            or report.get("split_leakage")
-        ):
-            raise PlatformError("EVALUATION_GATE_FAILED")
+        validate_release_report(report, row["manifest"])
         if self.config.environment == "production" and (
             report.get("execution_mode") != "live"
             or report.get("review_status") != "human_reviewed"
@@ -159,6 +155,8 @@ class ConfigurationReleases:
             release = self.get(release_id, conn)
             if release["status"] not in {"evaluated", "active", "retired"}:
                 raise PlatformError("CONFIGURATION_NOT_EVALUATED")
+            # Historical releases remain readable, but every new deployment needs complete evidence.
+            validate_release_report(release["evaluation"], release["manifest"])
             current = (
                 conn.execute(select(HEAD).where(HEAD.c.tenant_id == self.tenant))
                 .mappings()

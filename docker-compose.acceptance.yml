@@ -1,0 +1,24 @@
+# Disposable integration acceptance only. Never use the default production project.
+services:
+  postgres:
+    ports: ["127.0.0.1:55432:5432"]
+  api:
+    depends_on:
+      model: {condition: service_healthy}
+    environment: &acceptance
+      OPENAI_API_KEY: controlled-offline
+      OPENAI_BASE_URL: http://model:9126/v1
+      KNOWLEDGE_EMBEDDING_MODE: local_hash
+      MODEL_TOKEN_BUDGET: "10000000"
+      MODEL_SHARED_RPM: "10000"
+      MODEL_REQUESTS_PER_MINUTE: "10000"
+      API_USER_REQUESTS_PER_MINUTE: "10000"
+      API_ADMIN_REQUESTS_PER_MINUTE: "10000"
+      RUN_POLL_SECONDS: "0.1"
+      MEMORY_ENABLED: "false"
+      SKILLS_ENABLED: "false"
+      TELEMETRY_ENABLED: "true"
+  worker:
+    environment: *acceptance
+  inventory:
+    ports: ["127.0.0.1:9125:9125"]

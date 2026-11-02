@@ -1,0 +1,446 @@
+[
+  {
+    "id": "dev-apparel-1",
+    "family": "dev-apparel",
+    "order_family": "dev-apparel",
+    "split": "development",
+    "query": "衣服还保留吊牌，签收八天能退吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-apparel"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-apparel-2",
+    "family": "dev-apparel",
+    "order_family": "dev-apparel",
+    "split": "development",
+    "query": "上周收到的外套吊牌完整，退货窗口多长？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-apparel"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-install-1",
+    "family": "dev-install",
+    "order_family": "dev-install",
+    "split": "development",
+    "query": "冰箱到家以后什么时候预约安装？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-install"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-install-2",
+    "family": "dev-install",
+    "order_family": "dev-install",
+    "split": "development",
+    "query": "家电送到后约师傅安装需要付费吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-install"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-gift-1",
+    "family": "dev-gift",
+    "order_family": "dev-gift",
+    "split": "development",
+    "query": "要退主商品，送的赠品也要寄回吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-gift"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-gift-2",
+    "family": "dev-gift",
+    "order_family": "dev-gift",
+    "split": "development",
+    "query": "赠品弄丢了，退主商品该怎么处理？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-gift"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-preorder-1",
+    "family": "dev-preorder",
+    "order_family": "dev-preorder",
+    "split": "development",
+    "query": "预售尾款错过截止日期怎么办？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-preorder"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-preorder-2",
+    "family": "dev-preorder",
+    "order_family": "dev-preorder",
+    "split": "development",
+    "query": "我没付预售尾款，系统会自行扣钱吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-preorder"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-invoice-1",
+    "family": "dev-invoice",
+    "order_family": "dev-invoice",
+    "split": "development",
+    "query": "电子发票抬头开错了，怎么改？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-invoice"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-invoice-2",
+    "family": "dev-invoice",
+    "order_family": "dev-invoice",
+    "split": "development",
+    "query": "能在已经开出的发票上直接换抬头吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-invoice"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-region-1",
+    "family": "dev-region",
+    "order_family": "dev-region",
+    "split": "development",
+    "query": "家具配送要提前多久预约？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-region"
+    ],
+    "outcome": "needs_clarification",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-region-2",
+    "family": "dev-region",
+    "order_family": "dev-region",
+    "split": "development",
+    "query": "家具什么时候可以约配送？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-region"
+    ],
+    "outcome": "needs_clarification",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-unknown-1",
+    "family": "dev-unknown",
+    "order_family": "dev-unknown",
+    "split": "development",
+    "query": "宠物保险理赔额度是多少？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-unknown-2",
+    "family": "dev-unknown",
+    "order_family": "dev-unknown",
+    "split": "development",
+    "query": "平台能报销宠物看病费用吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-conflict-1",
+    "family": "dev-conflict",
+    "order_family": "dev-conflict",
+    "split": "development",
+    "query": "净水器滤芯保修多久？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-conflict",
+      "dev-conflict-alternative"
+    ],
+    "outcome": "policy_conflict",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "dev-conflict-2",
+    "family": "dev-conflict",
+    "order_family": "dev-conflict",
+    "split": "development",
+    "query": "滤芯的保修期限到底是多少？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "dev-conflict",
+      "dev-conflict-alternative"
+    ],
+    "outcome": "policy_conflict",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-digital-1",
+    "family": "hold-digital",
+    "order_family": "hold-digital",
+    "split": "holdout",
+    "query": "兑换码已经看过但没激活，能自动退吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-digital"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-digital-2",
+    "family": "hold-digital",
+    "order_family": "hold-digital",
+    "split": "holdout",
+    "query": "数字兑换码既没打开也没激活，怎么退款？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-digital"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-custom-1",
+    "family": "hold-custom",
+    "order_family": "hold-custom",
+    "split": "holdout",
+    "query": "刻字杯已经开工，还能改文字吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-custom"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-custom-2",
+    "family": "hold-custom",
+    "order_family": "hold-custom",
+    "split": "holdout",
+    "query": "定制订单尚未进入制作，可以取消吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-custom"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-cold-1",
+    "family": "hold-cold",
+    "order_family": "hold-cold",
+    "split": "holdout",
+    "query": "生鲜到家冰袋全化了，需要哪些证据？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-cold"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-cold-2",
+    "family": "hold-cold",
+    "order_family": "hold-cold",
+    "split": "holdout",
+    "query": "冷链配送异常能直接把包装扔掉吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-cold"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-address-1",
+    "family": "hold-address",
+    "order_family": "hold-address",
+    "split": "holdout",
+    "query": "商品已经出库，收件地址还可以改吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-address"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-address-2",
+    "family": "hold-address",
+    "order_family": "hold-address",
+    "split": "holdout",
+    "query": "没出库的订单，想换收货地址怎么办？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-address"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-repair-1",
+    "family": "hold-repair",
+    "order_family": "hold-repair",
+    "split": "holdout",
+    "query": "维修结束后保修是重新计算一年吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-repair"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-repair-2",
+    "family": "hold-repair",
+    "order_family": "hold-repair",
+    "split": "holdout",
+    "query": "商品送修的这段时间会扣保修天数吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-repair"
+    ],
+    "outcome": "answerable",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-channel-1",
+    "family": "hold-channel",
+    "order_family": "hold-channel",
+    "split": "holdout",
+    "query": "这个订单退货应该找谁？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-channel"
+    ],
+    "outcome": "needs_clarification",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-channel-2",
+    "family": "hold-channel",
+    "order_family": "hold-channel",
+    "split": "holdout",
+    "query": "我需要退货，联系什么人？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-channel"
+    ],
+    "outcome": "needs_clarification",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-medical-1",
+    "family": "hold-medical",
+    "order_family": "hold-medical",
+    "split": "holdout",
+    "query": "运动受伤能报销手术费用吗？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-medical-2",
+    "family": "hold-medical",
+    "order_family": "hold-medical",
+    "split": "holdout",
+    "query": "购买器材附带的医疗赔付限额是多少？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [],
+    "outcome": "no_evidence",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-conflict-1",
+    "family": "hold-conflict",
+    "order_family": "hold-conflict",
+    "split": "holdout",
+    "query": "跨境退货由谁支付运费？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-conflict",
+      "hold-conflict-alternative"
+    ],
+    "outcome": "policy_conflict",
+    "review_status": "synthetic_unreviewed"
+  },
+  {
+    "id": "hold-conflict-2",
+    "family": "hold-conflict",
+    "order_family": "hold-conflict",
+    "split": "holdout",
+    "query": "海外订单退货运费算谁的？",
+    "context": {},
+    "day": "2026-11-02",
+    "gold_documents": [
+      "hold-conflict",
+      "hold-conflict-alternative"
+    ],
+    "outcome": "policy_conflict",
+    "review_status": "synthetic_unreviewed"
+  }
+]

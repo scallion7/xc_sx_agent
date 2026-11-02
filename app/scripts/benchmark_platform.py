@@ -16,10 +16,43 @@ from app.platform.recovery import backup_restore
 from app.scripts.demo_stack import DemoStack
 
 
+def capacity_gate(report, *, max_error_rate=0.0, max_p95_ms=None):
+    failures = []
+    batches = report.get("batches", [])
+    if [b.get("concurrency") for b in batches] != [1, 10, 50]:
+        failures.append("BATCHES_INCOMPLETE")
+    for batch in batches:
+        rows = batch.get("raw", [])
+        count = len(rows)
+        errors = sum(r.get("status") != "completed" for r in rows)
+        if count != batch.get("requests") or count != batch.get("concurrency"):
+            failures.append("REQUESTS_INCOMPLETE")
+        if not count or errors / count > max_error_rate:
+            failures.append("ERROR_RATE_EXCEEDED")
+        if max_p95_ms is not None and batch.get("p95_ms", float("inf")) > max_p95_ms:
+            failures.append("P95_EXCEEDED")
+    if report.get("graceful_worker_exit") != 0:
+        failures.append("WORKER_EXIT_FAILED")
+    if report.get("recovery", {}).get("verified") is not True:
+        failures.append("RESTORE_UNVERIFIED")
+    return {
+        "passed": not failures,
+        "failures": sorted(set(failures)),
+        "max_error_rate": max_error_rate,
+        "max_p95_ms": max_p95_ms,
+    }
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--output", required=True)
+    p.add_argument("--max-error-rate", type=float, default=0.0)
+    p.add_argument("--max-p95-ms", type=float, default=None)
     a = p.parse_args()
+    if not 0 <= a.max_error_rate <= 1 or (
+        a.max_p95_ms is not None and a.max_p95_ms <= 0
+    ):
+        p.error("Invalid capacity thresholds")
     report = {
         "environment": {
             "os": platform.platform(),
@@ -119,6 +152,9 @@ def main():
             stack.directory / "backup.db",
             "sqlite:///" + str(stack.directory / "restored.db"),
         )
+    report["gate"] = capacity_gate(
+        report, max_error_rate=a.max_error_rate, max_p95_ms=a.max_p95_ms
+    )
     Path(a.output).parent.mkdir(parents=True, exist_ok=True)
     Path(a.output).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(
@@ -132,6 +168,11 @@ def main():
             }
         )
     )
+
+    if not report["gate"]["passed"]:
+        raise SystemExit(
+            "CAPACITY_GATE_FAILED: " + ",".join(report["gate"]["failures"])
+        )
 
 
 if __name__ == "__main__":

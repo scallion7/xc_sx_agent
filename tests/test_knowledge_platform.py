@@ -1,4 +1,4 @@
-"""Stages 27–28: persisted ingestion, release CAS, filters, tombstones and evidence."""
+"""persisted ingestion, release CAS, filters, tombstones and evidence."""
 
 import io
 import json

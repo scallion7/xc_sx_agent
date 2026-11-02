@@ -1,4 +1,4 @@
-"""Stages 29–33: shared budgets, immutable releases, ownership and MCP governance."""
+"""shared budgets, immutable releases, ownership and MCP governance."""
 
 import hashlib
 import json
@@ -30,6 +30,31 @@ from sqlalchemy import select, update
 from tests.test_knowledge_platform import PlatformTestCase
 
 
+def release_cases():
+    return [
+        {
+            "id": "gate-" + key,
+            "family": key,
+            "order_family": key,
+            "split": "holdout",
+            "expected": "answered",
+        }
+        for key in ("a", "b")
+    ]
+
+
+def release_report(row):
+    return AgentEvaluationRunner(
+        lambda *_: {
+            "outcome": "answered",
+            "unsafe_actions": 0,
+            "database_assertions_passed": True,
+            "tokens": 10,
+        },
+        max_runs=2,
+    ).run(release_cases(), row["manifest"], strategies=("react",))
+
+
 def manifest(rid):
     from pathlib import Path
 
@@ -44,7 +69,12 @@ def manifest(rid):
         knowledge_release_id=rid,
         risk_rule_version="v1",
         risk_rules={"version": "v1"},
-        dataset_hash="b" * 64,
+        dataset_hash=validate_dataset(release_cases()),
+        evaluation_plan={
+            "case_ids": ["gate-a", "gate-b"],
+            "strategies": ["react"],
+            "repeats": 1,
+        },
         strategy="react",
         mode="single",
     )
@@ -206,15 +236,7 @@ class ReleaseTests(PlatformTestCase):
     def evaluate(self, row):
         return self.releases.evaluate(
             row["release_id"],
-            dict(
-                manifest_hash=hashlib.sha256(row["manifest_json"].encode()).hexdigest(),
-                dataset_hash="b" * 64,
-                sample_count=2,
-                unsafe_actions=0,
-                passed=True,
-                execution_mode="offline",
-                review_status="synthetic_unreviewed",
-            ),
+            release_report(row),
             "admin",
         )
 
@@ -281,7 +303,8 @@ class ReleaseTests(PlatformTestCase):
             cases, {"dataset_hash": validate_dataset(cases)}
         )
         self.assertEqual(result["sample_count"], 2)
-        self.assertTrue(result["passed"])
+        self.assertFalse(result["passed"])
+        self.assertFalse(result["complete"])
 
     def test_production_rejects_offline_evidence(self):
         row = self.setup_release()

@@ -1,0 +1,891 @@
+{
+  "corpus_version": "review-v1",
+  "frozen_files": {
+    "documents.json": "080a0d6033ca03b72913a4d956f07369fb1743c28a763d60ac5a722c60bdf0a8",
+    "cases.json": "49ffb61cbac78fd43055856d3b902584d52994b3af33baa01d958736bf14c232"
+  },
+  "mode": "offline_lexical_projection",
+  "paid_calls": 0,
+  "semantic_quality_verified": false,
+  "human_review_applied": false,
+  "retrieval": {
+    "dataset_hash": "fda63bf0af729205223a9a3da1816d69ed198cf83b7c5f87637217616d81c01b",
+    "split": "development",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "review_status": "synthetic_unreviewed",
+    "ablations": {
+      "vector": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.508708000073966,
+        "cases": [
+          {
+            "id": "dev-apparel-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.508708000073966,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-apparel-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0730829999374691,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.1408340001253237,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-2",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.1219579996577522,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-install"
+            ]
+          },
+          {
+            "id": "dev-gift-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0960419999719306,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-gift"
+            ]
+          },
+          {
+            "id": "dev-gift-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0385829996266693,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-preorder-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9985829997276596,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-preorder"
+            ]
+          },
+          {
+            "id": "dev-preorder-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0027919997810386,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-invoice-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9963340003196208,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-invoice"
+            ]
+          },
+          {
+            "id": "dev-invoice-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0396669999863661,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-region-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0001670002566243,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "needs_clarification",
+            "retrieved": [
+              "dev-region"
+            ]
+          },
+          {
+            "id": "dev-region-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0437500000080036,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-1",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9680419998403522,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-2",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9945419997166027,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-conflict-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0286669999004516,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "policy_conflict",
+            "retrieved": [
+              "dev-conflict-alternative",
+              "dev-conflict"
+            ]
+          },
+          {
+            "id": "dev-conflict-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0355419999541482,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "hold-repair"
+            ]
+          }
+        ]
+      },
+      "bm25": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 0.9188750000248547,
+        "cases": [
+          {
+            "id": "dev-apparel-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8692920000612503,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-apparel-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8832090002215409,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8323339998241863,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-2",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9188750000248547,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-install"
+            ]
+          },
+          {
+            "id": "dev-gift-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.875084000199422,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-gift"
+            ]
+          },
+          {
+            "id": "dev-gift-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.9003750001284061,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-preorder-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8419159998993564,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-preorder"
+            ]
+          },
+          {
+            "id": "dev-preorder-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8340839999618765,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-invoice-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8192919999601145,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-invoice"
+            ]
+          },
+          {
+            "id": "dev-invoice-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.9025839999594609,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-region-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8276250000562868,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "needs_clarification",
+            "retrieved": [
+              "dev-region"
+            ]
+          },
+          {
+            "id": "dev-region-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8346670001628809,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-1",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8038749997467676,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-2",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8661249999022402,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-conflict-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.8579579998695408,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "policy_conflict",
+            "retrieved": [
+              "dev-conflict",
+              "dev-conflict-alternative"
+            ]
+          },
+          {
+            "id": "dev-conflict-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 0.8500409999214753,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "hold-repair"
+            ]
+          }
+        ]
+      },
+      "hybrid": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.1069170000155282,
+        "cases": [
+          {
+            "id": "dev-apparel-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.044042000103218,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-apparel-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.047334000304545,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0137919998669531,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-2",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.1069170000155282,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-install"
+            ]
+          },
+          {
+            "id": "dev-gift-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.044999999976426,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-gift"
+            ]
+          },
+          {
+            "id": "dev-gift-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0390409997853567,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-preorder-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9956670000974555,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-preorder"
+            ]
+          },
+          {
+            "id": "dev-preorder-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0506250000617001,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-invoice-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0202919997936988,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-invoice"
+            ]
+          },
+          {
+            "id": "dev-invoice-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0665830000107235,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-region-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0365000002821034,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "needs_clarification",
+            "retrieved": [
+              "dev-region"
+            ]
+          },
+          {
+            "id": "dev-region-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0010000000875152,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-1",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9691250002106244,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-2",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9791249999580032,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-conflict-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0234999999738648,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "policy_conflict",
+            "retrieved": [
+              "dev-conflict",
+              "dev-conflict-alternative"
+            ]
+          },
+          {
+            "id": "dev-conflict-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0392079998382542,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "hold-repair"
+            ]
+          }
+        ]
+      },
+      "hybrid_rerank": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.1181669997313293,
+        "cases": [
+          {
+            "id": "dev-apparel-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.1181669997313293,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-apparel-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0545000000092841,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-1",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0194999999839638,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-install-2",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.112832999751845,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-install"
+            ]
+          },
+          {
+            "id": "dev-gift-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0750839996944705,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-gift"
+            ]
+          },
+          {
+            "id": "dev-gift-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0782080003082228,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-preorder-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0472920002939645,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-preorder"
+            ]
+          },
+          {
+            "id": "dev-preorder-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0568749999038118,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-invoice-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0457499997755804,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "dev-invoice"
+            ]
+          },
+          {
+            "id": "dev-invoice-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0750410001492128,
+            "expected_outcome": "answerable",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-region-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0011250001298322,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "needs_clarification",
+            "retrieved": [
+              "dev-region"
+            ]
+          },
+          {
+            "id": "dev-region-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0099170003741165,
+            "expected_outcome": "needs_clarification",
+            "has_gold": true,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-1",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.9862909996627423,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-unknown-2",
+            "recall_at_k": 1,
+            "mrr": 0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 0.991625000096974,
+            "expected_outcome": "no_evidence",
+            "has_gold": false,
+            "outcome": "no_evidence",
+            "retrieved": []
+          },
+          {
+            "id": "dev-conflict-1",
+            "recall_at_k": 1.0,
+            "mrr": 1.0,
+            "citation_correct": true,
+            "outcome_correct": true,
+            "latency_ms": 1.0285829998792906,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "policy_conflict",
+            "retrieved": [
+              "dev-conflict",
+              "dev-conflict-alternative"
+            ]
+          },
+          {
+            "id": "dev-conflict-2",
+            "recall_at_k": 0.0,
+            "mrr": 0,
+            "citation_correct": false,
+            "outcome_correct": false,
+            "latency_ms": 1.0497499997654813,
+            "expected_outcome": "policy_conflict",
+            "has_gold": true,
+            "outcome": "answerable",
+            "retrieved": [
+              "hold-repair"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

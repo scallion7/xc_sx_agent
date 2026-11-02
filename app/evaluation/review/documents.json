@@ -1,0 +1,214 @@
+[
+  {
+    "document_id": "dev-apparel",
+    "text": "未拆吊牌的服饰在签收十天内可申请退换。",
+    "metadata": {
+      "title": "服饰退换",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-install",
+    "text": "大件家电安装应在送达后两天内预约，预约安装不另收费。",
+    "metadata": {
+      "title": "安装预约",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-gift",
+    "text": "主商品退货时须同时寄回随单赠品，缺失赠品转人工核算。",
+    "metadata": {
+      "title": "赠品",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-preorder",
+    "text": "预售订单尾款截止日为活动页注明日期，超过日期须转人工处理，不自动扣款。",
+    "metadata": {
+      "title": "预售",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-invoice",
+    "text": "电子发票抬头开具后不可直接修改，须先申请红冲再重新开具。",
+    "metadata": {
+      "title": "发票",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-region",
+    "text": "华东区域的家具配送须提前一天预约。",
+    "metadata": {
+      "title": "配送适用地域",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "regions": [
+        "华东"
+      ]
+    }
+  },
+  {
+    "document_id": "dev-unknown",
+    "text": "宠物食品应保存在干燥阴凉处。",
+    "metadata": {
+      "title": "无政策证据",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "dev-conflict",
+    "text": "净水器滤芯保修为六个月。",
+    "metadata": {
+      "title": "保修冲突",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "policy_key": "dev-conflict",
+      "decision": "original"
+    }
+  },
+  {
+    "document_id": "dev-conflict-alternative",
+    "text": "净水器滤芯保修为十二个月。",
+    "metadata": {
+      "title": "保修冲突",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "policy_key": "dev-conflict",
+      "decision": "alternative"
+    }
+  },
+  {
+    "document_id": "hold-digital",
+    "text": "数字兑换码未被查看且未激活时可申请退款；查看后须人工审核。",
+    "metadata": {
+      "title": "数字商品",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-custom",
+    "text": "定制商品进入制作前可取消；进入制作后变更需求需要人工协商。",
+    "metadata": {
+      "title": "定制订单",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-cold",
+    "text": "冷链包裹收到时如冰袋完全融化，应保留包装与照片并提交人工核验。",
+    "metadata": {
+      "title": "冷链异常",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-address",
+    "text": "订单出库前可以申请修改收货地址；出库后需联系物流核实拦截可能性。",
+    "metadata": {
+      "title": "地址修改",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-repair",
+    "text": "维修完成后的保修延续原剩余期限，维修期间不计算在原保修期内。",
+    "metadata": {
+      "title": "维修换新",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-channel",
+    "text": "企业采购渠道的退货需先联系专属客户经理。",
+    "metadata": {
+      "title": "渠道限制",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "channels": [
+        "企业采购"
+      ]
+    }
+  },
+  {
+    "document_id": "hold-medical",
+    "text": "健身器材清洁时使用干布擦拭。",
+    "metadata": {
+      "title": "无医疗政策",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general"
+    }
+  },
+  {
+    "document_id": "hold-conflict",
+    "text": "跨境退货运费由买方承担。",
+    "metadata": {
+      "title": "运费冲突",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "policy_key": "hold-conflict",
+      "decision": "original"
+    }
+  },
+  {
+    "document_id": "hold-conflict-alternative",
+    "text": "跨境退货运费由卖方承担。",
+    "metadata": {
+      "title": "运费冲突",
+      "source": "synthetic-review-corpus-v1",
+      "version": "1",
+      "effective_date": "2026-01-01",
+      "policy_type": "general",
+      "policy_key": "hold-conflict",
+      "decision": "alternative"
+    }
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "mode": "local-real-processes-controlled-model",
+  "drills": [
+    {
+      "fault": "worker_killed_after_lease_claim",
+      "alert_transitions": [
+        {
+          "event": "firing",
+          "code": "AGENT_LEASE_EXPIRED",
+          "value": 1,
+          "threshold": 0,
+          "severity": "critical",
+          "runbook": "docs/operations/incident-runbook.md#worker-recovery"
+        },
+        {
+          "event": "resolved",
+          "code": "AGENT_LEASE_EXPIRED",
+          "value": 1,
+          "threshold": 0,
+          "severity": "critical",
+          "runbook": "docs/operations/incident-runbook.md#worker-recovery"
+        }
+      ],
+      "injected_at": 1793635874.2756321,
+      "detected_at": 1793635874.275777,
+      "recovered_at": 1793635876.3474119,
+      "final_status": "completed",
+      "attempts": 2
+    },
+    {
+      "fault": "sqlite_exclusive_lock",
+      "injected_at": 1793635876.347509,
+      "detected_at": 1793635887.157212,
+      "recovered_at": 1793635887.4204202,
+      "during_fault_http_status": 500,
+      "final_status": "completed",
+      "durable_request_count": 1,
+      "worker_survived": true
+    }
+  ],
+  "redis": "not_applicable_SQL_shared_quota",
+  "provider_timeout_and_duplicate_callback": "covered_by_tests.test_http_commerce_sandbox; see validation report"
+}

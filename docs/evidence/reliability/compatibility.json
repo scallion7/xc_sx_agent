@@ -1,0 +1,14 @@
+{
+  "baseline": "bd1451788f4ff4093f49083ac8fcc248537a5187",
+  "old_paths_preserved": 81,
+  "added_paths": [
+    "/v1/admin/alerts"
+  ],
+  "changed_schemas": [
+    "VersionManifest"
+  ],
+  "added_schemas": [
+    "EvaluationPlan"
+  ],
+  "frozen_migrations_and_history_unchanged": true
+}

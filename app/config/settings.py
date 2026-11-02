@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     run_max_attempts: int = Field(default=3, ge=1, le=10)
     run_poll_seconds: float = Field(default=1.0, gt=0, le=30)
 
-    # Stages 27–34: trusted deployment scope and opt-in platform integration.
+    # trusted deployment scope and opt-in platform integration.
     tenant_id: str = Field(default="default", pattern=r"^[A-Za-z0-9_-]{1,80}$")
     knowledge_versioned_enabled: bool = False
     knowledge_embedding_mode: Literal["local_hash", "openai"] = "local_hash"

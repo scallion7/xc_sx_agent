@@ -1,0 +1,12 @@
+{
+  "version": "review-v1",
+  "status": "frozen_pending_human_review",
+  "source": "new synthetic review corpus; not a measured semantic benchmark",
+  "files": {
+    "documents.json": "080a0d6033ca03b72913a4d956f07369fb1743c28a763d60ac5a722c60bdf0a8",
+    "cases.json": "49ffb61cbac78fd43055856d3b902584d52994b3af33baa01d958736bf14c232"
+  },
+  "case_count": 32,
+  "development_count": 16,
+  "holdout_count": 16
+}

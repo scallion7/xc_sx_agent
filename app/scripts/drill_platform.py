@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 from app.infrastructure.database import agent_runs_table, get_engine
+from app.platform.alerts import AlertMonitor, AlertThresholds, evaluate_alerts
 from app.scripts.demo_stack import DemoStack
 from sqlalchemy import func, select
 
@@ -31,12 +32,27 @@ def main():
         )
         assert process.wait(timeout=10) == 9
         time.sleep(1.1)
+        monitor = AlertMonitor(stack.directory / "alerts.json")
+        fired = monitor.update(
+            evaluate_alerts(
+                stack.config, thresholds=AlertThresholds(lease_grace_seconds=0)
+            )
+        )
+        assert any(
+            e["code"] == "AGENT_LEASE_EXPIRED" and e["event"] == "firing" for e in fired
+        )
         stack.worker = stack.spawn("recovered-worker", ["-m", "app.scripts.run_worker"])
         result = stack.completed(row["run_id"])
         assert result["status"] == "completed" and result["attempt"] == 2
+        resolved = monitor.update(evaluate_alerts(stack.config))
+        assert any(
+            e["code"] == "AGENT_LEASE_EXPIRED" and e["event"] == "resolved"
+            for e in resolved
+        )
         events.append(
             {
                 "fault": "worker_killed_after_lease_claim",
+                "alert_transitions": fired + resolved,
                 "injected_at": injected,
                 "detected_at": detected,
                 "recovered_at": time.time(),

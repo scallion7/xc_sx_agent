@@ -1,6 +1,6 @@
 # 生产配置检查清单
 
-> 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 部署和 PostgreSQL 备份恢复仍待演练。下列检查项不等于生产就绪认证。
+> 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 与 PostgreSQL 恢复已加入独立 CI 门禁，实际结果按本次提交核对。下列检查项不等于生产就绪认证。
 
 本清单用于部署前验收，不代表仓库已经完成真实组织、供应商或生产流量联调。所有密钥、
 Token 和数据库凭据应由部署平台的密钥管理服务注入，不写入 `.env`、镜像或日志。
@@ -40,7 +40,7 @@ PROVIDER_WEBHOOK_SECRET=<secret-manager-injected>
 
 部署新版本前执行：
 
-第 24 期升级前暂停工单写入并备份数据库。迁移会拒绝历史重复活跃工单，须先核对
+工单唯一约束升级前暂停工单写入并备份数据库。迁移会拒绝历史重复活跃工单，须先核对
 对应审批、退款与审计记录，不能直接删除重复行。旧库即使启用自动建表也不会绕过
 迁移；具体步骤和降级数据边界见[第24期文档](../history/第24期-工单并发唯一约束与业务幂等.md)。
 
@@ -107,7 +107,7 @@ python -m app.scripts.validate_openapi
 SBOM 和容器扫描均针对当前提交成功；真实模型质量、费用、供应商故障、峰值流量、SLA、
 WAF、网络策略和容灾仍需在部署环境单独验收。
 
-## 6. 第 25 期 Worker 与任务恢复
+## 6. Worker 与任务恢复
 
 - 迁移到 `20261023_0004` 后再启动 API/Worker，双方使用相同 SQL 数据库与业务配置；
 - 配置 `RUN_LEASE_SECONDS`、`RUN_MAX_ATTEMPTS`、`RUN_POLL_SECONDS`，确保多机时钟同步；
@@ -123,17 +123,17 @@ WAF、网络策略和容灾仍需在部署环境单独验收。
 恢复协议和本地实测范围见[第25期文档](../history/第25期-可恢复的异步Agent任务执行.md)。
 
 
-## 7. 第 26 期 HTTP 沙箱与退款账本
+## 7. HTTP 沙箱与退款账本
 
 - 先备份并迁移到 `20261023_0005`，再运行新版 API、Agent Worker 和退款 Worker；
 - `PROVIDER_MODE=sandbox` 仅用于演示，production 禁止。沙箱与应用必须独立数据库；
 - API/退款 Worker 使用相同 SQL、固定供应商 URL、Token、回调密钥；故障控制使用独立管理员 Token；
 - 默认不支持模拟冲正；供应商能力未声明时补偿进入 needs_manual，不能把原退款改成“未发生”；
 - unknown/needs_reconciliation 不等于退款失败；管理员 recover 仅查询，不换键补发；
-- 应监控 Outbox/对账 dead、积压和 unknown 数量；目前仓库提供记录与查询接口，尚无正式告警系统；
+- 应监控 Outbox/对账 dead、积压和 unknown 数量；已提供只读告警接口与 firing/resolved 检测器，接收端通知仍由部署环境配置；
 - 新 HTTP 账本暂不自动清理。已有 HTTP operation 或 needs_manual 补偿时禁止降级删除队列表；
 - 应用备份不覆盖独立供应商/沙箱数据，必须分别备份并核对恢复窗口内的外部效果；
-- 本地真实 HTTP + SQLite 已验收；PostgreSQL、Compose 和线上 CI 状态须实际运行核验；
+- 本地真实 HTTP + SQLite 已验收；PostgreSQL/Compose 以独立验收作业的实际结果为准；
 - 生产供应商需独立验证幂等键保留期限、请求指纹、结果查询、回调签名与冲正能力，不能用沙箱测试代替。
 
 启动、故障演示、状态与验收见[第26期文档](../history/第26期-HTTP业务沙箱与退款对账.md)。

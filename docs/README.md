@@ -13,6 +13,8 @@
 | 如何管理政策、模型和发布 | [知识与治理](engineering/knowledge-and-governance.md) |
 | 哪些结果已经验证 | [验收状态与证据](evaluation/acceptance.md) |
 | 个人工程扩展如何说明 | [贡献说明](CONTRIBUTIONS.md) |
+| 如何处理告警与恢复 | [故障手册](operations/incident-runbook.md)、[Compose 验收](operations/compose-acceptance.md) |
+| 如何复核检索评测 | [离线评测与人工复核](evaluation/offline-review.md) |
 | 部署前检查什么 | [部署与维护清单](operations/deployment-checklist.md) |
 | 为什么采用这些设计 | [知识快照与共享治理 ADR](decisions/0002-knowledge-snapshots-and-governance.md) |
 | 查看完整开发过程 | [历史归档](history/README.md) |

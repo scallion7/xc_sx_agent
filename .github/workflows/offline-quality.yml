@@ -124,10 +124,35 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements-lock.txt
       - run: python -m playwright install --with-deps chromium
-      - run: RUN_BROWSER_E2E=1 python -m unittest tests.test_platform_http
+      - run: RUN_BROWSER_E2E=1 python -m unittest tests.test_platform_http tests.test_browser_retries
       - run: python -m app.scripts.benchmark_platform --output test-results/capacity.json
+      - run: python -m app.scripts.drill_platform --output test-results/drills.json
+      - run: python -m app.scripts.review_evaluation --output test-results/offline-review.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: platform-acceptance
+          path: test-results/
+
+  compose-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -r requirements-lock.txt
+      - name: PostgreSQL 17 recovery client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+      - name: Full isolated deployment and recovery
+        run: python -m app.scripts.accept_deployment --output test-results/deployment.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compose-deployment-evidence
           path: test-results/

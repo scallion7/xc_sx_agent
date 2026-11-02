@@ -1,0 +1,354 @@
+{
+  "dataset_sha256": "49ffb61cbac78fd43055856d3b902584d52994b3af33baa01d958736bf14c232",
+  "status": "pending_human_review",
+  "reviews": [
+    {
+      "id": "dev-apparel-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-apparel"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-apparel-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-apparel"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-install-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-install"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-install-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-install"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-gift-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-gift"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-gift-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-gift"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-preorder-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-preorder"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-preorder-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-preorder"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-invoice-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-invoice"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-invoice-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-invoice"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "dev-region-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-region"
+      ],
+      "outcome": "needs_clarification"
+    },
+    {
+      "id": "dev-region-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-region"
+      ],
+      "outcome": "needs_clarification"
+    },
+    {
+      "id": "dev-unknown-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [],
+      "outcome": "no_evidence"
+    },
+    {
+      "id": "dev-unknown-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [],
+      "outcome": "no_evidence"
+    },
+    {
+      "id": "dev-conflict-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-conflict",
+        "dev-conflict-alternative"
+      ],
+      "outcome": "policy_conflict"
+    },
+    {
+      "id": "dev-conflict-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "dev-conflict",
+        "dev-conflict-alternative"
+      ],
+      "outcome": "policy_conflict"
+    },
+    {
+      "id": "hold-digital-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-digital"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-digital-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-digital"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-custom-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-custom"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-custom-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-custom"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-cold-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-cold"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-cold-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-cold"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-address-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-address"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-address-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-address"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-repair-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-repair"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-repair-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-repair"
+      ],
+      "outcome": "answerable"
+    },
+    {
+      "id": "hold-channel-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-channel"
+      ],
+      "outcome": "needs_clarification"
+    },
+    {
+      "id": "hold-channel-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-channel"
+      ],
+      "outcome": "needs_clarification"
+    },
+    {
+      "id": "hold-medical-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [],
+      "outcome": "no_evidence"
+    },
+    {
+      "id": "hold-medical-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [],
+      "outcome": "no_evidence"
+    },
+    {
+      "id": "hold-conflict-1",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-conflict",
+        "hold-conflict-alternative"
+      ],
+      "outcome": "policy_conflict"
+    },
+    {
+      "id": "hold-conflict-2",
+      "reviewer": "",
+      "reviewed_at": "",
+      "approved": false,
+      "notes": "",
+      "gold_documents": [
+        "hold-conflict",
+        "hold-conflict-alternative"
+      ],
+      "outcome": "policy_conflict"
+    }
+  ]
+}

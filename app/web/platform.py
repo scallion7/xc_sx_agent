@@ -1,4 +1,4 @@
-"""Authenticated control plane for stages 27–34; tenant never comes from request bodies."""
+"""Authenticated control plane for tenant never comes from request bodies."""
 
 import base64
 from pathlib import Path
@@ -112,11 +112,23 @@ def register_platform_routes(app, services, require):
             content={"success": False, "error_code": exc.code, "detail": exc.code},
         )
 
+    @app.get("/v1/admin/alerts")
+    def alerts(ctx=Depends(require("maintenance:run"))):
+        from app.platform.alerts import evaluate_alerts
+
+        return evaluate_alerts(config)
+
     @app.get("/assets/{name}")
     def asset(name: str):
         from fastapi.responses import FileResponse
 
-        if name not in {"platform.css", "workspace.js", "workbench.js"}:
+        if name not in {
+            "platform.css",
+            "workspace.js",
+            "workbench.js",
+            "request_client.js",
+            "run_stream.js",
+        }:
             raise HTTPException(404)
         return FileResponse(Path(__file__).with_name(name))
 

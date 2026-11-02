@@ -45,3 +45,11 @@ python -m app.scripts.validate_plan_quality
 ```
 
 兼容回归覆盖独立构造的旧格式索引、新写旧读、配置别名、embedding 模型不匹配、旧导入以及旧测试入口。完整业务回归继续验证人工接管、可信确认、MCP 契约、HTTP 退款和恢复；数据库升级/漂移检查用于确认命名修改未改变数据库契约。实际结果见[验收状态](../evaluation/acceptance.md)。
+
+## 职责拆分后的入口
+
+`app.api` 保留应用工厂、ASGI `app` 和旧路由注册函数导出；ASGI 默认应用在访问时初始化，导入工厂不再触发数据库连接。路由实现分别位于 `app.web.public_routes`、`session_routes`、`commerce_routes`、`admin_routes`，公共响应/分页/OpenAPI 契约位于 `contracts`。
+
+`KnowledgePlatform` 与 `KnowledgeWorker` 仍从 `app.platform.knowledge` 导入。解析/切块在 `knowledge_documents`，导入任务在 `knowledge_ingestion`，发布/索引生命周期在 `knowledge_releases`；旧模块继续导出原公共类型和函数。数据库迁移和持久化格式保持原样。
+
+前端使用原生 ES modules：`request_client.js` 管理请求身份与待确认幂等键，`run_stream.js` 管理可中断 SSE 和游标。请求键按 token 摘要、会话和操作隔离；响应不明时刷新重试复用原键，明确成功后下一条新消息生成新键。待确认期间修改内容会提示先恢复原内容或查询记录。
