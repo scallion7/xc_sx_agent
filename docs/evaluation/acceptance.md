@@ -9,7 +9,24 @@
 - [容量门禁](../evidence/reliability/capacity.json)：1/10/50 并发共 61 请求成功；零错误、Worker 正常退出、恢复指纹匹配。P95 只作本机测量，未设生产延迟 SLA。
 - [故障演练](../evidence/reliability/drills.json)：强制退出后的租约接管与 firing/resolved 告警闭环，SQLite 锁释放后的原键重试收敛。
 - [离线复核材料](offline-review.md)：新 32 题冻结，16 题 development 完成四模式比较，16 题 holdout 未运行，人工复核未完成，付费模型调用为零。
-- [部署验收](../operations/compose-acceptance.md)：新增双 Worker、服务重启、旧库升级、真实 HTTP/MCP 和三个独立数据库恢复的 CI 作业；本机没有 Docker，远端结果待本次运行核验，不能用旧 smoke 代替。
+- [部署验收](../operations/compose-acceptance.md)：新增双 Worker、服务重启、旧库升级、真实 HTTP/MCP 和三个独立数据库恢复的 CI 作业；本机没有 Docker；已在 GitHub Actions 独立环境完成真实验收，详见下表。
+
+### 当前 CI 与部署证据
+
+实现提交 [`157159d`](https://github.com/scallion7/xc_sx_agent/commit/157159db24b1487bf403351d80f7fe37f3185967) 的 [Actions 运行 41482524125](https://github.com/scallion7/xc_sx_agent/actions/runs/41482524125) **8/8 作业通过**：[作业清单](../evidence/reliability/ci.json)。覆盖 Python 3.10–3.12、SQLite/PostgreSQL 迁移、真实浏览器、容量/故障演练、依赖审计与镜像扫描，以及新增完整 Compose 验收。
+
+[部署原始报告](../evidence/reliability/deployment.json)来自该作业的 artifact，模型为受控 HTTP，付费调用 0：
+
+| 检查 | 实测结果 |
+|---|---|
+| 干净项目与旧库升级 | PostgreSQL 17；从 0005 升级到 head，旧表与 action 提案哈希保持一致 |
+| 双 Worker 并发幂等 | 20 次提交、10 个稳定键、10 个唯一任务，每个 attempt=1 |
+| 外部业务 | 确认后退款提交断连、回调丢失，经查询对账成功，供应商退款数=1；MCP 库存执行成功 |
+| 服务重启 | 旧任务幂等命中，新任务完成，供应商退款数仍为 1 |
+| PostgreSQL 备份恢复 | 49 表记录数/哈希匹配，恢复数据库可启动应用并读取原任务；备份约 0.383 秒、恢复约 0.466 秒 |
+| 独立沙箱恢复 | 商务与库存分别通过 SQLite backup API 包含 WAL 读取源卷；源卷、备份及恢复库指纹匹配 |
+
+以上为停写、合成业务、小数据量验收；恢复时间不是生产 RTO，不能替代持续写入的 PITR、跨区域和真实支付供应商验收。测试数据库不纳入仓库，只归档报告和 Actions artifact；历史实验保持原样。
 
 ## 已完成的功能与依赖验收基线
 
@@ -42,7 +59,6 @@
 
 ## 仍未完成的验收
 
-- 完整 Compose 与 PostgreSQL 恢复新增独立 CI 流程，当前运行结果见本页顶部；上线部署仍须复验。
 - 生产持续写入下的 PostgreSQL PITR、跨区域和真实供应商一致恢复点演练。
 - 真实模型效果、人工金标准复核、语义 embedding 质量及真实费用验证。
 - 真实组织身份系统、订单/支付供应商与生产资金联调。
@@ -76,3 +92,5 @@ Ruff、格式、编译、文档链接及旧模块显式运行检查均已通过�
 ### 本轮首轮 CI 诊断
 
 [运行 41479809711](https://github.com/scallion7/xc_sx_agent/actions/runs/41479809711) 的浏览器/容量/故障演练和两种数据库迁移成功；新增部署作业因 Ubuntu 默认 apt 源缺少 PostgreSQL 17 客户端停止，尝试 PGDG 源后遇到上游下载连接中断，最终改为同一 PostgreSQL 17 镜像内的真实客户端适配器。锁定依赖审计发现 pypdf 6.21.2 的 7 条漏洞公告，按扫描给出的修复版本升级到 6.21.4，并提高运行依赖下限；未添加忽略漏洞规则。最终结果以修复提交的 CI 为准。
+
+部署调试还发现并修复了两个验收缺口：旧库夹具需要显式关闭自动建表，以免绕过迁移后产生重复表；库存 Compose 服务需要真实 MCP 握手健康检查，不能沿用 API 的 `/ready` 或仅禁用检查。最终完整部署作业已覆盖这些路径。

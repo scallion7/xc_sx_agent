@@ -1,0 +1,190 @@
+{
+  "passed": true,
+  "paid_model_calls": 0,
+  "model": "controlled HTTP",
+  "started_at": 1793637194.2523499,
+  "project": "ecom-acceptance-5eacaade2039",
+  "upgrade": {
+    "from": "20261023_0005",
+    "old_tables_preserved": true,
+    "action_id": "5d078d770f644b1987540a36c86c89c8"
+  },
+  "workers": {
+    "processes": 2,
+    "submissions": 20,
+    "unique_runs": 10,
+    "all_attempts": 1
+  },
+  "business": {
+    "refund_status": "succeeded",
+    "refund_count": 1,
+    "lost_provider_ack_and_callback_reconciled": true,
+    "inventory_status": "succeeded"
+  },
+  "restart": {
+    "idempotency_retained": true,
+    "new_run_completed": true,
+    "external_refund_count": 1
+  },
+  "recovery": {
+    "verified": true,
+    "backup_seconds": 0.3827485650000142,
+    "restore_seconds": 0.4662895910000202,
+    "backup_bytes": 114710,
+    "snapshot": {
+      "row_counts": {
+        "action_confirmations": 3,
+        "action_proposals": 4,
+        "after_sale_cases": 1,
+        "after_sale_creation_requests": 1,
+        "after_sale_operations": 1,
+        "agent_runs": 11,
+        "alembic_version": 1,
+        "api_idempotency_keys": 0,
+        "chunks": 10,
+        "compensation_operations": 0,
+        "configuration_releases": 0,
+        "connector_contracts": 1,
+        "connector_jobs": 1,
+        "connector_operations": 1,
+        "conversation_ownership": 13,
+        "deployment_heads": 0,
+        "document_versions": 10,
+        "documents": 10,
+        "embedding_cache": 10,
+        "evidence_records": 0,
+        "human_messages": 0,
+        "inbox_events": 1,
+        "ingestion_jobs": 11,
+        "knowledge_cache": 0,
+        "knowledge_heads": 1,
+        "knowledge_releases": 1,
+        "logistics": 0,
+        "maintenance_audits": 0,
+        "model_calls": 33,
+        "orders": 0,
+        "outbox_events": 1,
+        "plan_events": 0,
+        "plan_runs": 0,
+        "plan_step_attempts": 0,
+        "plan_steps": 0,
+        "plans": 0,
+        "platform_audits": 17,
+        "products": 0,
+        "provider_webhook_events": 0,
+        "quota_accounts": 3,
+        "reconciliation_jobs": 1,
+        "refunds": 0,
+        "risk_rule_versions": 0,
+        "run_events": 176,
+        "sandbox_inventory": 0,
+        "sandbox_reservations": 0,
+        "session_assignments": 0,
+        "sessions": 11,
+        "telemetry_spans": 277
+      },
+      "table_sha256": {
+        "action_confirmations": "d2b66976e3350b93dc17fed99bab69af6288ccd9d0ec84c9b2ef84da39ba57d2",
+        "action_proposals": "04a730108a07861d24aaf08c5eb0a4db17c31d9f44c1469befd434f1c192603d",
+        "after_sale_cases": "892bfe6e375b35285171817eefd35d2031be830dd23df07586399641b0ae8823",
+        "after_sale_creation_requests": "9b43645fd1c82a2e60169002e306503e708ed5daea2fd26f09cdaf3a3514d3cf",
+        "after_sale_operations": "4b0822a9aae2472c9db4f70f7e44cbdc9b2eaa89438500f6dd51b0e57bd0f1d1",
+        "agent_runs": "2a1e54236171f4cd1fb028da6edf09b58a12f78876ff4d4c717d14a5e8ddf7e8",
+        "alembic_version": "8bcb50c199cd7ae805db4b60beca072febacd703d06352aad32f65290030c2f6",
+        "api_idempotency_keys": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "chunks": "687cf87021ae4894732b8cbb2ee15fc5b7b7d6797f3100f9502593b0033cc3b4",
+        "compensation_operations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "configuration_releases": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "connector_contracts": "d572ae6a1ce2345846a43ef43a92aee930504a6e6f232ce738be6b6402062bfc",
+        "connector_jobs": "42ea9e4801436cd2c2cf7d37ea4889f235e122131c6803ced8889cd517ca9a3c",
+        "connector_operations": "f9ee2e06f63a93c22036575a9c954d8950d1f003bee020e8c01d70b6fbbd4cdb",
+        "conversation_ownership": "aaa3fbbc915622f238818bf787fb14a5550cfbcb129f1dda5e3e274d8a35de87",
+        "deployment_heads": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "document_versions": "aa6c27d06af9c93be1070f58b5f8b3eb18c2d4a8363cc973708e726dc612cc7f",
+        "documents": "e7f7ba0ce68173687016c342103f9f4225de3362cb36fc86b0a885daa0a8fa89",
+        "embedding_cache": "14a2a79fa93dad5c6b30b42d3b4cb330ceb87dd9fe784c4f967020fab7994156",
+        "evidence_records": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "human_messages": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "inbox_events": "10815553894d4dcc79e3da017f52630283ce91715bd4cfd5ca89dc733d218eaa",
+        "ingestion_jobs": "c7979dd357d442e0b95734ec51eb7fc1e0fa07fb152a6ad40a54463b002e545d",
+        "knowledge_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge_heads": "c53e15583bc9ef776dc17d688561f9a3cf97670d2d97c150c68f1f3f914d85e5",
+        "knowledge_releases": "2be7400816236e68051e609d15224a900bf5d7d1c505296e9c6a6130cb284adf",
+        "logistics": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "maintenance_audits": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model_calls": "fa1b6486e6322277d5fc36b2fff3452a661600e6fdd5c77641d4ffdf945283dc",
+        "orders": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "outbox_events": "04c9c5a23949121c826ecdcc29ba344a80c687a17a79efc18ecf33e5c596f763",
+        "plan_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "plan_runs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "plan_step_attempts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "plan_steps": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "plans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "platform_audits": "ecb570305bb62ce071421e8ba221eac87b83bd1309f9fb983b4ac53afdea3602",
+        "products": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "provider_webhook_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "quota_accounts": "b4b3b6cb58a25a08c6f3fb1fd244b7a13daa9aaff3ca7e6f3fcd142142ebc305",
+        "reconciliation_jobs": "ded6c579c5ed63b4b57cac112749f65311528af8bd325706f709616271ca837b",
+        "refunds": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_rule_versions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "run_events": "b3e0102e82a45aa0d3e87751f8fb82e47ac3c408fcbea3c02a8759e435ee9038",
+        "sandbox_inventory": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sandbox_reservations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "session_assignments": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sessions": "d6b80571cc3e4057d7f7ab84da8c9b801a09877467b3ec590f7fa3fa89a289a2",
+        "telemetry_spans": "2825b4ef1bbfac15e64d37124663b9f0ff102f4387adf27003f578f28349f480"
+      },
+      "audit_sha256": "ecb570305bb62ce071421e8ba221eac87b83bd1309f9fb983b4ac53afdea3602"
+    },
+    "source_overwritten": false,
+    "application_read_verified": true,
+    "scope": "quiesced logical snapshot; no production RPO/RTO or PITR claim"
+  },
+  "external_recovery": {
+    "sandbox": {
+      "verified": true,
+      "backup_seconds": 0.001237560999982179,
+      "restore_seconds": 0.0009842260000141323,
+      "backup_bytes": 61440,
+      "snapshot": {
+        "row_counts": {
+          "outbox_events": 1,
+          "sandbox_compensations": 0,
+          "sandbox_faults": 1,
+          "sandbox_orders": 1,
+          "sandbox_refunds": 1
+        },
+        "table_sha256": {
+          "outbox_events": "41486b13edf4f966a980856d7cc5d7ed7193985e6713d3604b2b352eca894d12",
+          "sandbox_compensations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "sandbox_faults": "4e9cfd27a9a1f154bfc24d38b09268f9af6070bed440399e660b69007370fe0b",
+          "sandbox_orders": "7b7b656c520edb6d7c180215093d851559abecbc5940f012c1caaa8b7ffe5f9b",
+          "sandbox_refunds": "d6e16b225bed972fd9f90e2588a0780c0a6e31805ee9f85083e5ecae09831db4"
+        },
+        "audit_sha256": ""
+      },
+      "source_overwritten": false,
+      "source_volume_verified": true
+    },
+    "inventory": {
+      "verified": true,
+      "backup_seconds": 0.000999634000010019,
+      "restore_seconds": 0.0009709809999947083,
+      "backup_bytes": 20480,
+      "snapshot": {
+        "row_counts": {
+          "sandbox_inventory": 1,
+          "sandbox_reservations": 1
+        },
+        "table_sha256": {
+          "sandbox_inventory": "a7cbfb596ffc8bb1e4343c164d08898abf19210485a32353e5398c54c12e809a",
+          "sandbox_reservations": "e1c081e53931ac8de022379cf4f5bd4d522fd6c7ff6c847bdbfafc3d28a722b4"
+        },
+        "audit_sha256": ""
+      },
+      "source_overwritten": false,
+      "source_volume_verified": true
+    }
+  },
+  "finished_at": 1793637318.4781814
+}

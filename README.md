@@ -66,7 +66,7 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-当前可靠性改进：本地 **370 项测试通过，覆盖率 81%**；已补齐完整评测矩阵门禁、浏览器请求重试幂等、告警与恢复手册。新增 Compose/PostgreSQL 完整验收作业的执行状态见[当前验收汇总](docs/evaluation/acceptance.md)。[人工复核材料](docs/evaluation/offline-review.md)已冻结，保留集未运行，未调用付费模型。
+当前可靠性改进：本地 **370 项测试通过，覆盖率 81%**；已补齐完整评测矩阵门禁、浏览器请求重试幂等、告警与恢复手册。GitHub Actions **8/8 作业通过**，包括双 Worker、重启与 PostgreSQL/独立沙箱恢复；见[当前验收汇总](docs/evaluation/acceptance.md)。[人工复核材料](docs/evaluation/offline-review.md)已冻结，保留集未运行，未调用付费模型。
 
 历史功能与依赖修复验收基线为 [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6cba0a86663524aeae3a5934dd7d9a3b4c)：
 

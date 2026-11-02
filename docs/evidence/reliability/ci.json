@@ -1,0 +1,55 @@
+{
+  "commit": "157159db24b1487bf403351d80f7fe37f3185967",
+  "run_id": 41482524125,
+  "url": "https://github.com/scallion7/xc_sx_agent/actions/runs/41482524125",
+  "jobs": [
+    {
+      "id": 125404281630,
+      "name": "compose-acceptance",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404281959,
+      "name": "migrations (sqlite:////tmp/ecom-service-agent-ci.db)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282043,
+      "name": "supply-chain",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282090,
+      "name": "migrations (postgresql+psycopg://xc_agent:xc_agent_test@127.0.0.1:5432/xc_sx_agent)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282164,
+      "name": "platform-browser",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282199,
+      "name": "python-matrix (3.12)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282209,
+      "name": "python-matrix (3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 125404282372,
+      "name": "python-matrix (3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

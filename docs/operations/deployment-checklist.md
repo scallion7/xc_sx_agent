@@ -1,6 +1,6 @@
 # 生产配置检查清单
 
-> 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 与 PostgreSQL 恢复已加入独立 CI 门禁，实际结果按本次提交核对。下列检查项不等于生产就绪认证。
+> 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 与 PostgreSQL/独立沙箱恢复已通过独立 CI 验收，提交与证据见该页。下列检查项不等于生产就绪认证。
 
 本清单用于部署前验收，不代表仓库已经完成真实组织、供应商或生产流量联调。所有密钥、
 Token 和数据库凭据应由部署平台的密钥管理服务注入，不写入 `.env`、镜像或日志。
