@@ -330,24 +330,67 @@ class Acceptance:
         report["recovery"] = backup_restore(
             SOURCE, self.directory / "postgres.dump", TARGET
         )
-        # Preserve independent provider volumes as distinct artifacts, never pretend an app dump covers them.
-        self.compose(
-            "cp",
-            "commerce-sandbox:/app/app/sessions/commerce-sandbox.db",
-            str(self.directory / "sandbox.db"),
-        )
-        self.compose(
-            "cp",
-            "inventory:/inventory/inventory.db",
-            str(self.directory / "inventory.db"),
-        )
+        # A new one-shot process reads the stopped volume through SQLite's backup
+        # API, including committed WAL pages; copying only the main file is unsafe.
         report["external_recovery"] = {}
-        for name in ("sandbox", "inventory"):
+        for name, service, source in (
+            ("sandbox", "commerce-sandbox", "/app/app/sessions/commerce-sandbox.db"),
+            ("inventory", "inventory", "/inventory/inventory.db"),
+        ):
+            snapshot = source + ".snapshot"
+            code = (
+                "import sqlite3,json; from app.platform.recovery import fingerprint; "
+                f"a=sqlite3.connect({source!r}); b=sqlite3.connect({snapshot!r}); "
+                "a.backup(b); a.close(); b.close(); "
+                f"print(json.dumps(fingerprint('sqlite:///' + {source!r})))"
+            )
+            expected = json.loads(
+                self.compose(
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "-T",
+                    service,
+                    "python",
+                    "-c",
+                    code,
+                    capture=True,
+                )
+            )
+            self.compose(
+                "cp", service + ":" + snapshot, str(self.directory / (name + ".db"))
+            )
+            copied = "sqlite:///" + str(self.directory / (name + ".db"))
+            assert fingerprint(copied) == expected
             report["external_recovery"][name] = backup_restore(
-                "sqlite:///" + str(self.directory / (name + ".db")),
+                copied,
                 self.directory / (name + "-backup.db"),
                 "sqlite:///" + str(self.directory / (name + "-restored.db")),
             )
+            report["external_recovery"][name]["source_volume_verified"] = True
+        # Boot the application against the restored PostgreSQL database and read
+        # an existing authenticated run, rather than relying only on SQL hashes.
+        restored_url = TARGET.replace("127.0.0.1:55432", "postgres:5432")
+        code = (
+            "from fastapi.testclient import TestClient; from app.api import create_app; "
+            "client=TestClient(create_app()); "
+            f"response=client.get('/v1/runs/{rows[0]['run_id']}',headers={{'X-API-Key':'dev-user-token'}}); "
+            "assert response.status_code==200,response.text; "
+            "assert response.json()['status']=='completed'"
+        )
+        self.compose(
+            "run",
+            "--rm",
+            "--no-deps",
+            "-T",
+            "-e",
+            "DATABASE_URL=" + restored_url,
+            "api",
+            "python",
+            "-c",
+            code,
+        )
+        report["recovery"]["application_read_verified"] = True
         report["recovery"]["scope"] = (
             "quiesced logical snapshot; no production RPO/RTO or PITR claim"
         )

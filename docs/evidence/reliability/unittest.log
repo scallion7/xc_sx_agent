@@ -138,8 +138,8 @@ Building prefix dict from the default dictionary ...
 DEBUG [jieba] Building prefix dict from the default dictionary ...
 Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
 DEBUG [jieba] Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
-Loading model cost 0.186 seconds.
-DEBUG [jieba] Loading model cost 0.186 seconds.
+Loading model cost 0.189 seconds.
+DEBUG [jieba] Loading model cost 0.189 seconds.
 Prefix dict has been built successfully.
 DEBUG [jieba] Prefix dict has been built successfully.
 ok
@@ -289,7 +289,7 @@ test_old_similarity_import_keeps_zero_and_dimension_checks (test_naming_compatib
 test_governed_service_aliases_preserve_class_identity (test_naming_compatibility.EntryPointCompatibilityTests.test_governed_service_aliases_preserve_class_identity) ... ok
 test_old_test_modules_load_explicitly_without_duplicate_discovery (test_naming_compatibility.EntryPointCompatibilityTests.test_old_test_modules_load_explicitly_without_duplicate_discovery) ... .
 ----------------------------------------------------------------------
-Ran 1 test in 0.041s
+Ran 1 test in 0.039s
 
 OK
 ok
@@ -635,8 +635,8 @@ test_standalone_mcp_write_requires_authenticated_boundary (test_trusted_actions.
 test_verified_evidence_is_used_and_review_change_requires_reconfirmation (test_trusted_actions.TrustedActionsTests.test_verified_evidence_is_used_and_review_change_requires_reconfirmation) ... ok
 
 ----------------------------------------------------------------------
-Ran 369 tests in 60.035s
+Ran 369 tests in 58.585s
 
 OK
-{"batches": [{"concurrency": 1, "requests": 1, "seconds": 0.00035004200026378385, "throughput_rps": 2856.8000389851, "p50_ms": 0.003916999958164524, "p95_ms": 0.003916999958164524, "errors": 1}, {"concurrency": 10, "requests": 10, "seconds": 0.0002764579999166017, "throughput_rps": 36171.85975090854, "p50_ms": 0.0006039999789209105, "p95_ms": 0.0009159998626273591, "errors": 10}, {"concurrency": 50, "requests": 50, "seconds": 0.0008551249998163257, "throughput_rps": 58470.98378686112, "p50_ms": 0.0005409999630501261, "p95_ms": 0.0009159998626273591, "errors": 50}], "recovery_verified": true}
+{"batches": [{"concurrency": 1, "requests": 1, "seconds": 0.0003522500001054141, "throughput_rps": 2838.892830946035, "p50_ms": 0.0026249999791616574, "p95_ms": 0.0026249999791616574, "errors": 1}, {"concurrency": 10, "requests": 10, "seconds": 0.00029408299997157883, "throughput_rps": 34004.00567515441, "p50_ms": 0.0005625001904263627, "p95_ms": 0.0010409999049443286, "errors": 10}, {"concurrency": 50, "requests": 50, "seconds": 0.0009523339999759628, "throughput_rps": 52502.588378932196, "p50_ms": 0.0005000001692678779, "p95_ms": 0.0008339998203155119, "errors": 50}], "recovery_verified": true}
 No new upgrade operations detected.

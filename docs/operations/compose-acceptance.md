@@ -16,9 +16,11 @@ python -m app.scripts.accept_deployment --output test-results/deployment.json
 3. 单独完成知识种子发布后启动两个 Agent Worker 和独立退款 Worker，避免种子发布与消费争抢。
 4. 20 次并发提交复用 10 个幂等键，断言 10 个唯一任务、每个一次尝试；验证确认接口、提交后断连与回调丢失的退款对账，以及 MCP 库存确认执行。
 5. 重启有状态服务，验证幂等记录、外部退款次数和新任务执行。
-6. 停止全部写入者，`pg_dump` 到新备份，再 `pg_restore` 至单独空库，对比所有表的记录数和 SHA256。密码通过权限 0600 的临时 passfile 传给 libpq，不放进进程 argv。
-7. 对退款和库存的独立 SQLite 持久卷分别复制、备份和恢复，对比全部表指纹；不把应用数据库备份解释成供应商数据备份。
+6. 停止全部写入者，`pg_dump` 到新备份，再 `pg_restore` 至单独空库，对比所有表的记录数和 SHA256。使用恢复库启动应用并读取旧任务；密码通过权限 0600 的临时 passfile 传给 libpq，不放进进程 argv。
+7. 停止服务后使用 SQLite backup API 读取独立卷中的数据库（包含已提交 WAL），再分别备份和恢复，对比源卷与恢复库的全部表指纹；不把应用数据库备份解释成供应商数据备份。
 
 产物包含 `deployment.json`、命令日志、服务日志和三类隔离测试数据库备份。GitHub Actions 的 `compose-acceptance` 作业始终上传产物，失败使该作业失败；最终状态以[验收汇总](../evaluation/acceptance.md)关联的当前提交为准。
 
 这覆盖停写后的逻辑快照恢复，不覆盖生产持续写入、跨机时钟/网络、真实支付系统、时间点恢复或灾难恢复 SLA。恢复应用备份后仍需按原业务键核对外部效果；不得通过回滚本地账本再次发起已发生的退款。
+
+CI 显式配置 [PostgreSQL 官方 PGDG 源](https://www.postgresql.org/download/linux/ubuntu/) 安装 17 客户端，避免使用 Ubuntu 默认仓库中的不同主版本。

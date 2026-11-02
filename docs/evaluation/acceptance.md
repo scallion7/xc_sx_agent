@@ -4,7 +4,7 @@
 
 ## 当前可靠性改进
 
-本地 Python 3.11、锁定依赖、Chromium：**369 项测试通过，无跳过，60.035 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
+本地 Python 3.11、锁定依赖、Chromium：**369 项测试通过，无跳过，58.585 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
 
 - [容量门禁](../evidence/reliability/capacity.json)：1/10/50 并发共 61 请求成功；零错误、Worker 正常退出、恢复指纹匹配。P95 只作本机测量，未设生产延迟 SLA。
 - [故障演练](../evidence/reliability/drills.json)：强制退出后的租约接管与 firing/resolved 告警闭环，SQLite 锁释放后的原键重试收敛。
@@ -72,3 +72,7 @@
 | SQLite 迁移与平台 smoke | 升级至 `20261025_0006`、无 schema drift、知识/预算/所有权检查通过 | [迁移日志](../evidence/naming-round2/migration.log) |
 
 Ruff、格式、编译、文档链接及旧模块显式运行检查均已通过。命名兼容策略和保留的历史标识见[说明](../engineering/naming-and-compatibility.md)。本轮远端 Python 多版本、PostgreSQL、浏览器、镜像与安全扫描结果，按本次提交查看 [GitHub Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml)，不以旧 CI 结果代替。
+
+### 本轮首轮 CI 诊断
+
+[运行 41479809711](https://github.com/scallion7/xc_sx_agent/actions/runs/41479809711) 的浏览器/容量/故障演练和两种数据库迁移成功；新增部署作业因 Ubuntu 默认 apt 源缺少 PostgreSQL 17 客户端停止，已改用官方 PGDG 源。锁定依赖审计发现 pypdf 6.21.2 的 7 条漏洞公告，按扫描给出的修复版本升级到 6.21.4，并提高运行依赖下限；未添加忽略漏洞规则。最终结果以修复提交的 CI 为准。

@@ -146,6 +146,11 @@ jobs:
       - run: python -m pip install -r requirements-lock.txt
       - name: PostgreSQL 17 recovery client
         run: |
+          # PGDG provides the matching client; Ubuntu's default repository may only ship 16.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
           echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
