@@ -33,8 +33,12 @@ services:
       INVENTORY_HOST: 0.0.0.0
     command: [python, -m, mcp_server.inventory_server]
     volumes: ["inventory_data:/inventory"]
-    # RPC readiness is verified by smoke; main image API healthcheck is inapplicable.
-    healthcheck: {disable: true}
+    # Verify the actual MCP handshake/list_tools, not the unrelated API /ready.
+    healthcheck:
+      test: [CMD, python, -c, "from app.mcp_client import MCPClient; c=MCPClient('http://127.0.0.1:9125/mcp'); assert c.connect(); c.close()"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
   seed:
     profiles: [integration]
     build: .
