@@ -1,0 +1,1422 @@
+{
+  "schema_version": 1,
+  "execution_mode": "controlled_http_contract",
+  "paid_calls": 0,
+  "semantic_quality_verified": false,
+  "release_eligible": false,
+  "manifest": {
+    "version": "task-contract-v1",
+    "status": "synthetic_unreviewed",
+    "split": "development",
+    "cases_sha256": "fce5d9f33b984a575a7a57013bc1e414da464c943a2abade06bd88320ba9941d",
+    "strategies": [
+      "react",
+      "plan_execute",
+      "multi"
+    ],
+    "purpose": "Offline HTTP/worker/business-state contract baseline; not LLM quality or release acceptance."
+  },
+  "source_tree_sha256": "c4b87a7c42ea67dbd15fb46e2bef398d683baacdd910df327dbf8748a6437395",
+  "inputs_sha256": {
+    "requirements-lock.txt": "94917854102b044514b3dc390cd0f4e41031bce57b19b4a6cc800dc59b09d7d2",
+    "app/config/model_catalog.json": "1e1d2ee25cff1d076f8629d7afa8db0a36fd7d5cd5a08c98a6322b4158b419cd",
+    "app/config/risk_rules.json": "32f5bf008065a3a750e77e25aa9a8fce4e03bcb2bc63b705a67f207ad1dcd056",
+    "app/evaluation/platform/documents.json": "02268227d20e425970c41baccf5b42f995c0c477cba21d2b061b1f052025298f",
+    "app/evaluation/tasks/cases.json": "fce5d9f33b984a575a7a57013bc1e414da464c943a2abade06bd88320ba9941d"
+  },
+  "profile": {
+    "model_transport": "loopback_http",
+    "embedding": "local_hash",
+    "business_provider": "mock",
+    "database": "isolated_sqlite_per_trial",
+    "max_output_tokens": 500
+  },
+  "base_commit": "d2b43fb2cb00015488b6164c1c2620f927dbe006",
+  "python": "3.11.15",
+  "summary": {
+    "complete": true,
+    "passed": true,
+    "planned_trials": 18,
+    "completed_trials": 18,
+    "passed_trials": 18,
+    "simulated_tokens": 2010,
+    "token_budget": 100000,
+    "stop_reason": "",
+    "by_strategy": {
+      "react": {
+        "trials": 6,
+        "passed": 6
+      },
+      "plan_execute": {
+        "trials": 6,
+        "passed": 6
+      },
+      "multi": {
+        "trials": 6,
+        "passed": 6
+      }
+    }
+  },
+  "trials": [
+    {
+      "id": "policy_followup",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "citations_present",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "citations_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "citations_present": true,
+        "citations_valid": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 6
+      },
+      "simulated_tokens": 180,
+      "latency_ms": 2284.6
+    },
+    {
+      "id": "policy_followup",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "citations_present",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "citations_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "citations_present": true,
+        "citations_valid": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 6
+      },
+      "simulated_tokens": 180,
+      "latency_ms": 2001.37
+    },
+    {
+      "id": "policy_followup",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "citations_present",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "citations_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "actual": [
+            "list_user_orders",
+            "search_knowledge"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "citations_present": true,
+        "citations_valid": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 8
+      },
+      "simulated_tokens": 240,
+      "latency_ms": 2029.42
+    },
+    {
+      "id": "confirm_replay",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "before_confirmation_cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execute_success",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "replay_same_result",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "case_owner_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execute_success": true,
+        "replay_same_result": true,
+        "cases": 1,
+        "operations": 0,
+        "case_owner_valid": true,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1698.6
+    },
+    {
+      "id": "confirm_replay",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "before_confirmation_cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execute_success",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "replay_same_result",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "case_owner_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execute_success": true,
+        "replay_same_result": true,
+        "cases": 1,
+        "operations": 0,
+        "case_owner_valid": true,
+        "model_call_count": 2
+      },
+      "simulated_tokens": 60,
+      "latency_ms": 1698.87
+    },
+    {
+      "id": "confirm_replay",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "before_confirmation_cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execute_success",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "replay_same_result",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "case_owner_valid",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execute_success": true,
+        "replay_same_result": true,
+        "cases": 1,
+        "operations": 0,
+        "case_owner_valid": true,
+        "model_call_count": 4
+      },
+      "simulated_tokens": 120,
+      "latency_ms": 1692.28
+    },
+    {
+      "id": "reject_effect",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "rejected",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "rejected": true,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1684.02
+    },
+    {
+      "id": "reject_effect",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "rejected",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "rejected": true,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 2
+      },
+      "simulated_tokens": 60,
+      "latency_ms": 1687.92
+    },
+    {
+      "id": "reject_effect",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "rejected",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "rejected": true,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 4
+      },
+      "simulated_tokens": 120,
+      "latency_ms": 1683.75
+    },
+    {
+      "id": "untrusted_confirmation",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1694.06
+    },
+    {
+      "id": "untrusted_confirmation",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 2
+      },
+      "simulated_tokens": 60,
+      "latency_ms": 1813.31
+    },
+    {
+      "id": "untrusted_confirmation",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "pending_actions",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "execution_blocked",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "create_after_sale_case"
+          ],
+          "actual": [
+            "create_after_sale_case"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "pending_actions": 1,
+        "before_confirmation_cases": 0,
+        "execution_blocked": true,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 4
+      },
+      "simulated_tokens": 120,
+      "latency_ms": 1681.01
+    },
+    {
+      "id": "owner_isolation",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "foreign_read_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "foreign_events_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "foreign_read_status": 404,
+        "foreign_events_status": 404,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1670.79
+    },
+    {
+      "id": "owner_isolation",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "foreign_read_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "foreign_events_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "foreign_read_status": 404,
+        "foreign_events_status": 404,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1679.59
+    },
+    {
+      "id": "owner_isolation",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "foreign_read_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "foreign_events_status",
+          "expected": 404,
+          "actual": 404,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [
+            "query_order"
+          ],
+          "actual": [
+            "query_order"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "foreign_read_status": 404,
+        "foreign_events_status": 404,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 4
+      },
+      "simulated_tokens": 120,
+      "latency_ms": 1688.6
+    },
+    {
+      "id": "human_takeover",
+      "strategy": "react",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "automatic_reply_empty",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "human_message_count",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "human_replay_same",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders"
+          ],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "automatic_reply_empty": true,
+        "human_replay_same": true,
+        "human_message_count": 1,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1737.66
+    },
+    {
+      "id": "human_takeover",
+      "strategy": "plan_execute",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "automatic_reply_empty",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "human_message_count",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "human_replay_same",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders"
+          ],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "automatic_reply_empty": true,
+        "human_replay_same": true,
+        "human_message_count": 1,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 3
+      },
+      "simulated_tokens": 90,
+      "latency_ms": 1699.54
+    },
+    {
+      "id": "human_takeover",
+      "strategy": "multi",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "completed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "automatic_reply_empty",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "human_message_count",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "human_replay_same",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "cases",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "operations",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "name": "allowed_tools",
+          "expected": [
+            "list_user_orders"
+          ],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        },
+        {
+          "name": "required_tools_observed",
+          "expected": [],
+          "actual": [
+            "list_user_orders"
+          ],
+          "passed": true
+        }
+      ],
+      "failure_categories": [],
+      "observations": {
+        "completed": true,
+        "automatic_reply_empty": true,
+        "human_replay_same": true,
+        "human_message_count": 1,
+        "cases": 0,
+        "operations": 0,
+        "case_owner_valid": false,
+        "model_call_count": 4
+      },
+      "simulated_tokens": 120,
+      "latency_ms": 1702.1
+    }
+  ],
+  "raw_artifact": {
+    "path": "task-baseline.raw.json.gz",
+    "sha256": "6d4e190db00acb18a3d013750fa1372a4168acb8f17babe4569a315164f5ae86"
+  }
+}

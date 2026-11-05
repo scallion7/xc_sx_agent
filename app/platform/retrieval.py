@@ -90,6 +90,27 @@ def applicable(meta, context, day):
     return "clarify" if missing else "include"
 
 
+def applicability_reasons(meta, context, day):
+    reasons = []
+    if meta["effective_date"] > day:
+        reasons.append("not_yet_effective")
+    if meta.get("expires_at") and meta["expires_at"] < day:
+        reasons.append("expired")
+    if context.get("policy_type") and context["policy_type"] != meta["policy_type"]:
+        reasons.append("policy_type_mismatch")
+    for plural, singular in [
+        ("regions", "region"),
+        ("channels", "channel"),
+        ("products", "product"),
+    ]:
+        if meta.get(plural):
+            if not context.get(singular):
+                reasons.append("missing_" + singular)
+            elif context[singular] not in meta[plural]:
+                reasons.append(singular + "_mismatch")
+    return reasons
+
+
 class HybridRetrieval:
     def __init__(self, config, *, embedder=None):
         self.service = KnowledgePlatform(config, embedder=embedder)
@@ -154,6 +175,10 @@ class HybridRetrieval:
                     pass
             return result | {"cache_hit": False}
 
+    def diagnose(self, query, **kwargs):
+        """Admin/offline only: execute the same search and expose each decision."""
+        return self._search(query, explain=True, **kwargs)
+
     def _search(
         self,
         query,
@@ -164,6 +189,7 @@ class HybridRetrieval:
         context=None,
         release_id="",
         day=None,
+        explain=False,
     ):
         started = time.perf_counter()
         context = context or {}
@@ -191,6 +217,20 @@ class HybridRetrieval:
             "grounded": False,
             "requires_human": True,
         }
+        if explain:
+            base["diagnostics"] = {
+                "query_tokens": tokens(query),
+                "context": context,
+                "day": day,
+                "top_k": top_k,
+                "candidates": [],
+                "cache_bypassed": True,
+                "outcome_reason": "no_evidence",
+                "conflicting_policy_keys": [],
+                "score_kind": "lexical_projection"
+                if self.service.embedder.model.startswith("local-hash")
+                else "semantic_embedding",
+            }
         if not release_id:
             return base | {"outcome": "no_evidence", "latency_ms": 0}
         release = self.service.release(release_id)
@@ -207,9 +247,29 @@ class HybridRetrieval:
                     )
                 ).scalars()
             )
+        original_items = json.loads(release["index_json"])
+        trace = {}
+        if explain:
+            for x in original_items:
+                trace[x["chunk_id"]] = {
+                    "chunk_id": x["chunk_id"],
+                    "document_id": x["document_id"],
+                    "text": x["text"],
+                    "page": x["page"],
+                    "start": x["start"],
+                    "end": x["end"],
+                    "applicability": applicable(x["metadata"], context, day),
+                    "filter_reasons": (
+                        ["deleted"] if x["document_id"] in deleted else []
+                    )
+                    + applicability_reasons(x["metadata"], context, day),
+                    "selected": False,
+                    "selection_reason": "filtered",
+                }
+            base["diagnostics"]["candidates"] = list(trace.values())
         items = [
             x
-            for x in json.loads(release["index_json"])
+            for x in original_items
             if x["document_id"] not in deleted
             and applicable(x["metadata"], context, day) != "exclude"
         ]
@@ -244,12 +304,26 @@ class HybridRetrieval:
                     1 / (60 + ranks[name][i]) for name in ranks if i in ranks[name]
                 )
             )
+            before_rerank = score
             if rerank:
                 # Explicit lexical reranker, not a cross-encoder; separately ablated.
                 numbers = set(re.findall(r"\d+(?:\.\d+)?", query))
                 matched = sum(n in items[i]["text"] for n in numbers)
                 score *= 1 + 0.15 * matched + 0.1 * (query in items[i]["text"])
             scores.append(score)
+            if explain:
+                trace[items[i]["chunk_id"]].update(
+                    bm25_score=lexical[i],
+                    vector_score=vector[i],
+                    bm25_rank=ranks["bm25"].get(i),
+                    vector_rank=ranks["vector"].get(i),
+                    score_before_rerank=before_rerank,
+                    score=score,
+                    rerank_multiplier=score / before_rerank if before_rerank else 1,
+                    selection_reason="outside_top_k"
+                    if score > 0
+                    else "nonpositive_score",
+                )
         selected = [
             i
             for i in sorted(
@@ -257,11 +331,31 @@ class HybridRetrieval:
             )
             if scores[i] > 0
         ][:top_k]
+        if explain:
+            for rank, i in enumerate(
+                sorted(
+                    range(len(items)), key=lambda i: (-scores[i], items[i]["chunk_id"])
+                )
+            ):
+                trace[items[i]["chunk_id"]]["final_rank"] = rank + 1
+            for i in selected:
+                trace[items[i]["chunk_id"]]["selection_reason"] = "selected"
         # Hash vectors can match by collision. The offline projector cannot create
         # evidence without any lexical support, unlike a configured semantic model.
         if self.service.embedder.model.startswith("local-hash"):
             query_terms = set(tokens(query))
             minimum = max(1, math.ceil(len(query_terms) * 0.35))
+            if explain:
+                base["diagnostics"]["minimum_lexical_overlap"] = minimum
+                for i, item in enumerate(items):
+                    entry = trace[item["chunk_id"]]
+                    entry["matched_tokens"] = sorted(
+                        query_terms & set(tokens(item["text"]))
+                    )
+                    if i in selected and (
+                        lexical[i] <= 0 or len(entry["matched_tokens"]) < minimum
+                    ):
+                        entry["selection_reason"] = "lexical_support_rejected"
             selected = [
                 i
                 for i in selected
@@ -299,6 +393,16 @@ class HybridRetrieval:
         hits = [h for h in hits if h["document_id"] in live]
         if not hits:
             outcome = "no_evidence"
+        if explain:
+            live_hits = {h["chunk_id"] for h in hits}
+            for entry in trace.values():
+                entry["selected"] = entry["chunk_id"] in live_hits
+                if entry["selection_reason"] == "selected" and not entry["selected"]:
+                    entry["selection_reason"] = "deleted_at_return"
+            base["diagnostics"]["outcome_reason"] = outcome
+            base["diagnostics"]["conflicting_policy_keys"] = sorted(
+                k for k, v in decisions.items() if len(v) > 1
+            )
         results = [
             {k: v for k, v in h.items() if k not in {"vector", "text_hash"}}
             | {

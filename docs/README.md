@@ -14,6 +14,7 @@
 | 哪些结果已经验证 | [验收状态与证据](evaluation/acceptance.md) |
 | 个人工程扩展如何说明 | [贡献说明](CONTRIBUTIONS.md) |
 | 如何处理告警与恢复 | [故障手册](operations/incident-runbook.md)、[Compose 验收](operations/compose-acceptance.md) |
+| 如何使用复核工作台与任务基线 | [检索诊断、人工复核与任务基线](evaluation/review-and-task-baseline.md) |
 | 如何复核检索评测 | [离线评测与人工复核](evaluation/offline-review.md) |
 | 部署前检查什么 | [部署与维护清单](operations/deployment-checklist.md) |
 | 为什么采用这些设计 | [知识快照与共享治理 ADR](decisions/0002-knowledge-snapshots-and-governance.md) |
@@ -24,6 +25,6 @@
 - 当前状态以验收状态页为汇总入口，每项结论注明提交、环境或证据；新结果追加记录。
 - `history/` 记录当时情况，`evidence/` 保存原始结果；不把旧报告中的测试数改成最新测试数。
 - 根目录的旧分期文档路径作为兼容入口保留，正文已归档；新增功能文档优先按主题命名。
-- 展示名称使用 Ecom Service Agent，页面副标题为客户服务、客服工作台、运行管理台。历史示例中的“并夕夕/小夕”不作为当前产品名。
+- 展示名称使用 Ecom Service Agent，页面副标题为客户服务、客服工作台、运行管理台、评测复核。历史示例中的“并夕夕/小夕”不作为当前产品名。
 - 不因文档改名修改数据库、迁移版本、接口路径或会话文件格式。代码重命名的别名与升级方式见[命名与兼容约定](engineering/naming-and-compatibility.md)。
 - 演示截图位于 `assets/`；历史截图/录像仍在 `evidence/platform/`，不得把它们标成新界面验收。

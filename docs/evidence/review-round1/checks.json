@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-05",
+  "base_commit": "d2b43fb2cb00015488b6164c1c2620f927dbe006",
+  "full_tests": {
+    "passed": 385,
+    "skipped": 0,
+    "seconds": 64.501,
+    "coverage_percent": 82
+  },
+  "final_targeted_tests": 14,
+  "final_review_browser_tests": 1,
+  "task_trials_passed": 18,
+  "task_trials_planned": 18,
+  "paid_model_calls": 0,
+  "holdout_executed": false,
+  "human_review_completed": false,
+  "frozen_review_files_unchanged": true,
+  "published_migrations_unchanged": true,
+  "openapi_paths": 90,
+  "ruff_check": true,
+  "ruff_format": true,
+  "compileall": true,
+  "docs_links": 383,
+  "plan_quality_cases_passed": 40,
+  "sqlite_upgrade_drift_smoke_downgrade_upgrade": true,
+  "ci_result": "See GitHub Actions for the implementation commit; prior CI results are historical."
+}

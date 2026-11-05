@@ -124,6 +124,8 @@ def register_platform_routes(app, services, require):
 
         if name not in {
             "platform.css",
+            "review.css",
+            "review.js",
             "workspace.js",
             "workbench.js",
             "request_client.js",

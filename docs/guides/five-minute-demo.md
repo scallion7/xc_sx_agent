@@ -72,3 +72,7 @@ python -m app.scripts.demo_stack --directory app/sessions/interview-demo-01
 | 端口/子进程错误 | 查看 `model.log`、`inventory.log`；允许本机回环监听 |
 
 对应自动化浏览器流程位于 [tests/test_platform_http.py](../../tests/test_platform_http.py)，支持确认后数据库计数断言和人工接管检查。运行方式见[配置与运行](configuration.md)。
+
+## 可选：展示评测工程闭环
+
+打开启动器打印的 `/review`，输入演示管理员令牌 `demo-admin`，选择 development 题目，核对原始政策并填写理由，保存草稿或标记分歧；运行离线诊断，展示四模式的候选分数、排序和拒答原因。演示审批仅在可丢弃数据库操作，不能把它作为人工金标准。导出文件后可看到真实账号、审核修订及原文定位；导入会恢复成待重新批准的草稿。详细复现与任务基线命令见[复核与评测指南](../evaluation/review-and-task-baseline.md)。

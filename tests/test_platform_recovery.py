@@ -45,6 +45,9 @@ class RecoveryTests(PlatformTestCase):
         )
         with self.assertRaises(RuntimeError):
             downgrade_database(url, "20261023_0005")
+        self.assertEqual(migration_status(url)["current"], "20261025_0006")
+        self.assertEqual(len(k.jobs()), 1)
+        upgrade_database(url)
         self.assertTrue(migration_status(url)["up_to_date"])
 
     def test_empty_expand_contract_reversible(self):

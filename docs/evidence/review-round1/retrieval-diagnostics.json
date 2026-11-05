@@ -1,0 +1,94 @@
+{
+  "corpus_version": "review-v1",
+  "frozen_files": {
+    "documents.json": "080a0d6033ca03b72913a4d956f07369fb1743c28a763d60ac5a722c60bdf0a8",
+    "cases.json": "49ffb61cbac78fd43055856d3b902584d52994b3af33baa01d958736bf14c232"
+  },
+  "mode": "offline_lexical_projection",
+  "paid_calls": 0,
+  "semantic_quality_verified": false,
+  "human_review_applied": false,
+  "retrieval": {
+    "dataset_hash": "fda63bf0af729205223a9a3da1816d69ed198cf83b7c5f87637217616d81c01b",
+    "split": "development",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "review_status": "synthetic_unreviewed",
+    "ablations": {
+      "vector": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.5442919993802207
+      },
+      "bm25": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 0.9499169991613599
+      },
+      "hybrid": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.1112499996670522
+      },
+      "hybrid_rerank": {
+        "sample_count": 16,
+        "recall_at_k": 0.42857142857142855,
+        "no_answer_accuracy": 1,
+        "mrr": 0.375,
+        "citation_correctness": 0.5,
+        "outcome_accuracy": 0.5,
+        "p95_ms": 1.1167499997100094
+      }
+    }
+  },
+  "diagnostics": {
+    "split": "development",
+    "sample_count": 16,
+    "same_final_results_count": 15,
+    "interpretation": "Stage traces explain observed outputs; equality does not establish equal semantic quality.",
+    "different_result_order": [
+      "dev-conflict-1"
+    ],
+    "candidate_decisions": {
+      "vector": {
+        "lexical_support_rejected": 50,
+        "nonpositive_score": 223,
+        "outside_top_k": 7,
+        "selected": 8
+      },
+      "bm25": {
+        "lexical_support_rejected": 36,
+        "nonpositive_score": 243,
+        "selected": 8,
+        "outside_top_k": 1
+      },
+      "hybrid": {
+        "lexical_support_rejected": 52,
+        "nonpositive_score": 218,
+        "outside_top_k": 10,
+        "selected": 8
+      },
+      "hybrid_rerank": {
+        "lexical_support_rejected": 52,
+        "nonpositive_score": 218,
+        "outside_top_k": 10,
+        "selected": 8
+      }
+    }
+  },
+  "raw_artifact": {
+    "path": "retrieval-diagnostics.raw.json.gz",
+    "sha256": "83c20e9cd24549ec890970b24bdb9050230e6f8976a47effe626e3d37dbcd58a"
+  }
+}

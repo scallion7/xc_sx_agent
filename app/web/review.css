@@ -1,0 +1,15 @@
+main{grid-template-columns:300px 1fr}
+.case-list{max-height:760px;overflow:auto}
+.case-list button{display:block;width:100%;text-align:left;margin:8px 0}
+.case-list button.active{outline:3px solid #8dcdb4}
+.documents{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.documents .card{margin:0}
+.table-scroll{overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px;border:1px solid var(--line);text-align:left;vertical-align:top}
+.quote{white-space:pre-wrap}
+h3{font-size:16px}
+#history{max-height:260px;overflow:auto}
+@media(max-width:760px){main{grid-template-columns:1fr}
+.case-list{max-height:320px}
+}

@@ -1,0 +1,12 @@
+{
+  "version": "task-contract-v1",
+  "status": "synthetic_unreviewed",
+  "split": "development",
+  "cases_sha256": "fce5d9f33b984a575a7a57013bc1e414da464c943a2abade06bd88320ba9941d",
+  "strategies": [
+    "react",
+    "plan_execute",
+    "multi"
+  ],
+  "purpose": "Offline HTTP/worker/business-state contract baseline; not LLM quality or release acceptance."
+}

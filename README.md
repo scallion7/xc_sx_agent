@@ -35,6 +35,7 @@ LLM 负责理解、规划和解释；权限、状态转换、幂等约束与敏�
 | 可恢复业务流程 | 并发请求、进程退出和回调丢失 | 唯一约束、持久化幂等、租约 fencing、Outbox/Inbox、查询对账 |
 | 版本化知识 | 政策更新后仍需解释历史回答 | 导入任务、不可变快照、CAS 发布、回滚、稳定引用；[知识与治理](docs/engineering/knowledge-and-governance.md) |
 | 模型与配置治理 | 重试费用、配置漂移、灰度不稳定 | 共享 token 配额、调用账本、评测门禁、会话版本固定 |
+| 评测诊断与复核 | 解释排序与拒答，防止未审核材料变成验收结论 | 检索逐阶段诊断、CAS 审核与审计、真实 HTTP 任务断言；[复核与任务基线](docs/evaluation/review-and-task-baseline.md) |
 | 人工协作与可观测性 | 接管时阻止新的自动写操作，定位跨进程故障 | 客服工作台、所有权检查、W3C Trace、审计与故障演练 |
 
 技术栈：Python、FastAPI、Pydantic、SQLAlchemy/Alembic、SQLite/PostgreSQL、MCP Streamable HTTP、OpenTelemetry、Playwright、GitHub Actions。支持 ReAct、Plan-and-Execute 与多 Agent 路由。
@@ -54,7 +55,7 @@ python -m app.scripts.demo_stack --directory app/sessions/readme-demo
 
 Windows PowerShell 使用 `py -3.11 -m venv .venv` 创建环境、`.venv\Scripts\Activate.ps1` 激活环境，随后执行相同的 `python` 命令。
 
-终端打印 `/workspace` 和 `/workbench` 的实际地址，端口动态分配。客户令牌为 `demo-user`，管理员令牌为 `demo-admin`，仅用于本机演示。启动器负责隔离数据库迁移、种子数据、API、Worker、受控 HTTP 模型和库存 MCP 进程，退出时按 `Ctrl+C`。
+终端打印 `/workspace`、`/workbench` 和 `/review` 的实际地址，端口动态分配。客户令牌为 `demo-user`，管理员令牌为 `demo-admin`，仅用于本机演示。启动器负责隔离数据库迁移、种子数据、API、Worker、受控 HTTP 模型和库存 MCP 进程，退出时按 `Ctrl+C`。
 
 本地演示无需真实模型密钥或 Docker；首次安装依赖需要网络。五分钟指环境准备完成后的操作时间，逐步流程与预期结果见[演示指南](docs/guides/five-minute-demo.md)。
 
@@ -66,7 +67,9 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-当前可靠性改进：本地 **370 项测试通过，覆盖率 81%**；已补齐完整评测矩阵门禁、浏览器请求重试幂等、告警与恢复手册。GitHub Actions **8/8 作业通过**，包括双 Worker、重启与 PostgreSQL/独立沙箱恢复；见[当前验收汇总](docs/evaluation/acceptance.md)。[人工复核材料](docs/evaluation/offline-review.md)已冻结，保留集未运行，未调用付费模型。
+当前评测工程扩展：本地 **385 项测试通过，覆盖率 82%**；新增检索诊断、持久化人工复核工作台和 **6 类任务 × 3 种执行方式，18/18 通过**的真实 HTTP/Worker 离线基线。[原始结果与使用指南](docs/evaluation/review-and-task-baseline.md)保留逐任务状态、调用与用量证据。任务使用受控模型，不能作为真实模型成功率；32 道冻结检索题仍待人工审核，保留集未运行，未调用付费模型。
+
+前一轮可靠性验收为 370 项测试、覆盖率 81%、CI 8/8 作业通过，包括双 Worker、重启与 PostgreSQL/独立沙箱恢复；历史与本轮结果在[验收汇总](docs/evaluation/acceptance.md)分别记录。
 
 历史功能与依赖修复验收基线为 [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6cba0a86663524aeae3a5934dd7d9a3b4c)：
 
@@ -83,7 +86,7 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 - 真实运行应用、HTTP/MCP、SQL、Worker 和浏览器；模型演示使用受控替身，订单、退款、库存为沙箱。
 - Chroma 后端因上游未修复安全公告暂停；默认余弦检索与版本化 SQL 知识平台可用。
-- 已验证 PostgreSQL 迁移/smoke 和 Docker 镜像构建/扫描；完整 Compose 部署、PostgreSQL 备份恢复演练仍待验证。
+- 已在上一轮 CI 验证完整 Compose、双 Worker、停写 PostgreSQL 与独立沙箱恢复；生产持续写入的 PITR 与跨区域恢复尚未验收。
 - 真实模型质量、人工金标准、真实支付及生产容量尚未验收。新增平台租户作用域不等同于整个系统已支持共享库 SaaS。
 
 ## 阅读与项目背景

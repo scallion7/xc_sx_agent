@@ -2,12 +2,14 @@
 
 当前要求：先完成离线比较和人工复核材料，暂不调用付费模型。本轮所有评测使用本地 lexical projection / 受控 HTTP 模型，不能据此声称真实语义能力或线上费用。
 
+本轮新增浏览器复核工作台 `/review`，推荐通过登录账号记录审核身份、原文字符定位与版本历史；见[完整操作说明](review-and-task-baseline.md)。旧 JSON 手工流程保留兼容。
+
 ## 冻结材料
 
 [review 数据目录](../../app/evaluation/review/) 包含 18 份合成政策、32 条题目、文件 SHA256 manifest 和空白 review-template。16 条 development 与 16 条 holdout 按 16 个 family 隔离。所有题目和初始标签均由开发过程生成，**尚未人工复核**；本轮没有运行新 holdout。旧 platform 数据的 holdout 曾参与诊断，不再作为最终独立测试集。
 
 ```bash
-python -m app.scripts.review_evaluation --output test-results/offline-development.json
+python -m app.scripts.review_evaluation --diagnostics --output test-results/offline-development.json
 python -m app.scripts.review_evaluation --review-template --output test-results/review.json
 ```
 
@@ -39,7 +41,7 @@ python -m app.scripts.review_evaluation --split holdout \
   --review test-results/review.json --output test-results/holdout.json
 ```
 
-门禁校验数据哈希、题目覆盖和审核字段。该校验不能验证签名者真实身份，组织环境还需评审权限和签名审计。初次 holdout 结果应完整保存，不能反复调参后仍称“未触碰测试集”。真实 embedding、付费模型和账单验证另行授权后进行。
+门禁校验数据哈希、题目覆盖、已知政策 ID、带时区的 ISO 时间与审核字段。工作台导出的 schema_version=2 同时绑定 documents 哈希、逐段核验原文与字符定位。旧格式仍可读，但未具备原文定位校验。外部 JSON 不能证明填写者真实身份；导入工作台只保存草稿，需要当前认证账号重新批准，持久化审计记录真实操作账号。组织环境仍需接入实名身份系统。初次 holdout 结果应完整保存，不能反复调参后仍称“未触碰测试集”。真实 embedding、付费模型和账单验证另行授权后进行。
 
 ## 发布评测门禁
 

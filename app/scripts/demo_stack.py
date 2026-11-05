@@ -40,6 +40,10 @@ class DemoStack:
             OPENAI_API_KEY="controlled-offline",
             OPENAI_BASE_URL=f"http://127.0.0.1:{self.model_port}/v1",
             KNOWLEDGE_VERSIONED_ENABLED="true",
+            KNOWLEDGE_EMBEDDING_MODE="local_hash",
+            PERSISTENCE_BACKEND="sql",
+            PROVIDER_MODE="mock",
+            CONFIGURATION_RELEASES_ENABLED="false",
             MODEL_BUDGET_ENABLED="true",
             MODEL_TOKEN_BUDGET="10000000",
             MODEL_SHARED_RPM="10000",
@@ -71,6 +75,10 @@ class DemoStack:
                 str(Path(x).resolve()) for x in self.env["PYTHONPATH"].split(os.pathsep)
             )
         self.config = Settings(
+            _env_file=None,
+            environment="test",
+            knowledge_embedding_mode="local_hash",
+            provider_mode="mock",
             database_url=self.database_url,
             openai_api_key="controlled-offline",
             knowledge_versioned_enabled=True,
@@ -193,6 +201,7 @@ def main():
                 {
                     "workspace": stack.url + "/workspace",
                     "workbench": stack.url + "/workbench",
+                    "review": stack.url + "/review",
                     "user_token": "demo-user",
                     "admin_token": "demo-admin",
                 },

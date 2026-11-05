@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 
 from app.config.settings import Settings
-from app.infrastructure.database import configure_database, platform
+from app.infrastructure.database import configure_database, platform, review
 from app.platform.budget import SharedBudget
 from app.platform.conversation_handoff import ConversationHandoffService
 from app.platform.knowledge import KnowledgePlatform, KnowledgeWorker
@@ -39,7 +39,29 @@ def run(config):
     c = ConversationHandoffService(config)
     c.ensure("ci", "ci:s")
     c.transition("ci", "ci:s", "ci", 1, take=True)
+    from app.platform.reviews import ReviewWorkspace
+
+    workspace = ReviewWorkspace(config)
+    project = workspace.create()["project_id"]
+    case = workspace.cases[0]["id"]
+    workspace.save(
+        project,
+        case,
+        {
+            "status": "draft",
+            "outcome": "no_evidence",
+            "gold_documents": [],
+            "evidence": [],
+            "notes": "SQL smoke",
+        },
+        0,
+        "ci",
+    )
+    assert workspace.export(project)["reviews"][0]["reviewer"] == "ci"
+    assert len(workspace.history(project, case)) == 1
     with k.engine.begin() as conn:
+        for table in review.values():
+            conn.execute(delete(table).where(table.c.tenant_id == config.tenant_id))
         for table in platform.values():
             if "tenant_id" in table.c:
                 conn.execute(delete(table).where(table.c.tenant_id == config.tenant_id))
@@ -58,6 +80,7 @@ def run(config):
         "knowledge": True,
         "budget": True,
         "ownership": True,
+        "review_workspace": True,
         "tenant": config.tenant_id,
     }
 

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ecom Service Agent · 评测复核</title>
+<link rel="stylesheet" href="/assets/platform.css">
+<link rel="stylesheet" href="/assets/review.css">
+</head>
+<body>
+<header>
+<div>
+<h1>评测复核工作台</h1>
+<small>逐题核对政策依据，保存审核记录与检索诊断</small>
+</div>
+<nav>
+<a href="/workbench">客服工作台</a>
+<a href="/workspace">客户服务</a>
+</nav>
+</header>
+<main>
+<section class="wide">
+<div class="row">
+<label for="reviewToken">管理员令牌</label>
+<input id="reviewToken" type="password" autocomplete="off">
+<button id="openReview">打开冻结数据集</button>
+<button id="exportReview" disabled>导出复核文件</button>
+</div>
+<p id="reviewStatus" class="status" role="status">请登录后开始。审核人由当前账号记录。</p>
+<p id="progress" class="muted">未审核的数据不作为质量验收结论。</p>
+<details>
+<summary>导入已有复核文件</summary>
+<p>导入内容保存为草稿，需当前账号重新核对批准；会保留历史记录。请先导出备份当前工作。</p>
+<input id="importFile" type="file" accept=".json">
+<button id="importReview" disabled>导入为草稿</button>
+</details>
+</section>
+<section class="case-list">
+<h2>题目列表</h2>
+<label for="splitFilter">数据分组</label>
+<select id="splitFilter">
+<option value="all">全部题目</option>
+<option value="development">开发集</option>
+<option value="holdout">保留集</option>
+</select>
+<div id="cases">
+</div>
+</section>
+<section>
+<h2 id="question">选择一道题目</h2>
+<p id="conditions" class="muted">
+</p>
+<p id="reviewIdentity">
+</p>
+<details id="suggestion">
+<summary>查看初始建议标签（尚未人工复核）</summary>
+<pre id="suggested">
+</pre>
+</details>
+<label for="outcome">判定</label>
+<select id="outcome">
+<option value="answerable">证据足够，可回答</option>
+<option value="no_evidence">无支持证据</option>
+<option value="needs_clarification">需要补充条件</option>
+<option value="policy_conflict">政策冲突</option>
+</select>
+<label for="notes">判定理由 / 分歧说明</label>
+<textarea id="notes" placeholder="说明适用条件、引用依据或无法判断的原因">
+</textarea>
+<h3>已选政策证据</h3>
+<div id="evidence">
+</div>
+<div class="row">
+<button id="saveDraft" disabled>保存草稿</button>
+<button id="approveReview" disabled>核对并批准</button>
+<button id="disputeReview" class="secondary" disabled>标记分歧</button>
+<button id="loadHistory" class="secondary" disabled>审核历史</button>
+</div>
+<div id="history">
+</div>
+</section>
+<section class="wide">
+<h2>原始政策资料</h2>
+<p class="muted">核对全文及适用范围后，将支持结论的政策加入证据。记录原文字符定位；无证据题需明确说明原因。</p>
+<div id="documents" class="documents">
+</div>
+</section>
+<section class="wide">
+<div class="row">
+<h2>四种检索模式诊断</h2>
+<button id="diagnose" disabled>运行本题离线诊断</button>
+</div>
+<p id="diagnosticHint" class="muted">仅使用本地词法与哈希投影。保留集需全部题目人工批准后才能运行。</p>
+<div id="diagnostics">
+</div>
+</section>
+</main>
+<script type="module" src="/assets/review.js">
+</script>
+</body>
+</html>

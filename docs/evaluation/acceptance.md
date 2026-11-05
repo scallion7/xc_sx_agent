@@ -1,8 +1,25 @@
 # 验收状态与证据
 
-更新日期：2026-11-03。此页是当前状态汇总；历史报告保留其原提交、样本和测量值。文档、界面名称整理不把历史报告重新标成新业务实验。
+更新日期：2026-11-05。此页是当前状态汇总；历史报告保留其原提交、样本和测量值。文档、界面名称整理不把历史报告重新标成新业务实验。
 
-## 当前可靠性改进
+## 当前检索诊断、复核工作台与任务基线
+
+基于 `d2b43fb` 扩展，2026-11-05 本地 Python 3.11、锁定依赖及 Chromium：**385 项测试通过，无跳过，64.501 秒，app 语句覆盖率 82%**。覆盖率沿用历史口径，不含脚本及独立服务子进程；因此任务基线另行保存真实 HTTP/Worker 证据。本轮最终脚本与页面整理后又完成针对性回归。
+
+| 检查 | 结果与证据 |
+|---|---|
+| 全量回归与覆盖率 | [385 项测试](../evidence/review-round1/unittest.log)、[覆盖率](../evidence/review-round1/coverage.log) |
+| 复核浏览器闭环 | 批准、原文证据、并发冲突、导出/导入草稿、身份切换与 holdout 拦截；[独立复测](../evidence/review-round1/browser.log) |
+| 新增 SQL 迁移 | `20261105_0007` 新增三张复核表；SQLite upgrade/drift/smoke/空复核表 downgrade/re-upgrade 通过；有审核数据时拒绝降级；[日志](../evidence/review-round1/sqlite-migration.log) |
+| 开发集诊断 | 16 题，15 题四模式最终结果完全一致，另 1 题仅冲突证据顺序不同；[汇总与原始轨迹](../evidence/review-round1/retrieval-diagnostics.json) |
+| 任务级基线 | 6 类 × ReAct / Plan-and-Execute / multi = 18/18 通过；模拟 usage 共 2010 tokens；[摘要](../evidence/review-round1/task-baseline.json)、[原始证据](../evidence/review-round1/task-baseline.raw.json.gz) |
+| 接口与静态检查 | OpenAPI 90 个路径、Ruff、编译与文档链接检查；保留全部既有接口，旧迁移和原冻结材料未修改 |
+
+CI 已增加复核浏览器、带诊断的离线评测、任务基线及 SQLite/PostgreSQL 复核 SQL smoke；该轮提交的结果通过[当前分支 Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml)核验，不能用下文旧提交通过记录代替。
+
+本轮没有替用户批准任何真实复核材料，没有运行新 holdout，没有调用付费模型。浏览器截图中已批准的题目来自可丢弃测试数据库。工作台功能、离线契约通过与人工金标准完成是三种不同状态；详见[范围与操作说明](review-and-task-baseline.md)。
+
+## 前一轮可靠性改进
 
 本地 Python 3.11、锁定依赖、Chromium：**370 项测试通过，无跳过，58.273 秒，app 语句覆盖率 81%**。新增回归覆盖部分评测拒绝发布、容量错误触发失败、数据库凭据不进入 argv、浏览器重试幂等与告警状态转换。证据见 [测试日志](../evidence/reliability/unittest.log)和[覆盖率](../evidence/reliability/coverage.log)。
 
@@ -11,7 +28,7 @@
 - [离线复核材料](offline-review.md)：新 32 题冻结，16 题 development 完成四模式比较，16 题 holdout 未运行，人工复核未完成，付费模型调用为零。
 - [部署验收](../operations/compose-acceptance.md)：新增双 Worker、服务重启、旧库升级、真实 HTTP/MCP 和三个独立数据库恢复的 CI 作业；本机没有 Docker；已在 GitHub Actions 独立环境完成真实验收，详见下表。
 
-### 当前 CI 与部署证据
+### 前一轮 CI 与部署证据
 
 实现提交 [`157159d`](https://github.com/scallion7/xc_sx_agent/commit/157159db24b1487bf403351d80f7fe37f3185967) 的 [Actions 运行 41482524125](https://github.com/scallion7/xc_sx_agent/actions/runs/41482524125) **8/8 作业通过**：[作业清单](../evidence/reliability/ci.json)。覆盖 Python 3.10–3.12、SQLite/PostgreSQL 迁移、真实浏览器、容量/故障演练、依赖审计与镜像扫描，以及新增完整 Compose 验收。
 

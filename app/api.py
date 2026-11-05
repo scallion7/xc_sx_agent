@@ -90,6 +90,9 @@ def create_app(
     from app.web.platform import register_platform_routes
 
     register_platform_routes(app, services, require)
+    from app.web.review_routes import register_review_routes
+
+    register_review_routes(app, services, require)
     register_run_routes(app, services, require)
     register_action_routes(app, services, require)
     register_public_routes(app, services, require)
