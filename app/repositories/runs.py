@@ -170,6 +170,34 @@ class RunRepository:
             )
         values.update(version=row["version"] + 1, updated_at=self.clock())
         with self.engine.begin() as conn:
+            # Serialize dispatch registration with takeover/release. Once registered,
+            # a request is in flight and may still consume provider usage.
+            runtime = row["payload"].get("runtime", {})
+            if event_type == "call.started" and runtime.get("collaboration"):
+                from app.infrastructure.database import platform
+
+                own_table = platform["conversation_ownership"]
+                criteria = (
+                    own_table.c.tenant_id == runtime["tenant_id"],
+                    own_table.c.user_id == row["user_id"],
+                    own_table.c.session_key == row["session_key"],
+                )
+                conn.execute(
+                    update(own_table)
+                    .where(*criteria)
+                    .values(version=own_table.c.version)
+                )
+                own_row = (
+                    conn.execute(select(own_table).where(*criteria)).mappings().first()
+                )
+                if own_row and (
+                    own_row["state"] == "human_owned"
+                    or (
+                        "ownership_version" in runtime
+                        and own_row["version"] != runtime["ownership_version"]
+                    )
+                ):
+                    raise RunInterrupted("RUN_HANDOFF")
             if values.get("status") == "completed" and row["payload"].get(
                 "runtime", {}
             ).get("collaboration"):
@@ -189,13 +217,19 @@ class RunRepository:
                 ownership = (
                     conn.execute(select(own).where(*criteria)).mappings().first()
                 )
-                if ownership and ownership["state"] == "human_owned":
+                if ownership and (
+                    ownership["state"] == "human_owned"
+                    or (
+                        "ownership_version" in runtime
+                        and ownership["version"] != runtime["ownership_version"]
+                    )
+                ):
                     payload = (
                         json.loads(values["payload_json"])
                         if "payload_json" in values
                         else dict(row["payload"])
                     )
-                    payload["internal_draft"] = payload.get("result")
+                    payload.setdefault("internal_draft", payload.get("result"))
                     result_payload = dict(payload.get("result") or {})
                     result_payload.update(
                         reply="",
@@ -205,7 +239,8 @@ class RunRepository:
                     )
                     payload["result"] = result_payload
                     values["payload_json"] = json.dumps(payload, ensure_ascii=False)
-                    session = None
+                    if not payload.get("handoff"):
+                        session = None
             result = conn.execute(
                 update(runs)
                 .where(

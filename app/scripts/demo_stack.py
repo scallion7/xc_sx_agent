@@ -202,6 +202,7 @@ def main():
                     "workspace": stack.url + "/workspace",
                     "workbench": stack.url + "/workbench",
                     "review": stack.url + "/review",
+                    "after_sale": stack.url + "/after-sale",
                     "user_token": "demo-user",
                     "admin_token": "demo-admin",
                 },

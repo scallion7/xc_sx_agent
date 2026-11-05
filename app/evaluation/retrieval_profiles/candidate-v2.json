@@ -1,0 +1,5 @@
+{
+  "version": "candidate-v2",
+  "normalization": "nfkc",
+  "candidate_pool": 20
+}

@@ -1,0 +1,2047 @@
+{
+  "split": "development",
+  "release_id": "e479c386b9e546849492f706c9ca8a61",
+  "baseline_profile": {
+    "version": "legacy-v1",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "normalization": "none",
+    "candidate_pool": 0,
+    "rrf_k": 60,
+    "bm25_weight": 1.0,
+    "vector_weight": 1.0,
+    "evidence_overlap": 0.35,
+    "numeric_bonus": 0.15,
+    "exact_bonus": 0.1
+  },
+  "candidate_profile": {
+    "version": "candidate-v2",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "normalization": "nfkc",
+    "candidate_pool": 20,
+    "rrf_k": 60,
+    "bm25_weight": 1.0,
+    "vector_weight": 1.0,
+    "evidence_overlap": 0.35,
+    "numeric_bonus": 0.15,
+    "exact_bonus": 0.1
+  },
+  "baseline_hash": "562940e4cca0ed5f015103b3f7346035bcf9206bf39aa89a6a28df1421b4767d",
+  "candidate_hash": "8b16c6d22af11bd6b154fc8ca985e468873ce55b39f3aa1e7e382eea07981526",
+  "sample_count": 16,
+  "comparison_count": 64,
+  "summaries": {
+    "bm25": {
+      "baseline": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "candidate": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "hybrid": {
+      "baseline": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "candidate": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "hybrid_rerank": {
+      "baseline": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "candidate": {
+        "samples": 16,
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 9
+        }
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "vector": {
+      "baseline": {
+        "samples": 16,
+        "candidate_recall": 0.9285714285714286,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 8,
+          "no_positive_score": 1
+        }
+      },
+      "candidate": {
+        "samples": 16,
+        "candidate_recall": 0.9285714285714286,
+        "evidence_recall": 0.42857142857142855,
+        "outcome_accuracy": 0.5,
+        "wrong_answer_count": 1,
+        "unsupported_document_count": 1,
+        "unnecessary_refusal_count": 6,
+        "missing_gold_stage_counts": {
+          "evidence_rejected": 8,
+          "no_positive_score": 1
+        }
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    }
+  },
+  "cases": [
+    {
+      "id": "dev-apparel-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 0.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "no_positive_score"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 0.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "no_positive_score"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-apparel-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-apparel": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-install": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-install-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-gift-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-gift": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-preorder-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-preorder": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-invoice-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": true,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-invoice": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-region-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {
+          "dev-region": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-unknown-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": null,
+        "evidence_recall": null,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-1",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-1",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-1",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-1",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-2",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-2",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-2",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-conflict-2",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 0.0,
+        "outcome_correct": false,
+        "wrong_answer": true,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [
+          "hold-repair"
+        ],
+        "missing_gold_stages": {
+          "dev-conflict": "evidence_rejected",
+          "dev-conflict-alternative": "evidence_rejected"
+        },
+        "passed": false
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    }
+  ],
+  "release_eligible": false,
+  "paid_calls": 0,
+  "semantic_quality_verified": false,
+  "source_tree_sha256": "c0ed2d56cd7b9313cd31f44dc8cf07db1a2b0c2669603418db7e73dd9b8ad1e3",
+  "frozen_files": {
+    "documents.json": "080a0d6033ca03b72913a4d956f07369fb1743c28a763d60ac5a722c60bdf0a8",
+    "cases.json": "49ffb61cbac78fd43055856d3b902584d52994b3af33baa01d958736bf14c232"
+  },
+  "labels": "synthetic_unreviewed",
+  "raw_artifact": {
+    "path": "comparison.raw.json.gz",
+    "sha256": "259d94d119d126905ce7c0e149c5bda60e918d645086a67cbcf60ff7b52e56b6"
+  }
+}

@@ -16,6 +16,7 @@ from app.agent.rag.similarity import cosine_similarity
 from app.infrastructure.database import platform
 from app.platform.common import PlatformError, encode
 from app.platform.knowledge import KnowledgePlatform
+from app.platform.retrieval_profile import RetrievalProfile
 
 TOKENIZER_VERSION = "jieba-0.42.1-search-v2"
 STOPWORDS = {
@@ -112,7 +113,8 @@ def applicability_reasons(meta, context, day):
 
 
 class HybridRetrieval:
-    def __init__(self, config, *, embedder=None):
+    def __init__(self, config, *, embedder=None, profile=None):
+        self.profile = RetrievalProfile.model_validate(profile or {})
         self.service = KnowledgePlatform(config, embedder=embedder)
         self.config = config
 
@@ -141,7 +143,11 @@ class HybridRetrieval:
                 query=query,
                 release_id=rid,
                 prompt_version=self.config.prompt_version,
-                model_config=[self.service.embedder.model, TOKENIZER_VERSION],
+                model_config=[
+                    self.service.embedder.model,
+                    TOKENIZER_VERSION,
+                    self.profile.fingerprint,
+                ],
                 context={
                     "filters": context or {},
                     "day": day or date.today().isoformat(),
@@ -198,7 +204,15 @@ class HybridRetrieval:
             raise PlatformError("RETRIEVAL_MODE_INVALID", 422)
         if not query.strip() or len(query) > 4000:
             raise PlatformError("QUERY_INVALID", 422)
+        original_query = query
+        query = self.profile.normalize(query)
+        pool_size = (
+            max(top_k, self.profile.candidate_pool)
+            if self.profile.candidate_pool
+            else top_k
+        )
         top_k = max(1, min(top_k, 20))
+        pool_size = max(top_k, min(pool_size, 100))
         release_id = (
             release_id
             or self.config.knowledge_release_id
@@ -206,7 +220,7 @@ class HybridRetrieval:
         )
         base = {
             "success": True,
-            "query": query,
+            "query": original_query,
             "release_id": release_id,
             "tokenizer": TOKENIZER_VERSION,
             "embedding_model": self.service.embedder.model,
@@ -220,6 +234,10 @@ class HybridRetrieval:
         if explain:
             base["diagnostics"] = {
                 "query_tokens": tokens(query),
+                "normalized_query": query,
+                "profile": self.profile.model_dump(),
+                "profile_hash": self.profile.fingerprint,
+                "candidate_pool": pool_size,
                 "context": context,
                 "day": day,
                 "top_k": top_k,
@@ -278,7 +296,7 @@ class HybridRetrieval:
                 "outcome": "no_evidence",
                 "latency_ms": (time.perf_counter() - started) * 1000,
             }
-        lexical = bm25(query, [x["text"] for x in items])
+        lexical = bm25(query, [self.profile.normalize(x["text"]) for x in items])
         query_vector = self.service.embedder.encode_one(query) if mode != "bm25" else []
         vector = (
             [cosine_similarity(query_vector, x["vector"]) for x in items]
@@ -301,7 +319,14 @@ class HybridRetrieval:
                 else vector[i]
                 if mode == "vector"
                 else sum(
-                    1 / (60 + ranks[name][i]) for name in ranks if i in ranks[name]
+                    (
+                        self.profile.bm25_weight
+                        if name == "bm25"
+                        else self.profile.vector_weight
+                    )
+                    / (self.profile.rrf_k + ranks[name][i])
+                    for name in ranks
+                    if i in ranks[name]
                 )
             )
             before_rerank = score
@@ -309,7 +334,12 @@ class HybridRetrieval:
                 # Explicit lexical reranker, not a cross-encoder; separately ablated.
                 numbers = set(re.findall(r"\d+(?:\.\d+)?", query))
                 matched = sum(n in items[i]["text"] for n in numbers)
-                score *= 1 + 0.15 * matched + 0.1 * (query in items[i]["text"])
+                score *= (
+                    1
+                    + self.profile.numeric_bonus * matched
+                    + self.profile.exact_bonus
+                    * (query in self.profile.normalize(items[i]["text"]))
+                )
             scores.append(score)
             if explain:
                 trace[items[i]["chunk_id"]].update(
@@ -330,7 +360,7 @@ class HybridRetrieval:
                 range(len(items)), key=lambda i: (-scores[i], items[i]["chunk_id"])
             )
             if scores[i] > 0
-        ][:top_k]
+        ][:pool_size]
         if explain:
             for rank, i in enumerate(
                 sorted(
@@ -340,17 +370,20 @@ class HybridRetrieval:
                 trace[items[i]["chunk_id"]]["final_rank"] = rank + 1
             for i in selected:
                 trace[items[i]["chunk_id"]]["selection_reason"] = "selected"
+                trace[items[i]["chunk_id"]]["in_candidate_pool"] = True
         # Hash vectors can match by collision. The offline projector cannot create
         # evidence without any lexical support, unlike a configured semantic model.
         if self.service.embedder.model.startswith("local-hash"):
             query_terms = set(tokens(query))
-            minimum = max(1, math.ceil(len(query_terms) * 0.35))
+            minimum = max(
+                1, math.ceil(len(query_terms) * self.profile.evidence_overlap)
+            )
             if explain:
                 base["diagnostics"]["minimum_lexical_overlap"] = minimum
                 for i, item in enumerate(items):
                     entry = trace[item["chunk_id"]]
                     entry["matched_tokens"] = sorted(
-                        query_terms & set(tokens(item["text"]))
+                        query_terms & set(tokens(self.profile.normalize(item["text"])))
                     )
                     if i in selected and (
                         lexical[i] <= 0 or len(entry["matched_tokens"]) < minimum
@@ -360,8 +393,17 @@ class HybridRetrieval:
                 i
                 for i in selected
                 if lexical[i] > 0
-                and len(query_terms & set(tokens(items[i]["text"]))) >= minimum
+                and len(
+                    query_terms & set(tokens(self.profile.normalize(items[i]["text"])))
+                )
+                >= minimum
             ]
+        if explain:
+            for i in selected:
+                trace[items[i]["chunk_id"]]["evidence_accepted"] = True
+            for i in selected[top_k:]:
+                trace[items[i]["chunk_id"]]["selection_reason"] = "outside_final_top_k"
+        selected = selected[:top_k]
         hits = [items[i] | {"score": scores[i]} for i in selected]
         missing = any(
             applicable(x["metadata"], context, day) == "clarify" for x in hits

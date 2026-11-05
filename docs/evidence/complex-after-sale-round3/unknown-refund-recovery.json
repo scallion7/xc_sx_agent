@@ -1,0 +1,1375 @@
+{
+  "scenario": "unknown-refund-recovery",
+  "passed": true,
+  "paid_calls": 0,
+  "execution": "real_http_sandbox",
+  "final_counts": {
+    "cases": 1,
+    "operations": 1,
+    "provider_refunds": 1
+  },
+  "final_intake": {
+    "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+    "session_id": "complex",
+    "revision": 3,
+    "updated_at": 1793889152.5386932,
+    "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+    "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+    "fields": {
+      "case_type": "return_refund",
+      "evidence_ids": [],
+      "order_id": "ORD-SANDBOX-001",
+      "reason": "不合适退货退款"
+    },
+    "missing": [],
+    "status": "awaiting_execution_confirmation",
+    "action": {
+      "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+      "user_id": "user-1",
+      "session_id": "user-1:complex",
+      "tool_name": "create_after_sale_case",
+      "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+      "arguments": {
+        "case_type": "return_refund",
+        "evidence_ids": [],
+        "evidence_provided": false,
+        "order_id": "ORD-SANDBOX-001",
+        "reason": "不合适退货退款",
+        "user_confirmed": false
+      },
+      "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+      "status": "completed",
+      "expires_at": "2026-11-05T14:47:32.489730+00:00",
+      "created_at": "2026-11-05T14:32:32.489730+00:00"
+    },
+    "case": {
+      "success": true,
+      "case": {
+        "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+        "order_id": "ORD-SANDBOX-001",
+        "case_type": "return_refund",
+        "reason": "不合适退货退款",
+        "amount": 99.0,
+        "risk_level": "low",
+        "route": "auto_process",
+        "risk_reasons": [
+          "金额及售后类型满足自动处理规则"
+        ],
+        "status": "completed",
+        "approval_status": "not_required",
+        "evidence_provided": false,
+        "created_at": "2026-11-05T22:32:32",
+        "updated_at": "2026-11-05T22:32:33",
+        "user_id": "user-1",
+        "reviewer": "",
+        "review_note": "",
+        "result": {
+          "success": true,
+          "in_progress": false,
+          "provider": "commerce-sandbox",
+          "refund": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "user_id": "user-1",
+            "reason": "不合适退货退款",
+            "provider": "commerce-sandbox",
+            "status": "succeeded",
+            "version": 1,
+            "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+            "amount_cents": 9900
+          }
+        },
+        "audit_log": [
+          {
+            "action": "case_created",
+            "actor": "agent",
+            "created_at": "2026-11-05T22:32:32",
+            "note": "risk=low, route=auto_process"
+          },
+          {
+            "action": "auto_approved",
+            "actor": "risk_router",
+            "created_at": "2026-11-05T22:32:32",
+            "note": "金额及售后类型满足自动处理规则"
+          },
+          {
+            "action": "refund_queued",
+            "actor": "agent",
+            "created_at": "2026-11-05T22:32:32",
+            "note": "ASOP-4AC163EC06B11F7C"
+          },
+          {
+            "action": "refund_succeeded",
+            "actor": "provider",
+            "created_at": "2026-11-05T22:32:33",
+            "note": "event=e73bd53f3a934d6c9366cd724270daac; version=1"
+          }
+        ],
+        "risk_rule_version": "2026.1",
+        "version": 3,
+        "evidence_ids": []
+      }
+    },
+    "operation": {
+      "success": true,
+      "operation": {
+        "operation_id": "ASOP-4AC163EC06B11F7C",
+        "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+        "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+        "user_id": "user-1",
+        "operation_type": "refund",
+        "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 8,
+        "version": 4,
+        "lease_expires_at": "",
+        "created_at": "2026-11-05T14:32:32.569749+00:00",
+        "updated_at": "2026-11-05T14:32:33.087787+00:00",
+        "result": {
+          "success": true,
+          "in_progress": false,
+          "provider": "commerce-sandbox",
+          "refund": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "user_id": "user-1",
+            "reason": "不合适退货退款",
+            "provider": "commerce-sandbox",
+            "status": "succeeded",
+            "version": 1,
+            "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+            "amount_cents": 9900
+          }
+        },
+        "error": "",
+        "completed_at": "2026-11-05T14:32:33.087763+00:00",
+        "compensation_status": "not_required",
+        "compensation_note": "",
+        "provider": "commerce-sandbox",
+        "provider_version": 1,
+        "provider_reference": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+        "request": {
+          "operation_id": "ASOP-4AC163EC06B11F7C",
+          "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+          "order_id": "ORD-SANDBOX-001",
+          "user_id": "user-1",
+          "reason": "不合适退货退款"
+        }
+      }
+    },
+    "execution_action": {
+      "action_id": "6dfe22f6473745928020eed87a31639f",
+      "user_id": "user-1",
+      "session_id": "user-1:complex",
+      "tool_name": "execute_after_sale_case",
+      "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+      "arguments": {
+        "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+      },
+      "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+      "status": "completed",
+      "expires_at": "2026-11-05T14:47:32.538876+00:00",
+      "created_at": "2026-11-05T14:32:32.538876+00:00"
+    },
+    "business_state": "succeeded"
+  },
+  "http_trace": [
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 0,
+        "updated_at": 1793889152.461817,
+        "action_id": "",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "",
+          "reason": ""
+        },
+        "missing": [
+          "order_id",
+          "reason"
+        ],
+        "status": "collecting"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 1,
+        "updated_at": 1793889152.475882,
+        "action_id": "",
+        "fields": {
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款",
+          "case_type": "return_refund",
+          "evidence_ids": []
+        },
+        "missing": [],
+        "status": "ready"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 2,
+        "updated_at": 1793889152.489484,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 2,
+        "updated_at": 1793889152.489484,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "business_state": "pending"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/d6fcedaa70174dbda25cc914e86cbf10/confirm",
+      "status": 200,
+      "response": {
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "confirmed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/d6fcedaa70174dbda25cc914e86cbf10/execute",
+      "status": 200,
+      "response": {
+        "success": true,
+        "created": true,
+        "idempotent": false,
+        "idempotency_scope": "new",
+        "request_matches": true,
+        "case": {
+          "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+          "order_id": "ORD-SANDBOX-001",
+          "case_type": "return_refund",
+          "reason": "不合适退货退款",
+          "amount": 99.0,
+          "risk_level": "low",
+          "route": "auto_process",
+          "risk_reasons": [
+            "金额及售后类型满足自动处理规则"
+          ],
+          "status": "approved",
+          "approval_status": "not_required",
+          "evidence_provided": false,
+          "created_at": "2026-11-05T22:32:32",
+          "updated_at": "2026-11-05T22:32:32",
+          "user_id": "user-1",
+          "reviewer": "",
+          "review_note": "",
+          "result": {},
+          "audit_log": [
+            {
+              "action": "case_created",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "risk=low, route=auto_process"
+            },
+            {
+              "action": "auto_approved",
+              "actor": "risk_router",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "金额及售后类型满足自动处理规则"
+            }
+          ],
+          "risk_rule_version": "2026.1",
+          "version": 1,
+          "evidence_ids": []
+        },
+        "next_action": "工单已通过自动规则，可调用 execute_after_sale_case 执行",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "return_refund",
+            "reason": "不合适退货退款",
+            "amount": 99.0,
+            "risk_level": "low",
+            "route": "auto_process",
+            "risk_reasons": [
+              "金额及售后类型满足自动处理规则"
+            ],
+            "status": "approved",
+            "approval_status": "not_required",
+            "evidence_provided": false,
+            "created_at": "2026-11-05T22:32:32",
+            "updated_at": "2026-11-05T22:32:32",
+            "user_id": "user-1",
+            "reviewer": "",
+            "review_note": "",
+            "result": {},
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "risk=low, route=auto_process"
+              },
+              {
+                "action": "auto_approved",
+                "actor": "risk_router",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "金额及售后类型满足自动处理规则"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 1,
+            "evidence_ids": []
+          }
+        },
+        "operation": {
+          "success": false,
+          "error": "该工单还没有副作用执行记录"
+        },
+        "execution_action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        },
+        "business_state": "approved"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/6dfe22f6473745928020eed87a31639f/confirm",
+      "status": 200,
+      "response": {
+        "action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "confirmed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/6dfe22f6473745928020eed87a31639f/execute",
+      "status": 200,
+      "response": {
+        "success": true,
+        "accepted": true,
+        "in_progress": true,
+        "message": "退款已提交到队列，需查询最终状态",
+        "operation": {
+          "operation_id": "ASOP-4AC163EC06B11F7C",
+          "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+          "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+          "user_id": "user-1",
+          "operation_type": "refund",
+          "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+          "status": "pending",
+          "attempt_count": 0,
+          "max_attempts": 8,
+          "version": 1,
+          "lease_expires_at": "",
+          "created_at": "2026-11-05T14:32:32.569749+00:00",
+          "updated_at": "2026-11-05T14:32:32.569749+00:00",
+          "result": {},
+          "error": "",
+          "completed_at": "",
+          "compensation_status": "not_required",
+          "compensation_note": "",
+          "provider": "commerce-sandbox",
+          "provider_version": 0,
+          "provider_reference": "",
+          "request": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "user_id": "user-1",
+            "reason": "不合适退货退款"
+          }
+        },
+        "case": {
+          "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+          "order_id": "ORD-SANDBOX-001",
+          "case_type": "return_refund",
+          "reason": "不合适退货退款",
+          "amount": 99.0,
+          "risk_level": "low",
+          "route": "auto_process",
+          "risk_reasons": [
+            "金额及售后类型满足自动处理规则"
+          ],
+          "status": "processing",
+          "approval_status": "not_required",
+          "evidence_provided": false,
+          "created_at": "2026-11-05T22:32:32",
+          "updated_at": "2026-11-05T22:32:32",
+          "user_id": "user-1",
+          "reviewer": "",
+          "review_note": "",
+          "result": {},
+          "audit_log": [
+            {
+              "action": "case_created",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "risk=low, route=auto_process"
+            },
+            {
+              "action": "auto_approved",
+              "actor": "risk_router",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "金额及售后类型满足自动处理规则"
+            },
+            {
+              "action": "refund_queued",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "ASOP-4AC163EC06B11F7C"
+            }
+          ],
+          "risk_rule_version": "2026.1",
+          "version": 2,
+          "evidence_ids": []
+        },
+        "action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "return_refund",
+            "reason": "不合适退货退款",
+            "amount": 99.0,
+            "risk_level": "low",
+            "route": "auto_process",
+            "risk_reasons": [
+              "金额及售后类型满足自动处理规则"
+            ],
+            "status": "processing",
+            "approval_status": "not_required",
+            "evidence_provided": false,
+            "created_at": "2026-11-05T22:32:32",
+            "updated_at": "2026-11-05T22:32:32",
+            "user_id": "user-1",
+            "reviewer": "",
+            "review_note": "",
+            "result": {},
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "risk=low, route=auto_process"
+              },
+              {
+                "action": "auto_approved",
+                "actor": "risk_router",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "金额及售后类型满足自动处理规则"
+              },
+              {
+                "action": "refund_queued",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "ASOP-4AC163EC06B11F7C"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 2,
+            "evidence_ids": []
+          }
+        },
+        "operation": {
+          "success": true,
+          "operation": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "user_id": "user-1",
+            "operation_type": "refund",
+            "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+            "status": "unknown",
+            "attempt_count": 1,
+            "max_attempts": 8,
+            "version": 3,
+            "lease_expires_at": "",
+            "created_at": "2026-11-05T14:32:32.569749+00:00",
+            "updated_at": "2026-11-05T14:32:32.589408+00:00",
+            "result": {},
+            "error": "PROVIDER_CONNECTION",
+            "completed_at": "",
+            "compensation_status": "not_required",
+            "compensation_note": "",
+            "provider": "commerce-sandbox",
+            "provider_version": 0,
+            "provider_reference": "",
+            "request": {
+              "operation_id": "ASOP-4AC163EC06B11F7C",
+              "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+              "order_id": "ORD-SANDBOX-001",
+              "user_id": "user-1",
+              "reason": "不合适退货退款"
+            }
+          }
+        },
+        "execution_action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        },
+        "business_state": "unknown"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/6dfe22f6473745928020eed87a31639f/execute",
+      "status": 200,
+      "response": {
+        "accepted": true,
+        "case": {
+          "amount": 99.0,
+          "approval_status": "not_required",
+          "audit_log": [
+            {
+              "action": "case_created",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "risk=low, route=auto_process"
+            },
+            {
+              "action": "auto_approved",
+              "actor": "risk_router",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "金额及售后类型满足自动处理规则"
+            },
+            {
+              "action": "refund_queued",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:32",
+              "note": "ASOP-4AC163EC06B11F7C"
+            }
+          ],
+          "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+          "case_type": "return_refund",
+          "created_at": "2026-11-05T22:32:32",
+          "evidence_ids": [],
+          "evidence_provided": false,
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款",
+          "result": {},
+          "review_note": "",
+          "reviewer": "",
+          "risk_level": "low",
+          "risk_reasons": [
+            "金额及售后类型满足自动处理规则"
+          ],
+          "risk_rule_version": "2026.1",
+          "route": "auto_process",
+          "status": "processing",
+          "updated_at": "2026-11-05T22:32:32",
+          "user_id": "user-1",
+          "version": 2
+        },
+        "in_progress": true,
+        "message": "退款已提交到队列，需查询最终状态",
+        "operation": {
+          "attempt_count": 0,
+          "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+          "compensation_note": "",
+          "compensation_status": "not_required",
+          "completed_at": "",
+          "created_at": "2026-11-05T14:32:32.569749+00:00",
+          "error": "",
+          "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+          "lease_expires_at": "",
+          "max_attempts": 8,
+          "operation_id": "ASOP-4AC163EC06B11F7C",
+          "operation_type": "refund",
+          "provider": "commerce-sandbox",
+          "provider_reference": "",
+          "provider_version": 0,
+          "request": {
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_id": "user-1"
+          },
+          "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+          "result": {},
+          "status": "pending",
+          "updated_at": "2026-11-05T14:32:32.569749+00:00",
+          "user_id": "user-1",
+          "version": 1
+        },
+        "success": true,
+        "idempotent_replay": true,
+        "action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "return_refund",
+            "reason": "不合适退货退款",
+            "amount": 99.0,
+            "risk_level": "low",
+            "route": "auto_process",
+            "risk_reasons": [
+              "金额及售后类型满足自动处理规则"
+            ],
+            "status": "completed",
+            "approval_status": "not_required",
+            "evidence_provided": false,
+            "created_at": "2026-11-05T22:32:32",
+            "updated_at": "2026-11-05T22:32:33",
+            "user_id": "user-1",
+            "reviewer": "",
+            "review_note": "",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "risk=low, route=auto_process"
+              },
+              {
+                "action": "auto_approved",
+                "actor": "risk_router",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "金额及售后类型满足自动处理规则"
+              },
+              {
+                "action": "refund_queued",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "ASOP-4AC163EC06B11F7C"
+              },
+              {
+                "action": "refund_succeeded",
+                "actor": "provider",
+                "created_at": "2026-11-05T22:32:33",
+                "note": "event=e73bd53f3a934d6c9366cd724270daac; version=1"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 3,
+            "evidence_ids": []
+          }
+        },
+        "operation": {
+          "success": true,
+          "operation": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "user_id": "user-1",
+            "operation_type": "refund",
+            "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+            "status": "succeeded",
+            "attempt_count": 1,
+            "max_attempts": 8,
+            "version": 4,
+            "lease_expires_at": "",
+            "created_at": "2026-11-05T14:32:32.569749+00:00",
+            "updated_at": "2026-11-05T14:32:33.087787+00:00",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "error": "",
+            "completed_at": "2026-11-05T14:32:33.087763+00:00",
+            "compensation_status": "not_required",
+            "compensation_note": "",
+            "provider": "commerce-sandbox",
+            "provider_version": 1,
+            "provider_reference": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+            "request": {
+              "operation_id": "ASOP-4AC163EC06B11F7C",
+              "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+              "order_id": "ORD-SANDBOX-001",
+              "user_id": "user-1",
+              "reason": "不合适退货退款"
+            }
+          }
+        },
+        "execution_action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        },
+        "business_state": "succeeded"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "return_refund",
+            "reason": "不合适退货退款",
+            "amount": 99.0,
+            "risk_level": "low",
+            "route": "auto_process",
+            "risk_reasons": [
+              "金额及售后类型满足自动处理规则"
+            ],
+            "status": "completed",
+            "approval_status": "not_required",
+            "evidence_provided": false,
+            "created_at": "2026-11-05T22:32:32",
+            "updated_at": "2026-11-05T22:32:33",
+            "user_id": "user-1",
+            "reviewer": "",
+            "review_note": "",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "risk=low, route=auto_process"
+              },
+              {
+                "action": "auto_approved",
+                "actor": "risk_router",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "金额及售后类型满足自动处理规则"
+              },
+              {
+                "action": "refund_queued",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "ASOP-4AC163EC06B11F7C"
+              },
+              {
+                "action": "refund_succeeded",
+                "actor": "provider",
+                "created_at": "2026-11-05T22:32:33",
+                "note": "event=e73bd53f3a934d6c9366cd724270daac; version=1"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 3,
+            "evidence_ids": []
+          }
+        },
+        "operation": {
+          "success": true,
+          "operation": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "user_id": "user-1",
+            "operation_type": "refund",
+            "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+            "status": "succeeded",
+            "attempt_count": 1,
+            "max_attempts": 8,
+            "version": 4,
+            "lease_expires_at": "",
+            "created_at": "2026-11-05T14:32:32.569749+00:00",
+            "updated_at": "2026-11-05T14:32:33.087787+00:00",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "error": "",
+            "completed_at": "2026-11-05T14:32:33.087763+00:00",
+            "compensation_status": "not_required",
+            "compensation_note": "",
+            "provider": "commerce-sandbox",
+            "provider_version": 1,
+            "provider_reference": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+            "request": {
+              "operation_id": "ASOP-4AC163EC06B11F7C",
+              "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+              "order_id": "ORD-SANDBOX-001",
+              "user_id": "user-1",
+              "reason": "不合适退货退款"
+            }
+          }
+        },
+        "execution_action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        },
+        "business_state": "succeeded"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889152.5386932,
+        "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+        "execution_action_id": "6dfe22f6473745928020eed87a31639f",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "不合适退货退款"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "d6fcedaa70174dbda25cc914e86cbf10",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "06acc3dff6afdb6a82e81a86de89b81342eb1daeb4d177b6b15834e4e8131062",
+          "arguments": {
+            "case_type": "return_refund",
+            "evidence_ids": [],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "不合适退货退款",
+            "user_confirmed": false
+          },
+          "business_version": "e1c4c467f1471107f880c7ded1ecc2095a7b53e48984c5c990ee845a54d0de82",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.489730+00:00",
+          "created_at": "2026-11-05T14:32:32.489730+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "return_refund",
+            "reason": "不合适退货退款",
+            "amount": 99.0,
+            "risk_level": "low",
+            "route": "auto_process",
+            "risk_reasons": [
+              "金额及售后类型满足自动处理规则"
+            ],
+            "status": "completed",
+            "approval_status": "not_required",
+            "evidence_provided": false,
+            "created_at": "2026-11-05T22:32:32",
+            "updated_at": "2026-11-05T22:32:33",
+            "user_id": "user-1",
+            "reviewer": "",
+            "review_note": "",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "risk=low, route=auto_process"
+              },
+              {
+                "action": "auto_approved",
+                "actor": "risk_router",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "金额及售后类型满足自动处理规则"
+              },
+              {
+                "action": "refund_queued",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:32",
+                "note": "ASOP-4AC163EC06B11F7C"
+              },
+              {
+                "action": "refund_succeeded",
+                "actor": "provider",
+                "created_at": "2026-11-05T22:32:33",
+                "note": "event=e73bd53f3a934d6c9366cd724270daac; version=1"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 3,
+            "evidence_ids": []
+          }
+        },
+        "operation": {
+          "success": true,
+          "operation": {
+            "operation_id": "ASOP-4AC163EC06B11F7C",
+            "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142",
+            "user_id": "user-1",
+            "operation_type": "refund",
+            "request_hash": "8ea6be663dede7ed0e7af63f5c5e762140ba61cbdd19c0722be801b969d727b5",
+            "status": "succeeded",
+            "attempt_count": 1,
+            "max_attempts": 8,
+            "version": 4,
+            "lease_expires_at": "",
+            "created_at": "2026-11-05T14:32:32.569749+00:00",
+            "updated_at": "2026-11-05T14:32:33.087787+00:00",
+            "result": {
+              "success": true,
+              "in_progress": false,
+              "provider": "commerce-sandbox",
+              "refund": {
+                "operation_id": "ASOP-4AC163EC06B11F7C",
+                "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+                "order_id": "ORD-SANDBOX-001",
+                "user_id": "user-1",
+                "reason": "不合适退货退款",
+                "provider": "commerce-sandbox",
+                "status": "succeeded",
+                "version": 1,
+                "refund_id": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+                "amount_cents": 9900
+              }
+            },
+            "error": "",
+            "completed_at": "2026-11-05T14:32:33.087763+00:00",
+            "compensation_status": "not_required",
+            "compensation_note": "",
+            "provider": "commerce-sandbox",
+            "provider_version": 1,
+            "provider_reference": "RF-07c006ac81fd4453a9ab1700c2ce1e04",
+            "request": {
+              "operation_id": "ASOP-4AC163EC06B11F7C",
+              "idempotency_key": "after_sale.execute:AS-433345E6B1A947E8B2FEECABD24AE142",
+              "order_id": "ORD-SANDBOX-001",
+              "user_id": "user-1",
+              "reason": "不合适退货退款"
+            }
+          }
+        },
+        "execution_action": {
+          "action_id": "6dfe22f6473745928020eed87a31639f",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "98d24e173bc06430678b69c2fd869a63c91cb489015fdd3b6ccef1abe0d8a35c",
+          "arguments": {
+            "case_id": "AS-433345E6B1A947E8B2FEECABD24AE142"
+          },
+          "business_version": "9b5522178a9f4dd98cf36982c67d9dbdf8bc9aa3db85aaaedb4d192160944606",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:32.538876+00:00",
+          "created_at": "2026-11-05T14:32:32.538876+00:00"
+        },
+        "business_state": "succeeded"
+      }
+    }
+  ]
+}

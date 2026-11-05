@@ -36,32 +36,36 @@ class EvidenceReviewRequest(BaseModel):
     status: Literal["verified", "rejected"]
 
 
+def build_action_manager(services, context, session_id):
+    after_sale = services.after_sale
+    if services.config.configuration_releases_enabled:
+        from app.platform.releases import ConfigurationReleases, pinned_after_sale
+
+        release = ConfigurationReleases(services.config).assign(
+            context.user_id, session_reference(services, context, session_id)
+        )
+        after_sale = pinned_after_sale(after_sale, release["manifest"])
+    registry = create_default_tool_registry(
+        config=services.config,
+        commerce_service=services.commerce,
+        after_sale_service=after_sale,
+        user_id=context.user_id,
+    )
+    return ToolManager(
+        registry=registry,
+        after_sale_enabled=services.config.after_sale_enabled,
+        execution_context=ToolExecutionContext(
+            user_id=context.user_id,
+            session_id=session_reference(services, context, session_id),
+            permissions=frozenset({"refund:execute", "after_sale:execute"}),
+        ),
+        event_bus=services.runtime.event_bus,
+    )
+
+
 def register_action_routes(app, services, require):
     def manager(context, session_id):
-        after_sale = services.after_sale
-        if services.config.configuration_releases_enabled:
-            from app.platform.releases import ConfigurationReleases, pinned_after_sale
-
-            release = ConfigurationReleases(services.config).assign(
-                context.user_id, session_reference(services, context, session_id)
-            )
-            after_sale = pinned_after_sale(after_sale, release["manifest"])
-        registry = create_default_tool_registry(
-            config=services.config,
-            commerce_service=services.commerce,
-            after_sale_service=after_sale,
-            user_id=context.user_id,
-        )
-        return ToolManager(
-            registry=registry,
-            after_sale_enabled=services.config.after_sale_enabled,
-            execution_context=ToolExecutionContext(
-                user_id=context.user_id,
-                session_id=session_reference(services, context, session_id),
-                permissions=frozenset({"refund:execute", "after_sale:execute"}),
-            ),
-            event_bus=services.runtime.event_bus,
-        )
+        return build_action_manager(services, context, session_id)
 
     def failure(exc):
         raise HTTPException(

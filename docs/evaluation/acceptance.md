@@ -2,7 +2,18 @@
 
 更新日期：2026-11-05。此页是当前状态汇总；历史报告保留其原提交、样本和测量值。文档、界面名称整理不把历史报告重新标成新业务实验。
 
-## 当前检索诊断、复核工作台与任务基线
+## 第二、三轮扩展的本地验收记录
+
+基于 `b2df06d`，完成检索配对实验、人工接管的所有权版本检查和结构化售后申请；详见[实现与使用说明](../engineering/retrieval-handoff-and-intake.md)。以下证据记录提交前的本地验收，CI 以对应提交的 GitHub Actions 结果为准。
+
+- 本地 **408 项回归通过，无跳过，77.286 秒，覆盖率 82%**：[日志](../evidence/retrieval-handoff-round2/unittest.log)、[覆盖率](../evidence/retrieval-handoff-round2/coverage.log)。
+- 相同冻结任务 **18/18 通过，模拟用量 2010 → 1710 tokens**；接管后三种策略均为零新增调用：[报告](../evidence/retrieval-handoff-round2/task-baseline.json)。
+- 开发集 64 组配对比较，无最终输出改善或退化，仍不可声称检索质量提升：[诊断对比](../evidence/retrieval-handoff-round2/comparison.json)。
+- 三条真实 HTTP 售后工作流通过，未知退款经重启与对账后供应商退款数为 1：[业务证据](../evidence/complex-after-sale-round3/)。
+- SQLite 新迁移/drift/smoke/空表降级重建通过；OpenAPI 95 路径、静态检查和文档链接检查通过。本地未验证 PostgreSQL 与完整 Compose，需检查本轮 CI；旧记录仅说明旧提交。
+- 原始冻结复核材料与已发布迁移未修改，未运行 holdout，未调用付费模型。
+
+## 上一轮检索诊断、复核工作台与任务基线
 
 基于 `d2b43fb` 扩展，2026-11-05 本地 Python 3.11、锁定依赖及 Chromium：**385 项测试通过，无跳过，64.501 秒，app 语句覆盖率 82%**。覆盖率沿用历史口径，不含脚本及独立服务子进程；因此任务基线另行保存真实 HTTP/Worker 证据。本轮最终脚本与页面整理后又完成针对性回归。
 

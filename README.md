@@ -55,7 +55,7 @@ python -m app.scripts.demo_stack --directory app/sessions/readme-demo
 
 Windows PowerShell 使用 `py -3.11 -m venv .venv` 创建环境、`.venv\Scripts\Activate.ps1` 激活环境，随后执行相同的 `python` 命令。
 
-终端打印 `/workspace`、`/workbench` 和 `/review` 的实际地址，端口动态分配。客户令牌为 `demo-user`，管理员令牌为 `demo-admin`，仅用于本机演示。启动器负责隔离数据库迁移、种子数据、API、Worker、受控 HTTP 模型和库存 MCP 进程，退出时按 `Ctrl+C`。
+终端打印 `/workspace`、`/workbench`、`/review` 和 `/after-sale` 的实际地址，端口动态分配。客户令牌为 `demo-user`，管理员令牌为 `demo-admin`，仅用于本机演示。启动器负责隔离数据库迁移、种子数据、API、Worker、受控 HTTP 模型和库存 MCP 进程，退出时按 `Ctrl+C`。
 
 本地演示无需真实模型密钥或 Docker；首次安装依赖需要网络。五分钟指环境准备完成后的操作时间，逐步流程与预期结果见[演示指南](docs/guides/five-minute-demo.md)。
 
@@ -67,7 +67,10 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-当前评测工程扩展：本地 **385 项测试通过，覆盖率 82%**；新增检索诊断、持久化人工复核工作台和 **6 类任务 × 3 种执行方式，18/18 通过**的真实 HTTP/Worker 离线基线。[原始结果与使用指南](docs/evaluation/review-and-task-baseline.md)保留逐任务状态、调用与用量证据。任务使用受控模型，不能作为真实模型成功率；32 道冻结检索题仍待人工审核，保留集未运行，未调用付费模型。
+**第二、三轮扩展**：已完成检索配置与配对实验、人工接管的调用阻断，以及分轮资料/证据、提案变更撤回、退款未知状态查询的持久化售后申请。合并本地 **408 项测试通过，覆盖率 82%**；相同 18 项任务模拟用量由 2010 降至 1710 tokens，三条复杂 HTTP 业务流程通过。[实现、使用与边界](docs/engineering/retrieval-handoff-and-intake.md)单独记录；本节数据来自本地验收；GitHub CI 结果以对应提交的 Actions 为准。
+
+
+上一轮已提交的评测工程扩展：本地 **385 项测试通过，覆盖率 82%**；新增检索诊断、持久化人工复核工作台和 **6 类任务 × 3 种执行方式，18/18 通过**的真实 HTTP/Worker 离线基线。[原始结果与使用指南](docs/evaluation/review-and-task-baseline.md)保留逐任务状态、调用与用量证据。任务使用受控模型，不能作为真实模型成功率；32 道冻结检索题仍待人工审核，保留集未运行，未调用付费模型。
 
 前一轮可靠性验收为 370 项测试、覆盖率 81%、CI 8/8 作业通过，包括双 Worker、重启与 PostgreSQL/独立沙箱恢复；历史与本轮结果在[验收汇总](docs/evaluation/acceptance.md)分别记录。
 

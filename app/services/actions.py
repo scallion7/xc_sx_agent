@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
@@ -107,12 +108,17 @@ class ActionService:
         name: str,
         arguments: dict,
         business_version: str,
+        *,
+        connection=None,
+        deduplicate=True,
     ) -> dict:
         if not session_id:
             raise ActionError("ACTION_SCOPE_REQUIRED", "写操作必须绑定会话")
         now = self.clock()
         fingerprint = digest(arguments)
-        with self.engine.begin() as connection:
+        with (
+            self.engine.begin() if connection is None else nullcontext(connection)
+        ) as connection:
             row = (
                 connection.execute(
                     select(proposals)
@@ -129,7 +135,7 @@ class ActionService:
                 .mappings()
                 .first()
             )
-            if row:
+            if row and deduplicate:
                 return dict(row)
             payload = dict(
                 action_id=uuid4().hex,

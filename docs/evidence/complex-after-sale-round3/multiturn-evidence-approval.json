@@ -1,0 +1,824 @@
+{
+  "scenario": "multiturn-evidence-approval",
+  "passed": true,
+  "paid_calls": 0,
+  "execution": "real_http_sandbox",
+  "final_counts": {
+    "cases": 1,
+    "operations": 0,
+    "provider_refunds": 0
+  },
+  "final_intake": {
+    "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+    "session_id": "complex",
+    "revision": 6,
+    "updated_at": 1793889149.8749352,
+    "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+    "execution_action_id": "d38877a82b58472f9483147b8056b776",
+    "fields": {
+      "case_type": "quality_issue",
+      "evidence_ids": [
+        "ec21e78496f04df19f4d682859206d49"
+      ],
+      "order_id": "ORD-SANDBOX-001",
+      "reason": "质量太差，投诉并退货"
+    },
+    "missing": [],
+    "status": "awaiting_execution_confirmation",
+    "action": {
+      "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+      "user_id": "user-1",
+      "session_id": "user-1:complex",
+      "tool_name": "create_after_sale_case",
+      "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+      "arguments": {
+        "case_type": "quality_issue",
+        "evidence_ids": [
+          "ec21e78496f04df19f4d682859206d49"
+        ],
+        "evidence_provided": false,
+        "order_id": "ORD-SANDBOX-001",
+        "reason": "质量太差，投诉并退货",
+        "user_confirmed": false
+      },
+      "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+      "status": "completed",
+      "expires_at": "2026-11-05T14:47:29.797201+00:00",
+      "created_at": "2026-11-05T14:32:29.797201+00:00"
+    },
+    "case": {
+      "success": true,
+      "case": {
+        "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39",
+        "order_id": "ORD-SANDBOX-001",
+        "case_type": "quality_issue",
+        "reason": "质量太差，投诉并退货",
+        "amount": 99.0,
+        "risk_level": "medium",
+        "route": "manual_review",
+        "risk_reasons": [
+          "命中投诉信号：投诉",
+          "命中投诉信号：质量太差"
+        ],
+        "status": "approved",
+        "approval_status": "approved",
+        "evidence_provided": true,
+        "created_at": "2026-11-05T22:32:29",
+        "updated_at": "2026-11-05T22:32:29",
+        "user_id": "user-1",
+        "reviewer": "root",
+        "review_note": "已核验测试证据",
+        "result": {},
+        "audit_log": [
+          {
+            "action": "case_created",
+            "actor": "agent",
+            "created_at": "2026-11-05T22:32:29",
+            "note": "risk=medium, route=manual_review"
+          },
+          {
+            "action": "approval_requested",
+            "actor": "system",
+            "created_at": "2026-11-05T22:32:29",
+            "note": "命中投诉信号：投诉; 命中投诉信号：质量太差"
+          },
+          {
+            "action": "approved",
+            "actor": "root",
+            "created_at": "2026-11-05T22:32:29",
+            "note": "已核验测试证据"
+          }
+        ],
+        "risk_rule_version": "2026.1",
+        "version": 2,
+        "evidence_ids": [
+          "ec21e78496f04df19f4d682859206d49"
+        ]
+      }
+    },
+    "operation": {
+      "success": false,
+      "error": "该工单还没有副作用执行记录"
+    },
+    "execution_action": {
+      "action_id": "d38877a82b58472f9483147b8056b776",
+      "user_id": "user-1",
+      "session_id": "user-1:complex",
+      "tool_name": "execute_after_sale_case",
+      "arguments_hash": "8a6d81f3db4be9b22ee17facaf3051b0995d0054347950a93c1025e967c50cd7",
+      "arguments": {
+        "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39"
+      },
+      "business_version": "7c68b37af4f6334b04708bad779ed72885025fdd7e73dc3f89ec3463ad709bf6",
+      "status": "pending",
+      "expires_at": "2026-11-05T14:47:29.875146+00:00",
+      "created_at": "2026-11-05T14:32:29.875146+00:00"
+    },
+    "business_state": "approved"
+  },
+  "http_trace": [
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 0,
+        "updated_at": 1793889149.69765,
+        "action_id": "",
+        "fields": {
+          "case_type": "return_refund",
+          "evidence_ids": [],
+          "order_id": "",
+          "reason": ""
+        },
+        "missing": [
+          "order_id",
+          "reason"
+        ],
+        "status": "collecting"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 1,
+        "updated_at": 1793889149.710191,
+        "action_id": "",
+        "fields": {
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "",
+          "case_type": "return_refund",
+          "evidence_ids": []
+        },
+        "missing": [
+          "reason"
+        ],
+        "status": "collecting"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/evidence",
+      "status": 201,
+      "response": {
+        "evidence": {
+          "evidence_id": "ec21e78496f04df19f4d682859206d49",
+          "user_id": "user-1",
+          "order_id": "ORD-SANDBOX-001",
+          "content": "商品破损照片与签收记录（合成测试）",
+          "content_hash": "98ce317be7cf33df275ebb8ae07401dd62b40724ad1f7f678a3f35e74306b05d",
+          "status": "submitted",
+          "reviewer": "",
+          "created_at": "2026-11-05T14:32:29.722451+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 2,
+        "updated_at": 1793889149.732481,
+        "action_id": "",
+        "fields": {
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货",
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ]
+        },
+        "missing": [],
+        "status": "ready"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889149.7436538,
+        "action_id": "181cba2858114af6addc69d2be158092",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 3,
+        "updated_at": 1793889149.7436538,
+        "action_id": "181cba2858114af6addc69d2be158092",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation",
+        "action": {
+          "action_id": "181cba2858114af6addc69d2be158092",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "64e23f0f386fa2e42fe146d7837a4a932cdd0909bb74a20f045f6ff37c3a472c",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:29.743846+00:00",
+          "created_at": "2026-11-05T14:32:29.743846+00:00"
+        },
+        "business_state": "pending"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/evidence/ec21e78496f04df19f4d682859206d49/review",
+      "status": 200,
+      "response": {
+        "evidence": {
+          "evidence_id": "ec21e78496f04df19f4d682859206d49",
+          "user_id": "user-1",
+          "order_id": "ORD-SANDBOX-001",
+          "content": "商品破损照片与签收记录（合成测试）",
+          "content_hash": "98ce317be7cf33df275ebb8ae07401dd62b40724ad1f7f678a3f35e74306b05d",
+          "status": "verified",
+          "reviewer": "root",
+          "created_at": "2026-11-05T14:32:29.722451+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/181cba2858114af6addc69d2be158092/confirm",
+      "status": 409,
+      "response": {
+        "success": false,
+        "error_code": "VERSION_CONFLICT",
+        "detail": {
+          "error_code": "ACTION_STALE",
+          "message": "订单、审批、规则或证据已变化，请重新确认"
+        },
+        "request_id": "20bd96de8c4f4997807a519eb78f3be5",
+        "trace_id": "20bd96de8c4f4997807a519eb78f3be5"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 4,
+        "updated_at": 1793889149.786123,
+        "action_id": "",
+        "fields": {
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货",
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ]
+        },
+        "missing": [],
+        "status": "ready"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 5,
+        "updated_at": 1793889149.797023,
+        "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 5,
+        "updated_at": 1793889149.797023,
+        "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_confirmation",
+        "action": {
+          "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:29.797201+00:00",
+          "created_at": "2026-11-05T14:32:29.797201+00:00"
+        },
+        "business_state": "pending"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/8353b41f2a844c3ba612f2a03f8ca953/confirm",
+      "status": 200,
+      "response": {
+        "action": {
+          "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+          "status": "confirmed",
+          "expires_at": "2026-11-05T14:47:29.797201+00:00",
+          "created_at": "2026-11-05T14:32:29.797201+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/actions/8353b41f2a844c3ba612f2a03f8ca953/execute",
+      "status": 200,
+      "response": {
+        "success": true,
+        "created": true,
+        "idempotent": false,
+        "idempotency_scope": "new",
+        "request_matches": true,
+        "case": {
+          "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39",
+          "order_id": "ORD-SANDBOX-001",
+          "case_type": "quality_issue",
+          "reason": "质量太差，投诉并退货",
+          "amount": 99.0,
+          "risk_level": "medium",
+          "route": "manual_review",
+          "risk_reasons": [
+            "命中投诉信号：投诉",
+            "命中投诉信号：质量太差"
+          ],
+          "status": "pending_review",
+          "approval_status": "pending",
+          "evidence_provided": true,
+          "created_at": "2026-11-05T22:32:29",
+          "updated_at": "2026-11-05T22:32:29",
+          "user_id": "user-1",
+          "reviewer": "",
+          "review_note": "",
+          "result": {},
+          "audit_log": [
+            {
+              "action": "case_created",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:29",
+              "note": "risk=medium, route=manual_review"
+            },
+            {
+              "action": "approval_requested",
+              "actor": "system",
+              "created_at": "2026-11-05T22:32:29",
+              "note": "命中投诉信号：投诉; 命中投诉信号：质量太差"
+            }
+          ],
+          "risk_rule_version": "2026.1",
+          "version": 1,
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ]
+        },
+        "next_action": "等待人工审批，当前不可执行退款",
+        "action": {
+          "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:29.797201+00:00",
+          "created_at": "2026-11-05T14:32:29.797201+00:00"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 409,
+      "response": {
+        "success": false,
+        "error_code": "INTAKE_CASE_NOT_APPROVED",
+        "detail": "INTAKE_CASE_NOT_APPROVED"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/after-sales/AS-365D7B27B447426BB078D03DE2DC9A39/review",
+      "status": 200,
+      "response": {
+        "success": true,
+        "case": {
+          "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39",
+          "order_id": "ORD-SANDBOX-001",
+          "case_type": "quality_issue",
+          "reason": "质量太差，投诉并退货",
+          "amount": 99.0,
+          "risk_level": "medium",
+          "route": "manual_review",
+          "risk_reasons": [
+            "命中投诉信号：投诉",
+            "命中投诉信号：质量太差"
+          ],
+          "status": "approved",
+          "approval_status": "approved",
+          "evidence_provided": true,
+          "created_at": "2026-11-05T22:32:29",
+          "updated_at": "2026-11-05T22:32:29",
+          "user_id": "user-1",
+          "reviewer": "root",
+          "review_note": "已核验测试证据",
+          "result": {},
+          "audit_log": [
+            {
+              "action": "case_created",
+              "actor": "agent",
+              "created_at": "2026-11-05T22:32:29",
+              "note": "risk=medium, route=manual_review"
+            },
+            {
+              "action": "approval_requested",
+              "actor": "system",
+              "created_at": "2026-11-05T22:32:29",
+              "note": "命中投诉信号：投诉; 命中投诉信号：质量太差"
+            },
+            {
+              "action": "approved",
+              "actor": "root",
+              "created_at": "2026-11-05T22:32:29",
+              "note": "已核验测试证据"
+            }
+          ],
+          "risk_rule_version": "2026.1",
+          "version": 2,
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/admin/after-sales/AS-365D7B27B447426BB078D03DE2DC9A39/review",
+      "status": 409,
+      "response": {
+        "success": false,
+        "error_code": "VERSION_CONFLICT",
+        "detail": {
+          "success": false,
+          "error_code": "CASE_VERSION_CONFLICT",
+          "error": "工单已更新，请刷新后审批"
+        },
+        "request_id": "e45a2a55c2d44a069a0d96400beda6a4",
+        "trace_id": "e45a2a55c2d44a069a0d96400beda6a4"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f/commands",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 6,
+        "updated_at": 1793889149.8749352,
+        "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "execution_action_id": "d38877a82b58472f9483147b8056b776"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 6,
+        "updated_at": 1793889149.8749352,
+        "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+        "execution_action_id": "d38877a82b58472f9483147b8056b776",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:29.797201+00:00",
+          "created_at": "2026-11-05T14:32:29.797201+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "quality_issue",
+            "reason": "质量太差，投诉并退货",
+            "amount": 99.0,
+            "risk_level": "medium",
+            "route": "manual_review",
+            "risk_reasons": [
+              "命中投诉信号：投诉",
+              "命中投诉信号：质量太差"
+            ],
+            "status": "approved",
+            "approval_status": "approved",
+            "evidence_provided": true,
+            "created_at": "2026-11-05T22:32:29",
+            "updated_at": "2026-11-05T22:32:29",
+            "user_id": "user-1",
+            "reviewer": "root",
+            "review_note": "已核验测试证据",
+            "result": {},
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "risk=medium, route=manual_review"
+              },
+              {
+                "action": "approval_requested",
+                "actor": "system",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "命中投诉信号：投诉; 命中投诉信号：质量太差"
+              },
+              {
+                "action": "approved",
+                "actor": "root",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "已核验测试证据"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 2,
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ]
+          }
+        },
+        "operation": {
+          "success": false,
+          "error": "该工单还没有副作用执行记录"
+        },
+        "execution_action": {
+          "action_id": "d38877a82b58472f9483147b8056b776",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "8a6d81f3db4be9b22ee17facaf3051b0995d0054347950a93c1025e967c50cd7",
+          "arguments": {
+            "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39"
+          },
+          "business_version": "7c68b37af4f6334b04708bad779ed72885025fdd7e73dc3f89ec3463ad709bf6",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:29.875146+00:00",
+          "created_at": "2026-11-05T14:32:29.875146+00:00"
+        },
+        "business_state": "approved"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/after-sale-intakes/4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+      "status": 200,
+      "response": {
+        "intake_id": "4de66fc113fd6dd49db00bdc2335e54b3ce23a75cc1f55ec76a72a54bd13b64f",
+        "session_id": "complex",
+        "revision": 6,
+        "updated_at": 1793889149.8749352,
+        "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+        "execution_action_id": "d38877a82b58472f9483147b8056b776",
+        "fields": {
+          "case_type": "quality_issue",
+          "evidence_ids": [
+            "ec21e78496f04df19f4d682859206d49"
+          ],
+          "order_id": "ORD-SANDBOX-001",
+          "reason": "质量太差，投诉并退货"
+        },
+        "missing": [],
+        "status": "awaiting_execution_confirmation",
+        "action": {
+          "action_id": "8353b41f2a844c3ba612f2a03f8ca953",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "create_after_sale_case",
+          "arguments_hash": "b29e2b26d7d4a3274e6cc8c676fb6514b6423dc004f4c2c3ee6b2625fa54256e",
+          "arguments": {
+            "case_type": "quality_issue",
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ],
+            "evidence_provided": false,
+            "order_id": "ORD-SANDBOX-001",
+            "reason": "质量太差，投诉并退货",
+            "user_confirmed": false
+          },
+          "business_version": "dc48640b89a323edd92eea5a418fcf8ab3c712a6f52fcc93057f3c088241fc75",
+          "status": "completed",
+          "expires_at": "2026-11-05T14:47:29.797201+00:00",
+          "created_at": "2026-11-05T14:32:29.797201+00:00"
+        },
+        "case": {
+          "success": true,
+          "case": {
+            "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39",
+            "order_id": "ORD-SANDBOX-001",
+            "case_type": "quality_issue",
+            "reason": "质量太差，投诉并退货",
+            "amount": 99.0,
+            "risk_level": "medium",
+            "route": "manual_review",
+            "risk_reasons": [
+              "命中投诉信号：投诉",
+              "命中投诉信号：质量太差"
+            ],
+            "status": "approved",
+            "approval_status": "approved",
+            "evidence_provided": true,
+            "created_at": "2026-11-05T22:32:29",
+            "updated_at": "2026-11-05T22:32:29",
+            "user_id": "user-1",
+            "reviewer": "root",
+            "review_note": "已核验测试证据",
+            "result": {},
+            "audit_log": [
+              {
+                "action": "case_created",
+                "actor": "agent",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "risk=medium, route=manual_review"
+              },
+              {
+                "action": "approval_requested",
+                "actor": "system",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "命中投诉信号：投诉; 命中投诉信号：质量太差"
+              },
+              {
+                "action": "approved",
+                "actor": "root",
+                "created_at": "2026-11-05T22:32:29",
+                "note": "已核验测试证据"
+              }
+            ],
+            "risk_rule_version": "2026.1",
+            "version": 2,
+            "evidence_ids": [
+              "ec21e78496f04df19f4d682859206d49"
+            ]
+          }
+        },
+        "operation": {
+          "success": false,
+          "error": "该工单还没有副作用执行记录"
+        },
+        "execution_action": {
+          "action_id": "d38877a82b58472f9483147b8056b776",
+          "user_id": "user-1",
+          "session_id": "user-1:complex",
+          "tool_name": "execute_after_sale_case",
+          "arguments_hash": "8a6d81f3db4be9b22ee17facaf3051b0995d0054347950a93c1025e967c50cd7",
+          "arguments": {
+            "case_id": "AS-365D7B27B447426BB078D03DE2DC9A39"
+          },
+          "business_version": "7c68b37af4f6334b04708bad779ed72885025fdd7e73dc3f89ec3463ad709bf6",
+          "status": "pending",
+          "expires_at": "2026-11-05T14:47:29.875146+00:00",
+          "created_at": "2026-11-05T14:32:29.875146+00:00"
+        },
+        "business_state": "approved"
+      }
+    }
+  ]
+}

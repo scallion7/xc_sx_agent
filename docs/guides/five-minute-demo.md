@@ -76,3 +76,7 @@ python -m app.scripts.demo_stack --directory app/sessions/interview-demo-01
 ## 可选：展示评测工程闭环
 
 打开启动器打印的 `/review`，输入演示管理员令牌 `demo-admin`，选择 development 题目，核对原始政策并填写理由，保存草稿或标记分歧；运行离线诊断，展示四模式的候选分数、排序和拒答原因。演示审批仅在可丢弃数据库操作，不能把它作为人工金标准。导出文件后可看到真实账号、审核修订及原文定位；导入会恢复成待重新批准的草稿。详细复现与任务基线命令见[复核与评测指南](../evaluation/review-and-task-baseline.md)。
+
+## 可选：展示复杂售后申请
+
+打开 `/after-sale`，使用 `demo-user` 新建申请，先只保存订单 `ORD-20240125-006`，展示还需补充原因；补全原因后生成提案，再修改诉求，展示旧确认失效与新提案重新确认。撤回后刷新或重新查询申请，仍能读取持久化历史。退款断连、补证审批的完整 API 与数据库证据见[第二、三轮说明](../engineering/retrieval-handoff-and-intake.md)。本版关联已有材料编号，不提供图片上传或自动识图。

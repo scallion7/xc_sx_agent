@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ecom Service Agent · 售后申请</title>
+<link rel="stylesheet" href="/assets/platform.css">
+</head>
+<body>
+<header>
+<div>
+<h1>售后申请</h1>
+<small>补充资料、确认操作并查询处理进度</small>
+</div>
+<nav>
+<a href="/workspace">客户服务</a>
+<a href="/workbench">客服工作台</a>
+</nav>
+</header>
+<main>
+<section class="wide">
+<div class="row">
+<label for="token">用户令牌</label>
+<input id="token" type="password" autocomplete="off">
+<label for="session">会话名称</label>
+<input id="session" value="after-sale">
+<button id="create">新建申请</button>
+</div>
+<div class="row">
+<label for="intakeId">申请编号</label>
+<input id="intakeId">
+<button id="load">查询已有申请</button>
+</div>
+<p id="status" class="status" role="status">请登录后新建或查询申请。</p>
+</section>
+<section>
+<h2>申请资料</h2>
+<p id="progress">尚未打开申请</p>
+<label for="order">订单编号</label>
+<input id="order">
+<label for="reason">售后原因</label>
+<textarea id="reason">
+</textarea>
+<label for="caseType">诉求</label>
+<select id="caseType">
+<option value="return_refund">退货退款</option>
+<option value="exchange">换货</option>
+<option value="quality_issue">质量问题</option>
+<option value="missing_item">缺少商品</option>
+<option value="logistics_damage">物流破损</option>
+<option value="other">其他</option>
+</select>
+<details>
+<summary>关联已提交的证据</summary>
+<label for="evidenceIds">材料凭据编号（多个用逗号分隔）</label>
+<input id="evidenceIds">
+<p>仅关联当前账号、当前订单的材料。材料审核结果改变后，需要重新核对并确认提案。</p>
+</details>
+<div class="row">
+<button id="save" disabled>保存资料</button>
+<button id="propose" disabled>生成创建提案</button>
+<button id="withdraw" class="secondary" disabled>撤回未执行申请</button>
+</div>
+</section>
+<section>
+<h2>操作确认与进度</h2>
+<p>创建工单与执行售后分别确认；修改资料会使旧确认失效。已开始的操作请查询进度，结果未知时由对账或人工核实。</p>
+<div id="action" class="card">
+</div>
+<div class="row">
+<button id="executeProposal" disabled>申请执行已审批工单</button>
+<button id="refresh" disabled>刷新处理进度</button>
+</div>
+<pre id="business">
+</pre>
+<h3>申请历史</h3>
+<div id="history">
+</div>
+</section>
+</main>
+<script type="module" src="/assets/after_sale.js">
+</script>
+</body>
+</html>

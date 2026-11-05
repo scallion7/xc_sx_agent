@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-05",
+  "base_commit": "b2df06db1993c0a5aa3717144d5572e58850aa8d",
+  "scope": [
+    "retrieval_experiments",
+    "handoff_execution",
+    "complex_after_sale_intake"
+  ],
+  "local_only": true,
+  "git_commit_created": false,
+  "github_pushed": false,
+  "new_ci_run": false,
+  "full_tests": 408,
+  "skipped": 0,
+  "duration_seconds": 77.286,
+  "coverage_percent": 82,
+  "task_baseline_trials": 18,
+  "task_baseline_passed": 18,
+  "simulated_tokens_before": 2010,
+  "simulated_tokens_after": 1710,
+  "complex_http_scenarios_passed": 3,
+  "development_paired_comparisons": 64,
+  "retrieval_quality_improvement_observed": false,
+  "paid_calls": 0,
+  "holdout_executed": false,
+  "human_review_completed": false,
+  "openapi_paths": 95
+}

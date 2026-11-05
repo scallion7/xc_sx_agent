@@ -126,6 +126,7 @@ def register_platform_routes(app, services, require):
             "platform.css",
             "review.css",
             "review.js",
+            "after_sale.js",
             "workspace.js",
             "workbench.js",
             "request_client.js",

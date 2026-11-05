@@ -1,0 +1,183 @@
+Name                                                                        Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------------------------------------
+app/__init__.py                                                                 0      0   100%
+app/agent/__init__.py                                                           0      0   100%
+app/agent/after_sale/__init__.py                                                6      0   100%
+app/agent/after_sale/creation.py                                               28      0   100%
+app/agent/after_sale/models.py                                                140      5    96%   163-164, 166, 171, 173
+app/agent/after_sale/operation_repository.py                                  109     12    89%   106, 110, 114-121, 141, 144, 154, 188, 190, 260-261, 264
+app/agent/after_sale/repository.py                                            113     12    89%   52, 55, 103, 130, 145, 174, 191-193, 196-198
+app/agent/after_sale/risk.py                                                   90      9    90%   78, 117-118, 135, 168-169, 171-172, 174
+app/agent/after_sale/service.py                                               289     43    85%   96, 108-109, 145, 295, 297, 303, 305, 307, 332, 341, 364, 372-373, 376, 378-379, 388-394, 421-422, 453-464, 501-502, 543, 557-558, 560, 606, 609, 611, 625, 648-649, 716-723
+app/agent/base.py                                                             358     79    78%   145-154, 238, 246-252, 346, 372-378, 424-425, 508, 562, 567-579, 584, 590-593, 627, 647-672, 677, 731, 758, 760-761, 767-794, 797-814, 825, 832, 836
+app/agent/chat.py                                                             150     31    79%   114, 205-220, 225, 236-241, 244-249, 256-270, 355-364
+app/agent/memory/__init__.py                                                    4      0   100%
+app/agent/memory/extraction.py                                                 73     64    12%   21-41, 51-84, 95-146
+app/agent/memory/long_term.py                                                  80     48    40%   49, 53-70, 80-93, 97-104, 107, 122-148, 152-165, 169-172
+app/agent/memory/manager.py                                                    44     14    68%   42, 48-53, 60-67, 77, 90-91
+app/agent/memory/short_term.py                                                 22      5    77%   26, 35-38
+app/agent/rag/__init__.py                                                      15      7    53%   22-24, 26-28, 30-32, 43
+app/agent/rag/backends/__init__.py                                             12      1    92%   32
+app/agent/rag/backends/base.py                                                 19      0   100%
+app/agent/rag/backends/chroma_backend.py                                       77     60    22%   38-43, 55-66, 74-113, 116-150, 153-160, 163-175, 178-183
+app/agent/rag/backends/cosine_backend.py                                       42      2    95%   40, 89
+app/agent/rag/backends/numpy_backend.py                                         3      0   100%
+app/agent/rag/chunker.py                                                       88     21    76%   61-62, 71, 74, 113-130
+app/agent/rag/embedder.py                                                      22     11    50%   31, 35-43, 46
+app/agent/rag/reranker.py                                                      36      4    89%   23, 38, 41-42
+app/agent/rag/retriever.py                                                     28      8    71%   30, 34, 38, 47, 50-53
+app/agent/rag/similarity.py                                                    12      0   100%
+app/agent/skills/__init__.py                                                    2      0   100%
+app/agent/skills/loader.py                                                     93     28    70%   28-32, 39, 52-53, 63-66, 85, 89, 92, 100, 110, 114, 118, 126, 147-159
+app/agent/storage.py                                                           33      5    85%   48-50, 53-54
+app/agent/strategies/__init__.py                                                5      0   100%
+app/agent/strategies/executor.py                                              324     32    90%   60-61, 69, 83, 94, 163, 179, 243-244, 271-272, 288, 428-429, 478, 508, 524, 585-586, 603, 613, 682, 684-686, 702, 734-735, 745-746, 754, 974
+app/agent/strategies/models.py                                                121      5    96%   69, 75-76, 78, 189
+app/agent/strategies/plan_execute.py                                           84     15    82%   121, 154, 161, 202, 240-246, 250-263
+app/agent/strategies/policies.py                                              164      5    97%   62, 142, 147, 168, 227
+app/agent/strategies/selector.py                                               22      0   100%
+app/agent/summarizer.py                                                        29     26    10%   15-53
+app/agent/tools/__init__.py                                                    13     10    23%   9-21
+app/agent/tools/after_sale.py                                                   7      2    71%   34, 42
+app/agent/tools/contracts.py                                                   30      0   100%
+app/agent/tools/definitions.py                                                  8      0   100%
+app/agent/tools/knowledge.py                                                   80     18    78%   47-53, 59, 72, 75-76, 105-114, 117, 129-133, 136, 158, 160, 163, 225
+app/agent/tools/logistics.py                                                   12      3    75%   8, 12, 16
+app/agent/tools/manager.py                                                    121     63    48%   64, 93-191, 211, 225-229, 259-265, 276-277
+app/agent/tools/memory_tool.py                                                 12      4    67%   13, 24, 28-29
+app/agent/tools/mock_data.py                                                    3      0   100%
+app/agent/tools/order.py                                                        6      4    33%   6-9
+app/agent/tools/product.py                                                     19      5    74%   21-22, 36, 40, 46
+app/agent/tools/refund.py                                                      10      3    70%   8, 11, 14
+app/agent/tools/registry.py                                                   159     25    84%   85, 100-101, 115, 189, 193-195, 199, 208-210, 213-215, 221, 227, 274-277, 287, 293, 298, 329-331
+app/agent/tools/skill_tool.py                                                   3      1    67%   7
+app/agent/tools/user_orders.py                                                  5      5     0%   1-24
+app/api.py                                                                     63      3    95%   118-120
+app/bootstrap.py                                                               71      2    97%   94, 123
+app/config/__init__.py                                                          0      0   100%
+app/config/settings.py                                                        158     14    91%   184, 186, 192, 197, 213-225
+app/evaluation/__init__.py                                                      5      0   100%
+app/evaluation/dataset.py                                                      20      2    90%   45-46
+app/evaluation/evaluator.py                                                    96     59    39%   53-54, 68-72, 75-161, 164-165, 169-186, 189-201, 208
+app/evaluation/faults.py                                                       63     22    65%   32, 34, 36, 38, 42, 45, 48, 54-56, 59-62, 67, 72-81
+app/evaluation/metrics.py                                                      77     58    25%   36-40, 49-53, 58-60, 65-67, 73, 82-84, 89-92, 97-99, 106-109, 123-136, 149-166, 182-195
+app/evaluation/plan_metrics.py                                                 17      0   100%
+app/evaluation/sandbox.py                                                      55      4    93%   51, 59, 136-137
+app/evaluation/trace.py                                                        43      4    91%   66, 71, 75-76
+app/infrastructure/__init__.py                                                  0      0   100%
+app/infrastructure/database.py                                                107      1    99%   458
+app/infrastructure/delivery_schema.py                                           7      0   100%
+app/infrastructure/file_lock.py                                                28      8    71%   20-26, 35-36
+app/infrastructure/intake_schema.py                                             3      0   100%
+app/infrastructure/migrations/__init__.py                                       0      0   100%
+app/infrastructure/migrations/env.py                                           25      5    80%   15, 22-30, 50
+app/infrastructure/migrations/runtime.py                                       26      0   100%
+app/infrastructure/migrations/versions/20260823_0001_stage22_baseline.py       21      0   100%
+app/infrastructure/migrations/versions/20261023_0002_trusted_actions.py        16      0   100%
+app/infrastructure/migrations/versions/20261023_0003_case_creation.py          31      0   100%
+app/infrastructure/migrations/versions/20261023_0004_agent_runs.py             15      0   100%
+app/infrastructure/migrations/versions/20261023_0005_refund_delivery.py        32      5    84%   42, 46-49
+app/infrastructure/migrations/versions/20261025_0006_platform.py               18      0   100%
+app/infrastructure/migrations/versions/20261105_0007_review_workspace.py       17      0   100%
+app/infrastructure/migrations/versions/20261105_0008_after_sale_intake.py      17      0   100%
+app/infrastructure/model_gateway.py                                           129      5    96%   111, 331-343, 355, 378
+app/infrastructure/platform_schema.py                                          42      0   100%
+app/infrastructure/review_schema.py                                             3      0   100%
+app/infrastructure/sql_after_sale_operation_repository.py                      60     18    70%   82-92, 95, 103-116, 124, 136-146
+app/infrastructure/sql_after_sale_repository.py                               102     10    90%   59, 108, 129, 179-180, 197, 228, 234-235, 244
+app/infrastructure/sql_commerce_repository.py                                 105     25    76%   92, 116, 137-162, 172-178, 197, 202, 222
+app/mcp_client/__init__.py                                                      2      0   100%
+app/mcp_client/client.py                                                       63     13    79%   43, 62-64, 68-75, 77, 83-86
+app/mcp_client/converter.py                                                     5      0   100%
+app/multi_agent/__init__.py                                                     4      0   100%
+app/multi_agent/agents.py                                                      46      4    91%   140-148
+app/multi_agent/orchestrator.py                                               144     38    74%   137, 164, 170-185, 244, 262, 265, 276-281, 284-289, 296-311, 322-336, 373, 378-379
+app/multi_agent/router.py                                                      37      1    97%   68
+app/observability/__init__.py                                                   2      0   100%
+app/observability/events.py                                                   159     22    86%   107-108, 152, 154, 259-283
+app/platform/__init__.py                                                        0      0   100%
+app/platform/after_sale_intake.py                                             170     18    89%   150, 152, 176, 191, 193, 204, 208, 210-216, 227, 229-231, 270, 273-277, 338, 342
+app/platform/alerts.py                                                         63      2    97%   104, 115
+app/platform/budget.py                                                        129      8    94%   46, 68, 172, 234, 256, 269, 280, 304
+app/platform/collaboration.py                                                   5      0   100%
+app/platform/common.py                                                         13      0   100%
+app/platform/connector_delivery.py                                            150     36    76%   32, 35, 38, 46-62, 79, 85, 112-116, 133, 159-160, 177, 194-206, 213, 223-224, 233, 255, 258, 276-278, 286, 291, 303, 323-324
+app/platform/connectors.py                                                    152     24    84%   30, 52, 58, 115, 118, 125, 127, 146-156, 183, 196, 215, 217, 254, 257, 261, 279-280, 296, 299-300, 302, 304
+app/platform/conversation_handoff.py                                           99     32    68%   44-45, 76-91, 119, 150, 155, 168, 205, 208-209, 226-267
+app/platform/evaluation.py                                                     90     23    74%   23, 27, 37-104, 122, 138, 157, 235
+app/platform/evaluation_contract.py                                            38      2    95%   26, 42
+app/platform/inventory.py                                                      60      8    87%   31-32, 46, 66, 101, 115, 131, 144
+app/platform/knowledge.py                                                      70      6    91%   43, 90, 96, 99, 123-124
+app/platform/knowledge_documents.py                                            87     12    86%   32, 61-63, 80, 85-88, 92, 94, 96, 123
+app/platform/knowledge_ingestion.py                                           106     24    77%   28, 30, 32, 70, 119, 136-192, 196, 216, 238, 250-251
+app/platform/knowledge_releases.py                                            135     10    93%   23, 28, 75, 95, 100, 115, 130, 143-144, 186
+app/platform/knowledge_tables.py                                                9      0   100%
+app/platform/recovery.py                                                       91     18    80%   98, 100, 113, 115-154, 157
+app/platform/releases.py                                                      138     21    85%   56, 73, 75, 85, 127, 153, 171, 173, 191, 194-195, 243, 267-269, 280-286
+app/platform/retrieval.py                                                     221     13    94%   77, 101, 109, 164-165, 180-181, 204, 206, 256, 258, 405, 443
+app/platform/retrieval_diagnostics.py                                          13     11    15%   7-34
+app/platform/retrieval_experiment.py                                           50      5    90%   19, 23, 26-29
+app/platform/retrieval_profile.py                                              24      0   100%
+app/platform/review_dataset.py                                                 73     18    75%   57, 100, 106, 110, 123, 125, 139-172
+app/platform/reviews.py                                                       162     16    90%   66, 81-82, 89, 162, 187-197, 239, 328, 361-370
+app/platform/task_evaluation.py                                                27      1    96%   19
+app/platform/telemetry.py                                                     121     42    65%   71-73, 99-104, 130-145, 155-156, 168-172, 179-180, 206-238, 247-255
+app/prompts/__init__.py                                                         0      0   100%
+app/prompts/agents.py                                                           8      0   100%
+app/prompts/customer_service.py                                                 3      0   100%
+app/prompts/evaluation.py                                                       3      0   100%
+app/prompts/memory.py                                                           2      0   100%
+app/prompts/summarizer.py                                                       1      0   100%
+app/repositories/__init__.py                                                    2      0   100%
+app/repositories/commerce.py                                                    3      0   100%
+app/repositories/delivery.py                                                   53      4    92%   59-67, 177
+app/repositories/mock_commerce.py                                              21      0   100%
+app/repositories/plan_runs.py                                                 221     15    93%   282, 333, 342, 346, 354-355, 438-440, 473, 563, 611, 619, 631, 634
+app/repositories/plans.py                                                     256     30    88%   97, 168-169, 173, 192, 195, 208, 241, 253, 260, 267-268, 272, 282-283, 292-293, 295, 299, 347, 356-367, 404, 417, 436
+app/repositories/policies.py                                                  223     36    84%   44, 89, 118, 147, 209-211, 231-235, 238-242, 263, 296-306, 311, 339-367, 408, 420, 437
+app/repositories/runs.py                                                      192     19    90%   89, 150, 253, 336-341, 343-348, 367-368, 382, 391, 403-406, 411, 459-461
+app/repositories/session.py                                                    60      1    98%   156
+app/sandbox/__init__.py                                                         0      0   100%
+app/sandbox/api.py                                                            129     83    36%   58, 61, 76-82, 95-218
+app/sandbox/store.py                                                          110     79    28%   68-69, 85-93, 96-101, 104-114, 117-187, 190-196, 212-216, 219-252, 255-312
+app/schemas/__init__.py                                                         0      0   100%
+app/schemas/actions.py                                                         22      0   100%
+app/schemas/response.py                                                        20      0   100%
+app/security/__init__.py                                                        4      0   100%
+app/security/auth.py                                                           30      0   100%
+app/security/guardrails.py                                                     45      3    93%   67, 70, 72
+app/security/providers.py                                                     109     25    77%   77-78, 85-86, 98-103, 137, 147-149, 155, 158, 165-175
+app/services/__init__.py                                                        2      0   100%
+app/services/actions.py                                                       128      7    95%   116, 139, 200, 239, 257, 300, 310
+app/services/commerce.py                                                       56     12    79%   46, 65-66, 111, 114, 125-126, 128, 144, 146, 158-159
+app/services/compensations.py                                                 140     14    90%   85, 92-95, 107, 116, 118, 142-144, 196, 308, 352
+app/services/data_maintenance.py                                              157     38    76%   108, 239, 245, 251, 257, 263, 267, 275, 283, 290, 309, 317-319, 343-345, 372-376, 388, 414-449, 459, 463-466
+app/services/http_commerce.py                                                  81     16    80%   17, 46, 65-66, 83, 85, 105, 108-109, 130-131, 137, 146-149
+app/services/idempotency.py                                                    85     31    64%   72-76, 79-88, 123, 139-155, 158-161, 164-170
+app/services/plan_runs.py                                                      42      4    90%   96-99
+app/services/plans.py                                                         121      7    94%   81, 120, 124, 159-162
+app/services/providers.py                                                     148      8    95%   74, 102, 147, 237, 271-273, 278
+app/services/refund_contracts.py                                               27      0   100%
+app/services/refund_delivery.py                                                84     16    81%   42, 47-48, 59, 70, 109, 123-137
+app/services/refund_workflow.py                                               162     16    90%   84, 121, 137, 139, 164-166, 200, 219, 227-229, 248, 250, 299, 404, 428
+app/services/run_context.py                                                   140      2    99%   173, 254
+app/services/runs.py                                                          105     13    88%   51-52, 100-102, 136, 188, 211-213, 223, 245-246
+app/services/tool_execution.py                                                160     21    87%   115-116, 192-202, 210-215, 222, 276, 303-313
+app/web/__init__.py                                                             0      0   100%
+app/web/actions.py                                                             90     20    78%   42-47, 80-82, 97-108, 136-141, 161-162, 171, 200-201
+app/web/admin.py                                                                3      0   100%
+app/web/admin_routes.py                                                       183     76    58%   115, 131, 140-156, 171-175, 195-211, 222-227, 236, 245, 317, 336-359, 371-372, 383-385, 421-425, 439-450, 464-465, 473-487, 500-503, 519-521
+app/web/commerce_routes.py                                                     37      0   100%
+app/web/contracts.py                                                           60     24    60%   51, 60, 77-83, 88-148
+app/web/intake_routes.py                                                       49      5    90%   32, 37, 45, 53, 79
+app/web/middleware.py                                                          68      8    88%   25, 78-87, 152
+app/web/platform.py                                                           204     60    71%   94, 98-104, 123-136, 144, 148-152, 158-188, 197, 203, 207, 211, 217, 221, 225, 229, 233, 237, 243, 247, 253, 300, 315, 333, 345, 351-354, 361-364, 375-377, 388-390, 394-399, 413-415, 424-426, 430, 436, 442
+app/web/public_routes.py                                                       97     12    88%   65-66, 161, 171-172, 176, 185, 194-195, 227-228, 240
+app/web/review_routes.py                                                       53     10    81%   28, 33, 37, 41, 45, 70, 74, 81, 88-89
+app/web/runs.py                                                                71      9    87%   43, 58-59, 79-80, 101, 108-110
+app/web/schemas.py                                                             28      0   100%
+app/web/services.py                                                           130     25    81%   166, 198-212, 246-253, 276-279, 308-309, 313
+app/web/session_routes.py                                                     139     25    82%   154-161, 170, 173-174, 224-225, 254-255, 274, 280-287, 295-298, 328-343
+app/web/streaming.py                                                           44      7    84%   42-43, 60, 66-67, 69-73
+---------------------------------------------------------------------------------------------------------
+TOTAL                                                                       11866   2149    82%

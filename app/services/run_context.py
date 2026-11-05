@@ -86,6 +86,37 @@ class RunContext:
             raise RunInterrupted("RUN_CANCELLED")
         return row
 
+    def guard_ownership(self):
+        row = self.check()
+        runtime = row["payload"].get("runtime", {})
+        if not runtime.get("collaboration"):
+            return
+        from sqlalchemy import select
+
+        from app.infrastructure.database import platform
+
+        table = platform["conversation_ownership"]
+        with self.repository.engine.connect() as conn:
+            own = (
+                conn.execute(
+                    select(table).where(
+                        table.c.tenant_id == runtime["tenant_id"],
+                        table.c.user_id == self.user_id,
+                        table.c.session_key == self.session_key,
+                    )
+                )
+                .mappings()
+                .first()
+            )
+        if own and (
+            own["state"] == "human_owned"
+            or (
+                "ownership_version" in runtime
+                and own["version"] != runtime["ownership_version"]
+            )
+        ):
+            raise RunInterrupted("RUN_HANDOFF")
+
     def mutate(self, fn, event_type, *, cancellation=True):
         if cancellation:
             self.check()
@@ -126,6 +157,7 @@ class RunContext:
         serializer=lambda x: x,
         deserializer=lambda x: x,
     ):
+        self.guard_ownership()
         base = digest(
             {"scope": _scope.get(), "kind": kind, "name": name, "arguments": arguments}
         )

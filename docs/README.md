@@ -14,6 +14,7 @@
 | 哪些结果已经验证 | [验收状态与证据](evaluation/acceptance.md) |
 | 个人工程扩展如何说明 | [贡献说明](CONTRIBUTIONS.md) |
 | 如何处理告警与恢复 | [故障手册](operations/incident-runbook.md)、[Compose 验收](operations/compose-acceptance.md) |
+| 如何使用最新本地检索实验与复杂售后 | [检索实验、接管与售后申请](engineering/retrieval-handoff-and-intake.md) |
 | 如何使用复核工作台与任务基线 | [检索诊断、人工复核与任务基线](evaluation/review-and-task-baseline.md) |
 | 如何复核检索评测 | [离线评测与人工复核](evaluation/offline-review.md) |
 | 部署前检查什么 | [部署与维护清单](operations/deployment-checklist.md) |

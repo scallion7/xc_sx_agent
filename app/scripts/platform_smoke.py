@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 
 from app.config.settings import Settings
-from app.infrastructure.database import configure_database, platform, review
+from app.infrastructure.database import configure_database, intake, platform, review
 from app.platform.budget import SharedBudget
 from app.platform.conversation_handoff import ConversationHandoffService
 from app.platform.knowledge import KnowledgePlatform, KnowledgeWorker
@@ -59,7 +59,18 @@ def run(config):
     )
     assert workspace.export(project)["reviews"][0]["reviewer"] == "ci"
     assert len(workspace.history(project, case)) == 1
+    from app.platform.after_sale_intake import AfterSaleIntake
+    from app.web.services import build_api_services
+
+    workflow = AfterSaleIntake(build_api_services(config), "smoke")
+    identity = workflow.create("smoke", "create")["intake_id"]
+    workflow.command(identity, "update", 0, "reason", {"reason": "SQL contract smoke"})
+    assert workflow.command(
+        identity, "update", 0, "reason", {"reason": "SQL contract smoke"}
+    )["idempotent_replay"]
     with k.engine.begin() as conn:
+        for table in intake.values():
+            conn.execute(delete(table).where(table.c.tenant_id == config.tenant_id))
         for table in review.values():
             conn.execute(delete(table).where(table.c.tenant_id == config.tenant_id))
         for table in platform.values():
@@ -81,6 +92,7 @@ def run(config):
         "budget": True,
         "ownership": True,
         "review_workspace": True,
+        "after_sale_intake": True,
         "tenant": config.tenant_id,
     }
 

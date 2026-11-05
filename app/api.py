@@ -95,6 +95,9 @@ def create_app(
     register_review_routes(app, services, require)
     register_run_routes(app, services, require)
     register_action_routes(app, services, require)
+    from app.web.intake_routes import register_intake_routes
+
+    register_intake_routes(app, services, require)
     register_public_routes(app, services, require)
     register_session_routes(app, services, require)
     register_commerce_routes(app, services, require)

@@ -268,7 +268,10 @@ def runtime_snapshot(services, user_id, session_key):
     if services.config.collaboration_enabled:
         from app.platform.conversation_handoff import ConversationHandoffService
 
-        ConversationHandoffService(services.config).ensure(user_id, session_key)
+        ownership = ConversationHandoffService(services.config).ensure(
+            user_id, session_key
+        )
+        snapshot["ownership_version"] = ownership["version"]
     if services.config.configuration_releases_enabled:
         from app.platform.releases import ConfigurationReleases
 
