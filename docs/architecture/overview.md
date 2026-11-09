@@ -1,5 +1,7 @@
 # 系统架构
 
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+
 Ecom Service Agent 面向订单咨询和售后处理。应用提供客户服务、客服工作台、运行管理台及 API；模型不直接拥有数据库或支付权限。
 
 ```mermaid

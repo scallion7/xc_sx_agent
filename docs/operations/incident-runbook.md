@@ -1,5 +1,7 @@
 # 告警与恢复手册
 
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+
 当前实现是只读检测器、本地状态去重和标准输出事件，不自动发消息、不自动重放业务。
 `GET /v1/admin/alerts` 要求 `maintenance:run`；核心队列按部署聚合，模型配额按当前 tenant 统计，不代表系统已完成 SaaS 多租户隔离。
 

@@ -1,5 +1,7 @@
 # 配置与运行
 
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+
 所有命令从仓库根目录执行。推荐 Python 3.11；CI 另覆盖 Python 3.10–3.12。当前项目展示名为 Ecom Service Agent，目录和数据库仍沿用 `xc_sx_agent` 以保持兼容。
 
 ## 三种使用方式
@@ -55,6 +57,6 @@ DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m alembic check
 DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m app.scripts.platform_smoke
 ```
 
-旧库先做一致性备份，再执行迁移并核对业务行；非空新账本拒绝破坏性降级。Docker 构建与扫描已通过 CI，但完整 Compose 服务部署仍须单独验证。操作细节见[部署清单](../operations/deployment-checklist.md)，沙箱参数见[历史 HTTP 沙箱说明](../history/第26期-HTTP业务沙箱与退款对账.md)。
+旧库先做一致性备份，再执行迁移并核对业务行；非空新账本拒绝破坏性降级。完整 Compose 隔离部署与恢复已通过指定提交的 CI，范围见[当前验收](../evaluation/acceptance.md)；真实生产环境仍需独立验收。操作细节见[部署清单](../operations/deployment-checklist.md)，沙箱参数见[历史 HTTP 沙箱说明](../history/第26期-HTTP业务沙箱与退款对账.md)。
 
-代码入口和配置别名的升级说明见[命名与兼容约定](../engineering/naming-and-compatibility.md)。旧索引、数据库及 `COLLABORATION_ENABLED` 配置键无需因本轮改名迁移。
+代码入口和配置别名的升级说明见[命名与兼容约定](../engineering/naming-and-compatibility.md)。旧索引、数据库及 `COLLABORATION_ENABLED` 配置键无需因展示或模块命名调整而迁移。

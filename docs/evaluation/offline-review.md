@@ -1,21 +1,23 @@
 # 离线评测与人工复核
 
-当前要求：先完成离线比较和人工复核材料，暂不调用付费模型。本轮所有评测使用本地 lexical projection / 受控 HTTP 模型，不能据此声称真实语义能力或线上费用。
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
 
-本轮新增浏览器复核工作台 `/review`，推荐通过登录账号记录审核身份、原文字符定位与版本历史；见[完整操作说明](review-and-task-baseline.md)。旧 JSON 手工流程保留兼容。
+当前要求：先完成离线比较和人工复核材料，暂不调用付费模型。此处离线评测使用本地 lexical projection / 受控 HTTP 模型，不能据此声称真实语义能力或线上费用。
+
+浏览器复核工作台 `/review`，推荐通过登录账号记录审核身份、原文字符定位与版本历史；见[完整操作说明](../guides/review-workbench.md)。旧 JSON 手工流程保留兼容。
 
 ## 冻结材料
 
-[review 数据目录](../../app/evaluation/review/) 包含 18 份合成政策、32 条题目、文件 SHA256 manifest 和空白 review-template。16 条 development 与 16 条 holdout 按 16 个 family 隔离。所有题目和初始标签均由开发过程生成，**尚未人工复核**；本轮没有运行新 holdout。旧 platform 数据的 holdout 曾参与诊断，不再作为最终独立测试集。
+[review 数据目录](../../app/evaluation/review/) 包含 18 份合成政策、32 条题目、文件 SHA256 manifest 和空白 review-template。16 条 development 与 16 条 holdout 按 16 个 family 隔离。所有题目和初始标签均由开发过程生成，**尚未人工复核**；当前冻结 holdout 未运行。旧 platform 数据的 holdout 曾参与诊断，不再作为最终独立测试集。
 
 ```bash
 python -m app.scripts.review_evaluation --diagnostics --output test-results/offline-development.json
 python -m app.scripts.review_evaluation --review-template --output test-results/review.json
 ```
 
-第一条只比较 development 上的 vector、BM25、hybrid、rerank；其中 vector 仍为本地哈希投影。查看[本轮原始结果](../evidence/reliability/offline-development.json)，包括逐题结果、Recall/MRR/排序指标和拒答状态。不要仅摘录最好模式或将其叫作真实模型准确率。第二条创建待填写材料，拒绝覆盖已有文件。
+第一条只比较 development 上的 vector、BM25、hybrid、rerank；其中 vector 仍为本地哈希投影。查看[冻结基线原始结果](../evidence/reliability/offline-development.json)，包括逐题结果、Recall/MRR/排序指标和拒答状态。不要仅摘录最好模式或将其叫作真实模型准确率。第二条创建待填写材料，拒绝覆盖已有文件。
 
-## 本次开发集诊断结果
+## 初始标签的开发集诊断结果
 
 16 题使用初始待复核标签；Recall 仅对有 gold 的题求平均，MRR 按现有脚本口径包含无证据题。
 
@@ -48,3 +50,5 @@ python -m app.scripts.review_evaluation --split holdout \
 新发布清单需要 `evaluation_plan`（case_ids、strategies、repeats），报告 schema_version=2，完整覆盖该笛卡尔积。评测和部署均复核 complete、逐题通过、数据库断言、零不安全动作、token 汇总及重复/缺失行。预算截断的结果保存为诊断，不能部署。
 
 历史清单和报告仍可读取；缺少计划或仅部分结果的历史版本不能再通过新部署门禁，需要绑定计划重新完整评测。旧已分配会话读取语义保留。本次未改历史评测文件以伪装它们通过新协议。
+
+配置版本与配对比较见[检索实验](retrieval-experiments.md)，业务终态评估见[任务级基线](task-baseline.md)。

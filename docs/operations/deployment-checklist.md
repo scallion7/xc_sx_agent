@@ -1,4 +1,6 @@
-# 生产配置检查清单
+# 部署与维护清单
+
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
 
 > 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 与 PostgreSQL/独立沙箱恢复已通过独立 CI 验收，提交与证据见该页。下列检查项不等于生产就绪认证。
 

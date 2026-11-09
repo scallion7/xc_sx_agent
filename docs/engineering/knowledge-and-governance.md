@@ -1,5 +1,7 @@
 # 知识、模型与发布治理
 
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+
 ## 知识生命周期
 
 导入 MD/TXT/文本 PDF 后，任务持久化经历解析、切分、embedding 和 ready 阶段。内容哈希支持去重与增量向量缓存；发布先构建不可变快照，再通过 expected_version 切换活动版本。支持撤回、保留期内回滚、删除屏蔽和受引用保护的索引 GC。

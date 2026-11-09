@@ -35,7 +35,7 @@ LLM 负责理解、规划和解释；权限、状态转换、幂等约束与敏�
 | 可恢复业务流程 | 并发请求、进程退出和回调丢失 | 唯一约束、持久化幂等、租约 fencing、Outbox/Inbox、查询对账 |
 | 版本化知识 | 政策更新后仍需解释历史回答 | 导入任务、不可变快照、CAS 发布、回滚、稳定引用；[知识与治理](docs/engineering/knowledge-and-governance.md) |
 | 模型与配置治理 | 重试费用、配置漂移、灰度不稳定 | 共享 token 配额、调用账本、评测门禁、会话版本固定 |
-| 评测诊断与复核 | 解释排序与拒答，防止未审核材料变成验收结论 | 检索逐阶段诊断、CAS 审核与审计、真实 HTTP 任务断言；[复核与任务基线](docs/evaluation/review-and-task-baseline.md) |
+| 评测诊断与复核 | 解释排序与拒答，防止未审核材料变成验收结论 | 检索逐阶段诊断、CAS 审核与审计、真实 HTTP 任务断言；[复核工作台](docs/guides/review-workbench.md)与[任务基线](docs/evaluation/task-baseline.md) |
 | 人工协作与可观测性 | 接管时阻止新的自动写操作，定位跨进程故障 | 客服工作台、所有权检查、W3C Trace、审计与故障演练 |
 
 技术栈：Python、FastAPI、Pydantic、SQLAlchemy/Alembic、SQLite/PostgreSQL、MCP Streamable HTTP、OpenTelemetry、Playwright、GitHub Actions。支持 ReAct、Plan-and-Execute 与多 Agent 路由。
@@ -67,29 +67,15 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-**第二、三轮扩展**：已完成检索配置与配对实验、人工接管的调用阻断，以及分轮资料/证据、提案变更撤回、退款未知状态查询的持久化售后申请。合并本地 **408 项测试通过，覆盖率 82%**；相同 18 项任务模拟用量由 2010 降至 1710 tokens，三条复杂 HTTP 业务流程通过。[实现、使用与边界](docs/engineering/retrieval-handoff-and-intake.md)单独记录；本节数据来自本地验收；GitHub CI 结果以对应提交的 Actions 为准。
+实现提交 [`7565683`](https://github.com/scallion7/xc_sx_agent/commit/7565683d9ebda84dee43b43215e574b7ddeb2969) 的 [GitHub Actions 8/8 作业通过](https://github.com/scallion7/xc_sx_agent/actions/runs/42054871319)。对应本地回归 **408 项通过，app 语句覆盖率 82%**；18 项受控模型任务与三条复杂售后 HTTP 流程分别通过。
 
-
-上一轮已提交的评测工程扩展：本地 **385 项测试通过，覆盖率 82%**；新增检索诊断、持久化人工复核工作台和 **6 类任务 × 3 种执行方式，18/18 通过**的真实 HTTP/Worker 离线基线。[原始结果与使用指南](docs/evaluation/review-and-task-baseline.md)保留逐任务状态、调用与用量证据。任务使用受控模型，不能作为真实模型成功率；32 道冻结检索题仍待人工审核，保留集未运行，未调用付费模型。
-
-前一轮可靠性验收为 370 项测试、覆盖率 81%、CI 8/8 作业通过，包括双 Worker、重启与 PostgreSQL/独立沙箱恢复；历史与本轮结果在[验收汇总](docs/evaluation/acceptance.md)分别记录。
-
-历史功能与依赖修复验收基线为 [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6cba0a86663524aeae3a5934dd7d9a3b4c)：
-
-- 本地完整回归 **345 项通过，语句覆盖率 81%**，包含真实 HTTP/MCP 与 Chromium。
-- [GitHub Actions 7 个作业全部通过](https://github.com/scallion7/xc_sx_agent/actions/runs/40175352228)：Python 3.10–3.12、SQLite/PostgreSQL 迁移、浏览器、依赖审计、镜像构建和安全扫描。
-- 受控 HTTP 模型下完成 540 次两轮任务；它验证工程流程，不代表真实模型效果。
-- 保存 Worker 退出、短暂数据库阻断、隔离备份恢复的证据；原始日志与适用边界见[验收状态](docs/evaluation/acceptance.md)。
-
-第二轮命名整理完成本地 **354 项回归，覆盖率 81%**；旧索引、配置别名和导入入口通过兼容检查，详见[命名与兼容约定](docs/engineering/naming-and-compatibility.md)及[本轮验收](docs/evaluation/acceptance.md)。
-
-[当前分支 CI](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml) 与历史证据分别记录，不用旧提交的成功结果替代新提交验收。
+检索配置的 64 组配对比较没有显示质量提升；32 道冻结检索题尚未完成真实人工审核，保留集未运行，未调用付费模型。当前结果、证据和待完成项统一见[验收状态](docs/evaluation/acceptance.md)，历史数字见[历史验收台账](docs/history/2026-11-05-acceptance-ledger.md)。
 
 ## 当前范围
 
 - 真实运行应用、HTTP/MCP、SQL、Worker 和浏览器；模型演示使用受控替身，订单、退款、库存为沙箱。
 - Chroma 后端因上游未修复安全公告暂停；默认余弦检索与版本化 SQL 知识平台可用。
-- 已在上一轮 CI 验证完整 Compose、双 Worker、停写 PostgreSQL 与独立沙箱恢复；生产持续写入的 PITR 与跨区域恢复尚未验收。
+- 已在上述提交 CI 验证完整 Compose、双 Worker、停写 PostgreSQL 与独立沙箱恢复；生产持续写入的 PITR 与跨区域恢复尚未验收。
 - 真实模型质量、人工金标准、真实支付及生产容量尚未验收。新增平台租户作用域不等同于整个系统已支持共享库 SaaS。
 
 ## 阅读与项目背景

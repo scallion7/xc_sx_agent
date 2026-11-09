@@ -1,5 +1,7 @@
 # 完整部署与恢复验收
 
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+
 此流程仅用于隔离验收，使用受控 HTTP 模型和合成订单，不调用付费模型。需要 Docker Compose v2、Python 3.11、锁定依赖、`pg_dump`/`pg_restore` 17，以及本机空闲端口 8000、9124、9125、55432。
 
 ```bash

@@ -1,6 +1,8 @@
 # 检索诊断、人工复核与任务级基线
 
-本页记录第一轮交付。第二、三轮本地改动见[检索实验、接管与复杂售后](../engineering/retrieval-handoff-and-intake.md)，其中已补齐接管前置检查；下文 2010 tokens 等数字保留第一轮口径。
+> 历史快照：保留 2026-11-05 的交付口径与当时状态，不作为当前操作或待办清单。当前结果见[验收状态](../evaluation/acceptance.md)。
+
+本页记录第一轮交付。第二、三轮本地改动见[检索实验、接管与复杂售后](2026-11-05-retrieval-handoff-and-intake.md)，其中已补齐接管前置检查；下文 2010 tokens 等数字保留第一轮口径。
 
 本轮交付三个可独立复现的能力：解释检索每个阶段的决策，保存可信的人工审核过程，以及用真实 HTTP/Worker 和业务状态判断任务是否完成。全程使用本地哈希投影与受控 HTTP 模型，不调用付费服务。当前原始检索语料仍为 **18 份合成政策、32 道未人工审核题目**；保留集未运行。
 
@@ -61,7 +63,7 @@ python -m app.scripts.review_evaluation --split holdout \
 python -m app.scripts.evaluate_tasks --output test-results/task-baseline.json
 ```
 
-任务定义及哈希见 [tasks](../../app/evaluation/tasks/)。每项任务、每种策略都启动独立 SQLite、API、Worker、受控 HTTP 模型进程。初态为空工单/退款操作，执行真实接口后，独立 grader 对照冻结期望检查终态，不能以回复文本里的“成功”判定通过。策略为 ReAct、Plan-and-Execute、multi 路由，共 18 项。
+任务定义及哈希见 [tasks](../../app/evaluation/tasks)。每项任务、每种策略都启动独立 SQLite、API、Worker、受控 HTTP 模型进程。初态为空工单/退款操作，执行真实接口后，独立 grader 对照冻结期望检查终态，不能以回复文本里的“成功”判定通过。策略为 ReAct、Plan-and-Execute、multi 路由，共 18 项。
 
 | 任务 | 关键断言 |
 |---|---|
@@ -80,6 +82,6 @@ python -m app.scripts.evaluate_tasks --output test-results/task-baseline.json
 
 ## 检查与边界
 
-本地 385 项全量测试、18 项独立 HTTP 基线及 SQLite 迁移已完成；新增复核 SQL smoke 同时进入 SQLite/PostgreSQL CI，浏览器 CI 会运行真实 Chromium。参见[验收汇总](acceptance.md)。既有 CLI、公开检索、业务 API、原始语料与旧迁移保持兼容；新导出格式增加更严格的原文校验，旧人工 JSON 入口仍保留。
+本地 385 项全量测试、18 项独立 HTTP 基线及 SQLite 迁移已完成；新增复核 SQL smoke 同时进入 SQLite/PostgreSQL CI，浏览器 CI 会运行真实 Chromium。参见[验收汇总](../evaluation/acceptance.md)。既有 CLI、公开检索、业务 API、原始语料与旧迁移保持兼容；新导出格式增加更严格的原文校验，旧人工 JSON 入口仍保留。
 
 后续真实工作包括：本人/独立复核者完成金标准、对 development 做可解释检索改进、另行授权真实 embedding/模型评测，以及在人工接管状态下进一步减少无效模型调用。本轮没有替代这些人工或外部服务验证。
