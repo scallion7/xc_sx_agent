@@ -19,7 +19,26 @@ class IntakeBrowserTests(unittest.TestCase):
             page.on("pageerror", lambda e: errors.append(str(e)))
             page.goto(stack.url + "/after-sale")
             page.locator("#token").fill("demo-user")
+            refresh_controls = []
+
+            def inspect_initial_refresh(route):
+                # Create renders once before its GET refresh. The form must stay
+                # locked so the refresh cannot overwrite a user's new input.
+                if route.request.method == "GET":
+                    refresh_controls.append(
+                        [
+                            page.locator("#" + field).is_disabled()
+                            for field in ("order", "reason", "caseType", "evidenceIds")
+                        ]
+                    )
+                route.continue_()
+
+            page.route("**/v1/after-sale-intakes/*", inspect_initial_refresh)
             page.locator("#create").click()
+            expect(page.locator("#status")).to_contain_text("申请已创建")
+            page.unroute("**/v1/after-sale-intakes/*", inspect_initial_refresh)
+            self.assertTrue(refresh_controls)
+            self.assertTrue(all(all(fields) for fields in refresh_controls))
             expect(page.locator("#progress")).to_contain_text("待补充资料")
             page.locator("#order").fill("ORD-20240125-006")
             lost = [False]

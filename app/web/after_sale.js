@@ -42,6 +42,7 @@ const status = (message, error = false) => {
 const path = () => '/v1/after-sale-intakes/' + flow.intake_id;
 
 function controls() {
+  for (const id of ['order', 'reason', 'caseType', 'evidenceIds']) $(id).disabled = !flow || busy;
   for (const id of ['save', 'propose', 'withdraw', 'executeProposal', 'refresh']) $(id).disabled = !flow || busy;
   for (const button of $('action').querySelectorAll('button')) button.disabled = busy;
   if (flow && !busy) {
