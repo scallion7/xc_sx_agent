@@ -11,6 +11,7 @@
 <header>
 <div>
 <h1>评测复核工作台</h1>
+<label>数据项目 ID（留空使用原冻结集）<input id="projectId" aria-label="数据项目编号"></label>
 <small>逐题核对政策依据，保存审核记录与检索诊断</small>
 </div>
 <nav>
@@ -33,6 +34,16 @@
 <p>导入内容保存为草稿，需当前账号重新核对批准；会保留历史记录。请先导出备份当前工作。</p>
 <input id="importFile" type="file" accept=".json">
 <button id="importReview" disabled>导入为草稿</button>
+</details>
+</section>
+<section class="wide">
+<details id="datasetManagement"><summary>数据版本与失败案例</summary>
+<p>从任务收集脱敏候选，填写复核说明后整理入库；冻结版本仍需逐题审核。</p>
+<label for="captureRun">来源任务 ID</label><input id="captureRun">
+<label for="captureClass">问题分类</label><select id="captureClass"><option value="retrieval">检索</option><option value="clarification">澄清</option><option value="tool_selection">工具选择</option><option value="business_state">业务状态</option><option value="execution">执行</option><option value="other">其他</option></select>
+<button id="captureCandidate">收集候选</button><button id="loadCandidates">查看候选</button><div id="candidateList"></div>
+<label for="datasetFile">完整数据集 JSON</label><input id="datasetFile" type="file" accept=".json">
+<button id="freezeDataset">冻结新版本</button><button id="listDatasets">查看已有版本</button><div id="datasetList"></div>
 </details>
 </section>
 <section class="case-list">

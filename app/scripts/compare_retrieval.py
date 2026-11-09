@@ -11,10 +11,25 @@ from app.platform.retrieval_profile import RetrievalProfile
 from app.platform.review_dataset import apply_review, load_frozen, offline_retriever
 
 
-def run(baseline_path, candidate_path, review=None):
-    manifest, documents, cases = load_frozen()
+def run(baseline_path, candidate_path, review=None, dataset=None):
+    if dataset is None:
+        manifest, documents, cases = load_frozen()
+    else:
+        manifest, documents, cases = (
+            dataset["manifest"],
+            dataset["documents"],
+            dataset["cases"],
+        )
+        for name, content in (("documents.json", documents), ("cases.json", cases)):
+            from app.platform.common import PlatformError, encode
+
+            if (
+                hashlib.sha256(encode(content).encode()).hexdigest()
+                != manifest["files"][name]
+            ):
+                raise PlatformError("DATASET_HASH_MISMATCH")
     if review is not None:
-        cases = apply_review(manifest, cases, review)
+        cases = apply_review(manifest, cases, review, documents=documents)
     baseline = RetrievalProfile.model_validate_json(Path(baseline_path).read_text())
     candidate = RetrievalProfile.model_validate_json(Path(candidate_path).read_text())
     with offline_retriever(documents) as retriever:
@@ -30,7 +45,13 @@ def run(baseline_path, candidate_path, review=None):
     result["source_tree_sha256"] = source.hexdigest()
     result.update(
         frozen_files=manifest["files"],
-        labels="human_reviewed" if review else "synthetic_unreviewed",
+        labels="human_reviewed"
+        if review
+        else "unreviewed"
+        if dataset is not None
+        else "synthetic_unreviewed",
+        dataset_version=manifest.get("version"),
+        dataset_name=manifest.get("name"),
     )
     return result
 
@@ -44,12 +65,14 @@ def main():
         "--candidate", default="app/evaluation/retrieval_profiles/candidate-v2.json"
     )
     p.add_argument("--review")
+    p.add_argument("--dataset", help="Verified versioned dataset export JSON")
     p.add_argument("--output", required=True)
     args = p.parse_args()
     report = run(
         args.baseline,
         args.candidate,
         json.loads(Path(args.review).read_text()) if args.review else None,
+        json.loads(Path(args.dataset).read_text()) if args.dataset else None,
     )
     path = Path(args.output)
     path.parent.mkdir(parents=True, exist_ok=True)

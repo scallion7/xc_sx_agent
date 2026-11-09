@@ -221,6 +221,8 @@ class HybridRetrieval:
         base = {
             "success": True,
             "query": original_query,
+            "context": context,
+            "day": day,
             "release_id": release_id,
             "tokenizer": TOKENIZER_VERSION,
             "embedding_model": self.service.embedder.model,
@@ -251,7 +253,9 @@ class HybridRetrieval:
             }
         if not release_id:
             return base | {"outcome": "no_evidence", "latency_ms": 0}
-        release = self.service.release(release_id)
+        release = self.service.release(
+            release_id, include_index=not self.config.compiled_retrieval_enabled
+        )
         if release["status"] != "ready":
             raise PlatformError("KNOWLEDGE_RELEASE_NOT_READY")
         if release["embedding_model"] != self.service.embedder.model:
@@ -265,7 +269,14 @@ class HybridRetrieval:
                     )
                 ).scalars()
             )
-        original_items = json.loads(release["index_json"])
+        compiled = None
+        if self.config.compiled_retrieval_enabled:
+            from app.platform.compiled_index import CompiledIndexReader
+
+            compiled = CompiledIndexReader(self.service, self.profile).read(release_id)
+        original_items = (
+            compiled["items"] if compiled else json.loads(release["index_json"])
+        )
         trace = {}
         if explain:
             for x in original_items:
@@ -296,7 +307,11 @@ class HybridRetrieval:
                 "outcome": "no_evidence",
                 "latency_ms": (time.perf_counter() - started) * 1000,
             }
-        lexical = bm25(query, [self.profile.normalize(x["text"]) for x in items])
+        lexical = (
+            CompiledIndexReader.lexical(query, items, compiled)
+            if compiled
+            else bm25(query, [self.profile.normalize(x["text"]) for x in items])
+        )
         query_vector = self.service.embedder.encode_one(query) if mode != "bm25" else []
         vector = (
             [cosine_similarity(query_vector, x["vector"]) for x in items]
@@ -375,6 +390,14 @@ class HybridRetrieval:
         # evidence without any lexical support, unlike a configured semantic model.
         if self.service.embedder.model.startswith("local-hash"):
             query_terms = set(tokens(query))
+
+            def item_terms(item):
+                return (
+                    set(compiled["counts"][item["chunk_id"]])
+                    if compiled
+                    else set(tokens(self.profile.normalize(item["text"])))
+                )
+
             minimum = max(
                 1, math.ceil(len(query_terms) * self.profile.evidence_overlap)
             )
@@ -382,9 +405,7 @@ class HybridRetrieval:
                 base["diagnostics"]["minimum_lexical_overlap"] = minimum
                 for i, item in enumerate(items):
                     entry = trace[item["chunk_id"]]
-                    entry["matched_tokens"] = sorted(
-                        query_terms & set(tokens(self.profile.normalize(item["text"])))
-                    )
+                    entry["matched_tokens"] = sorted(query_terms & item_terms(item))
                     if i in selected and (
                         lexical[i] <= 0 or len(entry["matched_tokens"]) < minimum
                     ):
@@ -392,11 +413,7 @@ class HybridRetrieval:
             selected = [
                 i
                 for i in selected
-                if lexical[i] > 0
-                and len(
-                    query_terms & set(tokens(self.profile.normalize(items[i]["text"])))
-                )
-                >= minimum
+                if lexical[i] > 0 and len(query_terms & item_terms(items[i])) >= minimum
             ]
         if explain:
             for i in selected:
@@ -476,6 +493,8 @@ class HybridRetrieval:
 
     def validate_citations(self, release_id, citations):
         release = self.service.release(release_id)
+        if release["status"] != "ready":
+            raise PlatformError("KNOWLEDGE_RELEASE_NOT_READY")
         items = {x["chunk_id"]: x for x in json.loads(release["index_json"])}
         with self.service.engine.connect() as conn:
             deleted = set(

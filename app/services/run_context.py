@@ -86,6 +86,56 @@ class RunContext:
             raise RunInterrupted("RUN_CANCELLED")
         return row
 
+    def guard_transaction(self, conn):
+        """Fence reversible state commits in the same transaction as the draft write."""
+        import json
+
+        from sqlalchemy import select, update
+
+        from app.infrastructure.database import agent_runs_table as runs
+        from app.infrastructure.database import platform
+
+        row = (
+            conn.execute(select(runs).where(runs.c.run_id == self.run_id))
+            .mappings()
+            .first()
+        )
+        if not row:
+            raise RunInterrupted("RUN_FENCED")
+        runtime = json.loads(row["payload_json"]).get("runtime", {})
+        if runtime.get("collaboration"):
+            own = platform["conversation_ownership"]
+            criteria = [
+                own.c.tenant_id == runtime["tenant_id"],
+                own.c.user_id == self.user_id,
+                own.c.session_key == self.session_key,
+                own.c.state == "agent",
+            ]
+            if "ownership_version" in runtime:
+                criteria.append(own.c.version == runtime["ownership_version"])
+            changed = conn.execute(
+                update(own).where(*criteria).values(version=own.c.version)
+            )
+            if changed.rowcount != 1:
+                raise RunInterrupted("RUN_HANDOFF")
+        # Match ownership -> run lock order used by call registration and completion.
+        changed = conn.execute(
+            update(runs)
+            .where(
+                runs.c.run_id == self.run_id,
+                runs.c.user_id == self.user_id,
+                runs.c.session_key == self.session_key,
+                runs.c.owner == self.owner,
+                runs.c.fence == self.fence,
+                runs.c.status == "running",
+                runs.c.lease_until > self.repository.clock(),
+                runs.c.cancel_state != "requested",
+            )
+            .values(lease_until=runs.c.lease_until)
+        )
+        if changed.rowcount != 1:
+            raise RunInterrupted("RUN_FENCED")
+
     def guard_ownership(self):
         row = self.check()
         runtime = row["payload"].get("runtime", {})

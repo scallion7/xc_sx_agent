@@ -41,6 +41,10 @@ python -m app.scripts.validate_openapi
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 自行接模型时设置；勿提交密钥 |
 | `API_USER_TOKENS` / `API_ADMIN_TOKENS` | 本机演示之外需使用自己的身份配置 |
 | `KNOWLEDGE_VERSIONED_ENABLED` | 启用 SQL 版本化知识，不代表已部署分布式向量库 |
+| `CONVERSATION_INTAKE_ENABLED` | 默认 false；持久化多轮售后草稿与来源检查，演示用 `demo_stack --intake` |
+| `ANSWER_EVIDENCE_CHECK_ENABLED` | 默认 false；保守原文分句支持规则，未支持结论转人工 |
+| `COMPILED_RETRIEVAL_ENABLED` | 默认 false；按知识版本预编译 token 计数，原路径兼容 |
+| `RUN_MAX_PENDING` / `RUN_MAX_PENDING_PER_USER` | 默认 0 不限制；生产需按测量设置，同步配置所有 API 实例 |
 | `MODEL_BUDGET_ENABLED` | 启用共享累计 token 配额与调用账本 |
 | `COLLABORATION_ENABLED` | 启用会话所有权和人工协作 |
 | `TELEMETRY_ENABLED` | W3C Trace 与持久化指标；业务审计独立存在 |

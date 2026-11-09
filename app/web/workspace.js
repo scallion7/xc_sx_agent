@@ -75,6 +75,13 @@ async function refresh() {
     p.textContent = message.content;
     $('human').append(p)
   }
+  const drafts = await api(`/v1/sessions/${session()}/after-sale-intakes`);
+  $('intakes').replaceChildren();
+  for (const intake of drafts.intakes) {
+    const card = document.createElement('p');
+    card.textContent = `订单：${intake.fields.order_id || '待补充'}；原因：${intake.fields.reason || '待补充'}；${intake.status === 'withdrawn' ? '已撤回' : '已保存，执行仍需单独确认'}`;
+    $('intakes').append(card);
+  }
   const data = await api(`/v1/sessions/${session()}/actions`);
   $('actions').replaceChildren();
   for (const action of data.actions) {

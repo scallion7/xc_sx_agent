@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-11-09T15:45:02.168666+00:00",
+  "base_commit": "eccd6ebbbd027d97ef96f70ee15b55e097881194",
+  "working_tree": "uncommitted local development",
+  "git_push": false,
+  "github_actions_for_this_change": "not_run",
+  "tests": {
+    "count": 428,
+    "skipped": 0,
+    "passed": true,
+    "seconds": 85.492,
+    "app_statement_coverage_percent": 82,
+    "isolated_source": true
+  },
+  "source_python_hashes_match": true,
+  "frontend_tested_hashes": {
+    "app/web/admin.html": "fad8d69f194ac0ea0d05243a605d3881a6ea37a89d1c09934efb54abab1d6f90",
+    "app/web/after_sale.html": "b0c0725e16153b9681c89fafb970a6029eabd868e8f0717b8bc7310bd84b661e",
+    "app/web/after_sale.js": "114917abcdc18cca8ef84dd975961ac85ece56f934480847f676f45105a8ec4f",
+    "app/web/platform.css": "5f75ed6926cdb36e8dc3a3e3088d0b6db549df729641f8210c74477a5b3d36c8",
+    "app/web/request_client.js": "acfe7a2a289df0d8ebe59c8f2cb96dee346fa381794cedd54d20dabd41ee1388",
+    "app/web/review.css": "2025d043519e69e48f38f2ebf8333d324ea3af5755415ec43c6559bc75e3f426",
+    "app/web/review.html": "0fb4ab913989d4eba52c324d452c82fa52b94b25c5bed8897ce1e306d3adf63a",
+    "app/web/review.js": "71da6066d9762f6b899cb2ea66a884595b45ae79353b6875b047c3a4f22eb82b",
+    "app/web/run_stream.js": "af089e1bb8e3091fd5ddf1221be92ecd1067e32bebd41d56ed34b3608e392da0",
+    "app/web/workbench.html": "3922178bd9141e4b72acbf7f653d22650d151e45286d970a97b4b8da2594f2b2",
+    "app/web/workbench.js": "6722607effab48520d3e4c70141b835b9b93a19fa30041a2b96847b4f3fd6a73",
+    "app/web/workspace.html": "02a2b64db002425ae9f4fbc67eb849dbdc0e4d533914811bb02c74fdc148c12d",
+    "app/web/workspace.js": "6a04caefa5e092b02d5c754afc63626ebd7baca4afda3adf1147d69b591a801f"
+  },
+  "checks": {
+    "unittest": 0,
+    "coverage": 0,
+    "postgres-load": 0,
+    "index-scale": 0,
+    "migrations": 0,
+    "plan-quality": 0,
+    "plan-benchmark": 0,
+    "openapi": 0,
+    "lint": 0,
+    "format": 0,
+    "compile": 0
+  },
+  "dataset_cli_loop": true,
+  "screenshots_visually_checked": true,
+  "paid_model_calls": 0,
+  "real_human_review_completed": false,
+  "original_frozen_holdout_run": false,
+  "environment_notes": [
+    "PostgreSQL 17.11 binaries installed locally; owned temporary clusters only, no persistent service registration.",
+    "Original default SQLite demonstration database retained; all full regressions ran in copied source without ignored runtime data.",
+    "Temporary validation harness import collision and original default DB failures were resolved by launcher/source isolation; diagnostic logs retained."
+  ],
+  "limitations": [
+    "Rule-based clause support is not semantic entailment verification.",
+    "Compiled-index measurements use synthetic snapshots and uncached BM25; warm retained cache memory is excluded from incremental allocation measurements.",
+    "Controlled HTTP model load is not production model throughput or financial-provider acceptance."
+  ],
+  "final_integrity": {
+    "documentation_links_validated": 543,
+    "markdown_files_validated": 60,
+    "ruff_lint": "passed",
+    "ruff_format_files": 355,
+    "git_diff_check": "passed",
+    "evidence_hashes_verified": 28,
+    "python_source_files_verified": 284,
+    "frontend_files_verified": 13,
+    "raw_postgres_archive_matches_original": true,
+    "owned_temporary_postgres_directories_remaining": 0,
+    "test_services_remaining": 0,
+    "staged_changes": false,
+    "existing_numbered_history_unchanged": true
+  }
+}

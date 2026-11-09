@@ -488,7 +488,10 @@ class PlanExecutor:
                 lifecycle=lifecycle,
             )
 
-        if not read_only and not confirmed:
+        draft_only = getattr(self.tool_manager, "is_draft_only", lambda name: False)(
+            step.tool_name
+        )
+        if not read_only and not draft_only and not confirmed:
             output = {}
             if hasattr(self.tool_manager, "prepare_action"):
                 output = self.tool_manager.prepare_action(step.tool_name, arguments)

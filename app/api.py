@@ -93,6 +93,9 @@ def create_app(
     from app.web.review_routes import register_review_routes
 
     register_review_routes(app, services, require)
+    from app.web.corpus_routes import register_corpus_routes
+
+    register_corpus_routes(app, services, require)
     register_run_routes(app, services, require)
     register_action_routes(app, services, require)
     from app.web.intake_routes import register_intake_routes

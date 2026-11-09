@@ -234,5 +234,7 @@ class IntakeTests(PlatformTestCase):
         identity = workflow.create("case", "new")["intake_id"]
         with self.assertRaisesRegex(RuntimeError, "INTAKE_DOWNGRADE_BLOCKED"):
             downgrade_database(url, "20261105_0007")
+        self.assertEqual(workflow.get(identity)["revision"], 0)
+        upgrade_database(url)
         self.assertTrue(migration_status(url)["up_to_date"])
         self.assertEqual(workflow.get(identity)["revision"], 0)

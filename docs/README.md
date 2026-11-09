@@ -29,6 +29,7 @@ Ecom Service Agent｜电商售后智能体平台。本文按读者要完成的�
 | [可信执行与业务一致性](engineering/reliable-execution.md) | 确认、幂等、租约与对账分别保证什么？ |
 | [人工接管与执行边界](engineering/human-handoff.md) | 接管与调用竞争如何处理，为什么释放后不能恢复旧授权？ |
 | [知识、模型与发布治理](engineering/knowledge-and-governance.md) | 知识版本、预算、灰度发布与 MCP 契约如何管理？ |
+| [对话办理、证据约束与索引扩展](engineering/improvement-loop.md) | 如何追溯多轮草稿、校验结论并复用预编译索引？ |
 | [模块命名与兼容约定](engineering/naming-and-compatibility.md) | 旧导入、配置和索引如何继续使用？ |
 | [ADR：知识快照与共享治理](decisions/0002-knowledge-snapshots-and-governance.md) | 为什么选择不可变快照与 SQL 治理？ |
 
@@ -39,12 +40,14 @@ Ecom Service Agent｜电商售后智能体平台。本文按读者要完成的�
 | [当前验收状态](evaluation/acceptance.md) | 哪个提交通过哪些检查，哪些结论尚无证据？ |
 | [离线评测协议](evaluation/offline-review.md) | 数据如何冻结，人工复核、holdout 和发布门禁有什么要求？ |
 | [检索诊断与配置对比](evaluation/retrieval-experiments.md) | 如何定位召回/过滤损失并比较两个配置？ |
+| [版本化评测与失败回流](evaluation/versioned-datasets.md) | 如何脱敏收集任务、冻结新数据并完成双人复核？ |
 | [任务级离线基线](evaluation/task-baseline.md) | 如何用真实 HTTP、调用账本与数据库终态验证任务？ |
 
 ## 运维 · operations
 
 - [部署与维护清单](operations/deployment-checklist.md)：配置、迁移、备份与发布检查。
 - [完整部署与恢复验收](operations/compose-acceptance.md)：可丢弃 Compose 环境的复现步骤和限制。
+- [PostgreSQL 持续负载验收](operations/sustained-load.md)：临时实例、准入控制、多 worker 和故障恢复。
 - [告警与恢复手册](operations/incident-runbook.md)：队列、租约、死信、退款未知与模型预算的处理。
 
 ## 证据、素材与历史

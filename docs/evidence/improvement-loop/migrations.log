@@ -1,0 +1,126 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+Building prefix dict from the default dictionary ...
+DEBUG [jieba] Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+DEBUG [jieba] Loading model from cache /var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/jieba.cache
+Loading model cost 0.180 seconds.
+DEBUG [jieba] Loading model cost 0.180 seconds.
+Prefix dict has been built successfully.
+DEBUG [jieba] Prefix dict has been built successfully.
+case_creation_smoke={'requests': 50, 'initial_cases': 1, 'creation_receipts': 50, 'passed': True}
+run_queue_smoke={'claimants': 8, 'winners': 1, 'events': 3}
+refund_delivery_smoke={'submissions': 16, 'callbacks': 10, 'applied': 1, 'passed': True}
+database_smoke=ok
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261109_0009 -> 20261105_0008, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0008 -> 20261105_0007, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0007 -> 20261025_0006, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+case_creation_smoke={'requests': 50, 'initial_cases': 1, 'creation_receipts': 50, 'passed': True}
+run_queue_smoke={'claimants': 8, 'winners': 1, 'events': 3}
+refund_delivery_smoke={'submissions': 16, 'callbacks': 10, 'applied': 1, 'passed': True}
+database_smoke=ok
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261109_0009 -> 20261105_0008, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0008 -> 20261105_0007, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0007 -> 20261025_0006, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments
+INFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.checkconstraint_byname
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+No new upgrade operations detected.
+No new upgrade operations detected.
+No new upgrade operations detected.
+No new upgrade operations detected.

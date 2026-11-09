@@ -22,6 +22,8 @@ class ToolManager:
     """聚合本地工具和 MCP 工具，提供统一的工具定义和调度接口。"""
 
     CONTEXT_BOUND_TOOLS = {
+        "update_after_sale_intake",
+        "get_after_sale_intake",
         "query_order",
         "query_logistics",
         "list_user_orders",
@@ -76,6 +78,8 @@ class ToolManager:
                 "create_after_sale_case",
                 "query_after_sale_case",
                 "execute_after_sale_case",
+                "get_after_sale_intake",
+                "update_after_sale_intake",
             }
         self._filter_tools(visible)
 
@@ -204,6 +208,11 @@ class ToolManager:
     @property
     def tool_names(self) -> set[str]:
         return set(self._tool_source)
+
+    def is_draft_only(self, name: str) -> bool:
+        return self._tool_source.get(name) == "local" and self._registry.is_draft_only(
+            name
+        )
 
     def is_read_only(self, name: str) -> bool:
         """只有显式标记的本地只读工具可由计划执行器自动调用。"""

@@ -33,6 +33,8 @@ AGENT_CONFIGS = {
             "create_after_sale_case",
             "query_after_sale_case",
             "execute_after_sale_case",
+            "get_after_sale_intake",
+            "update_after_sale_intake",
         },
     },
     "complaint": {
@@ -44,6 +46,8 @@ AGENT_CONFIGS = {
             "load_skill",
             "create_after_sale_case",
             "query_after_sale_case",
+            "get_after_sale_intake",
+            "update_after_sale_intake",
         },
     },
 }

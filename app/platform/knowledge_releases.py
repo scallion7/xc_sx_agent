@@ -74,8 +74,13 @@ class KnowledgeReleases:
         if len(rows) != len(document_ids) or any(r["deleted"] for r in rows):
             raise PlatformError("DOCUMENT_DELETED")
 
-    def release(self, release_id, conn=None):
-        query = select(REL).where(
+    def release(self, release_id, conn=None, *, include_index=True):
+        columns = (
+            list(REL.c)
+            if include_index
+            else [c for c in REL.c if c.name != "index_json"]
+        )
+        query = select(*columns).where(
             REL.c.tenant_id == self.tenant, REL.c.release_id == release_id
         )
         if conn is None:
@@ -155,6 +160,11 @@ class KnowledgeReleases:
         with self.engine.begin() as conn:
             self.queue.guard(conn, claim)
             self._check_not_deleted(conn, list({x["document_id"] for x in items}))
+            if self.config.compiled_retrieval_enabled:
+                from app.platform.compiled_index import persist
+                from app.platform.retrieval_profile import RetrievalProfile
+
+                persist(conn, self.tenant, release_id, items, RetrievalProfile())
             conn.execute(
                 update(REL)
                 .where(REL.c.tenant_id == self.tenant, REL.c.release_id == release_id)
@@ -286,6 +296,16 @@ class KnowledgeReleases:
                         CACHE.c.release_id == row["release_id"],
                     )
                 )
+                from app.platform.compiled_index import TABLE as COMPILED
+                from app.platform.compiled_index import clear_cache
+
+                conn.execute(
+                    delete(COMPILED).where(
+                        COMPILED.c.tenant_id == self.tenant,
+                        COMPILED.c.release_id == row["release_id"],
+                    )
+                )
+                clear_cache()
                 removed.append(row["release_id"])
             audit(
                 conn,

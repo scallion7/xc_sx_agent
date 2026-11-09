@@ -1,0 +1,34 @@
+[
+  {
+    "database": "sqlite",
+    "schema_drift": false,
+    "platform": {
+      "knowledge": true,
+      "compiled_index": true,
+      "versioned_dataset": true,
+      "budget": true,
+      "ownership": true,
+      "review_workspace": true,
+      "after_sale_intake": true,
+      "tenant": "smoke-da90eb0a8bb9403fa48329d07a00595e"
+    },
+    "database_smoke": true,
+    "empty_upgrade_and_roundtrip": true
+  },
+  {
+    "database": "postgresql",
+    "schema_drift": false,
+    "platform": {
+      "knowledge": true,
+      "compiled_index": true,
+      "versioned_dataset": true,
+      "budget": true,
+      "ownership": true,
+      "review_workspace": true,
+      "after_sale_intake": true,
+      "tenant": "smoke-7b125959ca484ad0acf17feaaf2e1fa4"
+    },
+    "database_smoke": true,
+    "empty_upgrade_and_roundtrip": true
+  }
+]

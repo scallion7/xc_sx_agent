@@ -6,6 +6,7 @@
 
 | 目录 | 建议先读 | 包含内容 |
 |---|---|---|
+| [improvement-loop](improvement-loop/) | [checks.json](improvement-loop/checks.json) | 当前本地回归、持续 PostgreSQL 负载、索引规模、双数据库迁移、版本数据 CLI 与界面证据 |
 | [retrieval-handoff-round2](retrieval-handoff-round2/) | [checks.json](retrieval-handoff-round2/checks.json) | 408 项回归日志、覆盖率、18 项任务摘要与压缩轨迹、64 组检索配置比较、接管回归 |
 | [complex-after-sale-round3](complex-after-sale-round3/) | [未知退款恢复](complex-after-sale-round3/unknown-refund-recovery.json) | 补证审批、变更撤回、退款未知恢复的真实 HTTP 轨迹，浏览器与 SQLite 迁移日志 |
 

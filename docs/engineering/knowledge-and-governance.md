@@ -27,3 +27,7 @@
 实现入口：[knowledge.py](../../app/platform/knowledge.py)、[retrieval.py](../../app/platform/retrieval.py)、[budget.py](../../app/platform/budget.py)、[releases.py](../../app/platform/releases.py)、[connectors.py](../../app/platform/connectors.py)。
 
 详细参数与历史实现见[第 27–34 期归档](../history/第27-34期-知识平台与工程交付.md)，当前验证范围见[验收状态](../evaluation/acceptance.md)。
+
+## 可选扩展
+
+当前增加按 release/profile 固定的预编译索引、逐结论原文支持检查以及版本化评测数据入口。详细机制与开关见[对话与索引扩展](improvement-loop.md)，数据集版本不等同于线上知识版本；冻结数据不会自动触发发布。

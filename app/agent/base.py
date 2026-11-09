@@ -659,6 +659,22 @@ class BaseConversationAgent(ABC):
                         "needs_clarification": "请补充适用地域、渠道或商品信息后再核实政策。",
                         "policy_conflict": "政策证据存在冲突，已建议转人工核实。",
                     }[evidence["outcome"]]
+                if (
+                    self.config.answer_evidence_check_enabled
+                    and evidence["outcome"] == "answerable"
+                ):
+                    from app.platform.evidence_support import check_answer
+
+                    support = check_answer(result.reply, evidence)
+                    self.event_bus.emit(
+                        "answer.support.checked", source="agent", data=support
+                    )
+                    if not support["supported"]:
+                        result.requires_human = True
+                        result.evidence_state = "unsupported_claim"
+                        result.reply = (
+                            "回答中的结论尚未获得完整政策原文支持，请人工核实。"
+                        )
                 knowledge.last_result = None
             try:
                 for citation in result.citations:
@@ -687,6 +703,33 @@ class BaseConversationAgent(ABC):
             if self.tool_registry.action_service
             else []
         )
+        if self.config.conversation_intake_enabled and not pending_actions:
+            for message in reversed(self.raw_messages):
+                if message.get("role") == "user":
+                    break
+                if message.get("role") != "tool":
+                    continue
+                import json
+
+                try:
+                    draft = json.loads(message.get("content", ""))
+                except (ValueError, TypeError):
+                    continue
+                state = draft.get("intake") if isinstance(draft, dict) else None
+                if state and draft.get("success") and state.get("missing"):
+                    labels = {
+                        "order_id": "订单号",
+                        "reason": "售后原因",
+                        "evidence_ids": "凭证",
+                    }
+                    question = (
+                        "请补充"
+                        + "、".join(labels.get(k, k) for k in state["missing"])
+                        + "。"
+                    )
+                    result.reply = "已保存您提供的申请信息。" + question
+                    result.follow_up_question = question
+                    break
         if pending_actions:
             import json
 

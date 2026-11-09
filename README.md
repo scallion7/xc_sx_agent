@@ -36,6 +36,7 @@ LLM 负责理解、规划和解释；权限、状态转换、幂等约束与敏�
 | 版本化知识 | 政策更新后仍需解释历史回答 | 导入任务、不可变快照、CAS 发布、回滚、稳定引用；[知识与治理](docs/engineering/knowledge-and-governance.md) |
 | 模型与配置治理 | 重试费用、配置漂移、灰度不稳定 | 共享 token 配额、调用账本、评测门禁、会话版本固定 |
 | 评测诊断与复核 | 解释排序与拒答，防止未审核材料变成验收结论 | 检索逐阶段诊断、CAS 审核与审计、真实 HTTP 任务断言；[复核工作台](docs/guides/review-workbench.md)与[任务基线](docs/evaluation/task-baseline.md) |
+| 多轮办理与检索扩展 | 分轮资料丢失、旧授权误用、重复解析索引 | 字段来源、事务 fencing、完整分句证据与预编译索引；[实现与边界](docs/engineering/improvement-loop.md) |
 | 人工协作与可观测性 | 接管时阻止新的自动写操作，定位跨进程故障 | 客服工作台、所有权检查、W3C Trace、审计与故障演练 |
 
 技术栈：Python、FastAPI、Pydantic、SQLAlchemy/Alembic、SQLite/PostgreSQL、MCP Streamable HTTP、OpenTelemetry、Playwright、GitHub Actions。支持 ReAct、Plan-and-Execute 与多 Agent 路由。
@@ -50,7 +51,7 @@ cd xc_sx_agent
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-lock.txt
-python -m app.scripts.demo_stack --directory app/sessions/readme-demo
+python -m app.scripts.demo_stack --intake --directory app/sessions/readme-demo
 ```
 
 Windows PowerShell 使用 `py -3.11 -m venv .venv` 创建环境、`.venv\Scripts\Activate.ps1` 激活环境，随后执行相同的 `python` 命令。
@@ -67,15 +68,15 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-实现提交 [`7565683`](https://github.com/scallion7/xc_sx_agent/commit/7565683d9ebda84dee43b43215e574b7ddeb2969) 的 [GitHub Actions 8/8 作业通过](https://github.com/scallion7/xc_sx_agent/actions/runs/42054871319)。对应本地回归 **408 项通过，app 语句覆盖率 82%**；18 项受控模型任务与三条复杂售后 HTTP 流程分别通过。
+当前本地验收：**428 项回归通过、app 语句覆盖率 82%**。3 个 worker 在隔离 PostgreSQL 上完成 180 秒持续负载，接受的 2891 个任务全部完成，709 次按容量上限返回 429；万级合成 chunk 的 BM25 结果保持一致，预编译热读 p50 为 17.85 ms。完整环境、原始报告与限制见[当前验收](docs/evaluation/acceptance.md)。
 
-检索配置的 64 组配对比较没有显示质量提升；32 道冻结检索题尚未完成真实人工审核，保留集未运行，未调用付费模型。当前结果、证据和待完成项统一见[验收状态](docs/evaluation/acceptance.md)，历史数字见[历史验收台账](docs/history/2026-11-05-acceptance-ledger.md)。
+新增多轮售后草稿、版本化评测与失败回流、双人复核、原文证据检查、预编译索引及队列 admission。本地验收证据保留生成时的状态；提交后的远端结果以对应 [GitHub Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml) 运行为准。真实人工金标准、原冻结 holdout 和付费模型评测仍未完成。
 
 ## 当前范围
 
 - 真实运行应用、HTTP/MCP、SQL、Worker 和浏览器；模型演示使用受控替身，订单、退款、库存为沙箱。
 - Chroma 后端因上游未修复安全公告暂停；默认余弦检索与版本化 SQL 知识平台可用。
-- 已在上述提交 CI 验证完整 Compose、双 Worker、停写 PostgreSQL 与独立沙箱恢复；生产持续写入的 PITR 与跨区域恢复尚未验收。
+- 历史 CI 已验证完整 Compose、双 Worker、停写 PostgreSQL 与独立沙箱恢复；当前本机持续负载另有新证据，生产持续写入 PITR 与跨区域恢复尚未验收。
 - 真实模型质量、人工金标准、真实支付及生产容量尚未验收。新增平台租户作用域不等同于整个系统已支持共享库 SaaS。
 
 ## 阅读与项目背景

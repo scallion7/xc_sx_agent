@@ -56,7 +56,9 @@ class ToolExecutionService:
         if run is None:
             return self._execute_logged(name, arguments, context, **kwargs)
         return run.call(
-            "read"
+            "draft"
+            if self.registry.is_draft_only(name)
+            else "read"
             if self.registry.is_read_only(name)
             or getattr(kwargs.get("remote"), "governed", False)
             else "write",
@@ -215,7 +217,7 @@ class ToolExecutionService:
                 raise ActionError(
                     "SESSION_HUMAN_OWNED", "会话已由人工接管，自动业务写已暂停"
                 )
-        if self.registry.is_read_only(name):
+        if self.registry.is_read_only(name) or self.registry.is_draft_only(name):
             raw = self.registry.execute(name, parsed, context)
             return json.loads(raw)
         if self.actions is None or self.registry.business_snapshot is None:

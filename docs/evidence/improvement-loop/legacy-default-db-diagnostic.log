@@ -1,0 +1,64 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261109_0009 -> 20261105_0008, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0008 -> 20261105_0007, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0007 -> 20261025_0006, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 20260823_0001, 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Running upgrade 20260823_0001 -> 20261023_0002, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0002 -> 20261023_0003, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0003 -> 20261023_0004, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0004 -> 20261023_0005, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running upgrade 20261023_0005 -> 20261025_0006, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running upgrade 20261025_0006 -> 20261105_0007, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0007 -> 20261105_0008, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running upgrade 20261105_0008 -> 20261109_0009, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 20261109_0009 -> 20261105_0008, Versioned evaluation corpora, compiled indexes and queue admission.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0008 -> 20261105_0007, Durable after-sale intake and atomic command receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261105_0007 -> 20261025_0006, Persistent corpus review annotations and immutable review history.
+INFO  [alembic.runtime.migration] Running downgrade 20261025_0006 -> 20261023_0005, Stages 27–34: additive knowledge, budget, release, collaboration and tool governance.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0005 -> 20261023_0004, Stage 26: transactional refund delivery, inbox and reconciliation jobs.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0004 -> 20261023_0003, Stage 25: persistent Agent queue and event log.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0003 -> 20261023_0002, Stage 24: active-case uniqueness, version CAS and creation receipts.
+INFO  [alembic.runtime.migration] Running downgrade 20261023_0002 -> 20260823_0001, Stage 23: trusted proposals, confirmations and evidence.
+INFO  [alembic.runtime.migration] Running downgrade 20260823_0001 -> , 阶段 22 基线迁移：覆盖现有与治理表。
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+确定性计划质量门禁失败: {"cases": {"plan-024": " \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/agent/base.py\", line 192, in __init__\n    self.tool_registry = tool_registry or create_default_tool_registry(\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/agent/tools/registry.py\", line 275, in create_default_tool_registry\n    registry.action_service = ActionService(\n                              ^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/services/actions.py\", line 45, in __init__\n    self.engine = get_engine(database_url)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/infrastructure/database.py\", line 497, in get_engine\n    raise RuntimeError(\nRuntimeError: CASE_SCHEMA_UPGRADE_REQUIRED: run python -m app.scripts.manage_migrations upgrade before starting the application\n\n----------------------------------------------------------------------\nRan 1 test in 0.009s\n\nFAILED (errors=1)\n", "plan-025": " \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/agent/base.py\", line 192, in __init__\n    self.tool_registry = tool_registry or create_default_tool_registry(\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/agent/tools/registry.py\", line 275, in create_default_tool_registry\n    registry.action_service = ActionService(\n                              ^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/services/actions.py\", line 45, in __init__\n    self.engine = get_engine(database_url)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/mxc/VScode/test20260708/xc_sx_agent/app/infrastructure/database.py\", line 497, in get_engine\n    raise RuntimeError(\nRuntimeError: CASE_SCHEMA_UPGRADE_REQUIRED: run python -m app.scripts.manage_migrations upgrade before starting the application\n\n----------------------------------------------------------------------\nRan 1 test in 0.007s\n\nFAILED (errors=1)\n"}, "metrics": {"checkpoint_reuse_rate": 0.0, "recovery_consistency_rate": 0.75, "route_stability_rate": 0.6666666666666666}}

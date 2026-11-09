@@ -23,6 +23,7 @@
 | 质量与供应链修复 | 复现 CI 失败、审计真实部署锁文件、更新漏洞依赖 | [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6)、[修复记录](history/CI-第27-34期上传修复.md) |
 | 检索诊断与人工复核 | 冻结标签、原文定位、CAS 审核、逐阶段检索诊断与任务级断言 | [`b2df06d`](https://github.com/scallion7/xc_sx_agent/commit/b2df06d)、[复核工作台](guides/review-workbench.md)、[任务基线](evaluation/task-baseline.md) |
 | 接管与复杂售后 | 所有权版本检查、提案失效、申请修订幂等与未知退款恢复 | [`7565683`](https://github.com/scallion7/xc_sx_agent/commit/7565683)、[人工接管](engineering/human-handoff.md)、[售后申请](guides/after-sale.md) |
+| 多轮办理与评测闭环 | 来源校验、事务 fencing、版本数据与双人复核、预编译索引、PostgreSQL 持续负载 | 实现与验收：[机制](engineering/improvement-loop.md)、[数据协议](evaluation/versioned-datasets.md)、[容量方法](operations/sustained-load.md) |
 
 ## 简历表述与证据
 

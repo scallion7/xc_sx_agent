@@ -1,0 +1,259 @@
+{
+  "split": "development",
+  "release_id": "88daf8adc524463fb4b76a8dfb74106d",
+  "baseline_profile": {
+    "version": "legacy-v1",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "normalization": "none",
+    "candidate_pool": 0,
+    "rrf_k": 60,
+    "bm25_weight": 1.0,
+    "vector_weight": 1.0,
+    "evidence_overlap": 0.35,
+    "numeric_bonus": 0.15,
+    "exact_bonus": 0.1
+  },
+  "candidate_profile": {
+    "version": "candidate-v2",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "normalization": "nfkc",
+    "candidate_pool": 20,
+    "rrf_k": 60,
+    "bm25_weight": 1.0,
+    "vector_weight": 1.0,
+    "evidence_overlap": 0.35,
+    "numeric_bonus": 0.15,
+    "exact_bonus": 0.1
+  },
+  "baseline_hash": "562940e4cca0ed5f015103b3f7346035bcf9206bf39aa89a6a28df1421b4767d",
+  "candidate_hash": "8b16c6d22af11bd6b154fc8ca985e468873ce55b39f3aa1e7e382eea07981526",
+  "sample_count": 1,
+  "comparison_count": 4,
+  "summaries": {
+    "bm25": {
+      "baseline": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "candidate": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "hybrid": {
+      "baseline": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "candidate": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "hybrid_rerank": {
+      "baseline": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "candidate": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    },
+    "vector": {
+      "baseline": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "candidate": {
+        "samples": 1,
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_accuracy": 1.0,
+        "wrong_answer_count": 0,
+        "unsupported_document_count": 0,
+        "unnecessary_refusal_count": 0,
+        "missing_gold_stage_counts": {}
+      },
+      "improved_ids": [],
+      "regressed_ids": [],
+      "changed_ids": []
+    }
+  },
+  "cases": [
+    {
+      "id": "dev-smoke",
+      "mode": "vector",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-smoke",
+      "mode": "bm25",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-smoke",
+      "mode": "hybrid",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    },
+    {
+      "id": "dev-smoke",
+      "mode": "hybrid_rerank",
+      "baseline": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "candidate": {
+        "candidate_recall": 1.0,
+        "evidence_recall": 1.0,
+        "outcome_correct": true,
+        "wrong_answer": false,
+        "unnecessary_refusal": false,
+        "unsupported_documents": [],
+        "missing_gold_stages": {},
+        "passed": true
+      },
+      "improved": false,
+      "regressed": false,
+      "changed": false
+    }
+  ],
+  "release_eligible": false,
+  "paid_calls": 0,
+  "semantic_quality_verified": false,
+  "source_tree_sha256": "98d64a8b33f2056d071fc76f85cc9f8c18db6d8526a6472889cdceafac55720d",
+  "frozen_files": {
+    "cases.json": "ec474958f692f3c5e1b44bebc62261a18ca170ef97296d8f9c8210fda400d0ae",
+    "documents.json": "72fc4e91526a42d403acb12a80a6c9c18c99498b5458413d38bd772fc0d42a03"
+  },
+  "labels": "unreviewed",
+  "dataset_version": "1",
+  "dataset_name": "capture-smoke",
+  "raw_artifact": {
+    "path": "version-comparison.raw.json.gz",
+    "sha256": "9a260c60e87e129f8c62e2c65b6c79ead2ea41787687adb099f1792f63930caf"
+  }
+}

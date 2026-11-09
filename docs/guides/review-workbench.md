@@ -10,7 +10,7 @@
 python -m app.scripts.demo_stack --directory app/sessions/review-demo
 ```
 
-打开终端打印的 `/review`，输入 `demo-admin`。此令牌仅用于本机可丢弃演示；实际部署使用现有管理员认证，接口要求 `maintenance:run` 权限。生产维护者应先执行 `python -m app.scripts.manage_migrations upgrade`，新增版本 `20261105_0007` 包含 `review_projects`、`review_annotations`、`review_events`，不修改既有业务表。
+打开终端打印的 `/review`，输入 `demo-admin`。此令牌仅用于本机可丢弃演示；实际部署使用现有管理员认证，接口要求 `maintenance:run` 权限。生产维护者应先执行 `python -m app.scripts.manage_migrations upgrade`，当前应升级至 head（`20261109_0009`）；原版本 `20261105_0007` 包含 `review_projects`、`review_annotations`、`review_events`，不修改既有业务表。
 
 ![复核工作台](../assets/review.png)
 
@@ -20,7 +20,7 @@ python -m app.scripts.demo_stack --directory app/sessions/review-demo
 2. 点击“采用此政策”保存原文及 `[start, end)` 字符定位（按 Unicode 字符计数），填写结果判定与理由。当前界面引用政策全文，API 支持原文片段定位。
 3. 保存草稿、核对并批准，或标记分歧。批准必须提供非空理由；除 `no_evidence` 外，必须为所有 gold 政策提供精确匹配的原文证据。无证据结论必须清空 gold 并说明原因。
 4. “审核历史”查看认证账号、修订与理由。两个窗口编辑同一旧版本时，仅第一个保存成功；另一个返回 `REVIEW_VERSION_CONFLICT`，重新选择题目读取新版本，再人工合并意见。
-5. 导出 JSON，保存原始文件。导出绑定题目和文档哈希，保留账号、UTC 时间、修订、证据与批准状态。**导入只生成草稿**，不继承外部文件声称的身份或批准；完整验证后同事务写入全部 32 题。导入前先导出备份，已有审核历史保留。
+5. 导出 JSON，保存原始文件。导出绑定题目和文档哈希，保留账号、UTC 时间、修订、证据与批准状态。**导入只生成草稿**，不继承外部文件声称的身份或批准；完整验证后同事务写入当前项目的全部题目。导入前先导出备份，已有审核历史保留。
 
 项目与记录按配置中的 tenant 隔离；这不代表整套旧业务系统已成为共享库 SaaS。令牌不存入浏览器 localStorage；切换令牌会清空页面资料。审计历史在应用中仅追加，没有修改接口；它不等同于防数据库管理员篡改的签名日志。共享管理员令牌只能标识共享账号，真实组织需使用独立身份。
 
@@ -29,3 +29,7 @@ python -m app.scripts.demo_stack --directory app/sessions/review-demo
 ## 完成审核后
 
 导出完整审核文件，按[离线评测协议](../evaluation/offline-review.md)核验覆盖与哈希，再决定是否执行保留集。当前仓库材料尚未完成真实人工复核；自动化测试中的批准记录不计入该进度。
+
+## 新数据版本与失败案例
+
+“数据版本与失败案例”支持从 run 收集脱敏候选、记录人工整理说明、冻结与选择新数据版本。输入项目 ID 打开指定版本；留空仍使用原冻结数据。高风险题目由两个不同账号核对相同内容后批准，界面会提示首位复核状态。格式、来源约束与命令见[版本化评测](../evaluation/versioned-datasets.md)。

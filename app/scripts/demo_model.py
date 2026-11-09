@@ -52,6 +52,54 @@ def complete(body: dict):
             "reason": "不合适退货退款",
             "case_type": "return_refund",
         }
+    intake_stage = False
+    if "update_after_sale_intake" in names and (
+        "售后申请" in query
+        or "补充" in query
+        or "撤回" in query
+        or "生成提案" in query
+        or "改为" in query
+        or "新申请" in query
+        or "另一笔" in query
+        or "重新申请" in query
+    ):
+        last = max(
+            [i for i, m in enumerate(messages) if m.get("role") == "user"] or [-1]
+        )
+        results = [m for m in messages[last + 1 :] if m.get("role") == "tool"]
+        if not results:
+            tool, args, intake_stage = "get_after_sale_intake", {}, True
+        elif len(results) == 1:
+            state = json.loads(results[0]["content"]).get("intake") or {}
+            fields = {}
+            if order:
+                fields["order_id"] = order.group()
+            reason = re.search(r"原因[：:](.+)", query)
+            if reason:
+                fields["reason"] = reason.group(1).strip()
+            if "换货" in query:
+                fields["case_type"] = "exchange"
+            command = (
+                "withdraw"
+                if "撤回" in query
+                else "propose"
+                if "生成提案" in query
+                else "update"
+            )
+            tool, args, intake_stage = (
+                "update_after_sale_intake",
+                {
+                    "command": command,
+                    "expected_revision": 0
+                    if any(x in query for x in ("新申请", "另一笔", "重新申请"))
+                    else state.get("revision", 0),
+                    "new_task": any(
+                        x in query for x in ("新申请", "另一笔", "重新申请")
+                    ),
+                    "fields": fields,
+                },
+                True,
+            )
     schema = body.get("response_format", {}).get("json_schema", {}).get("name", "")
     reply = "您好，这是受控离线模型的演示回复。"
     if schema == "ExecutionPlan":
@@ -92,7 +140,7 @@ def complete(body: dict):
     )
     already = any(m.get("role") == "tool" for m in messages[last_user + 1 :])
     message = {"role": "assistant", "content": content}
-    if not schema and tool in names and not already:
+    if not schema and tool in names and (not already or intake_stage):
         message = {
             "role": "assistant",
             "content": None,

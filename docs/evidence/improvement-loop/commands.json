@@ -1,0 +1,183 @@
+[
+  {
+    "name": "unittest",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-m",
+      "coverage",
+      "run",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-v"
+    ],
+    "exit_code": 0,
+    "seconds": 87.10144996643066
+  },
+  {
+    "name": "coverage",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-m",
+      "coverage",
+      "report",
+      "--fail-under=65"
+    ],
+    "exit_code": 0,
+    "seconds": 0.5334160327911377
+  },
+  {
+    "name": "postgres-load",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.benchmark_sustained",
+      "--seconds",
+      "180",
+      "--rate",
+      "20",
+      "--workers",
+      "3",
+      "--max-pending",
+      "24",
+      "--output",
+      "/tmp/xc-acceptance/postgres-load.json"
+    ],
+    "exit_code": 0,
+    "seconds": 195.41390299797058
+  },
+  {
+    "name": "index-scale",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.benchmark_indexes",
+      "--sizes",
+      "1000,10000",
+      "--repeats",
+      "12",
+      "--output",
+      "/tmp/xc-acceptance/index-scale.json"
+    ],
+    "exit_code": 0,
+    "seconds": 12.644109010696411
+  },
+  {
+    "name": "migrations",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "/tmp/xc-next-dev/migration_accept.py"
+    ],
+    "exit_code": 1,
+    "seconds": 0.8967139720916748,
+    "note": "Ad hoc launcher directory contained queue.py, shadowing stdlib queue before migrations; relocated launcher, no source changes.",
+    "log": "harness-import-diagnostic.log"
+  },
+  {
+    "name": "migrations",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "/tmp/xc-migration-accept.py"
+    ],
+    "exit_code": 0,
+    "seconds": 3.3354220390319824
+  },
+  {
+    "name": "plan-quality",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.validate_plan_quality"
+    ],
+    "exit_code": 1,
+    "seconds": 1.3166768550872803,
+    "note": "Default legacy database in source checkout; rerun this check in the same isolated source as the successful full regression.",
+    "log": "legacy-default-db-diagnostic.log"
+  },
+  {
+    "name": "plan-quality",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.validate_plan_quality"
+    ],
+    "exit_code": 0,
+    "seconds": 1.3004112243652344,
+    "cwd": "/var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/xc-final-source-5_i6jx22"
+  },
+  {
+    "name": "plan-benchmark",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.benchmark_plan"
+    ],
+    "exit_code": 0,
+    "seconds": 0.43123507499694824,
+    "cwd": "/var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/xc-final-source-5_i6jx22"
+  },
+  {
+    "name": "openapi",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-B",
+      "-m",
+      "app.scripts.validate_openapi"
+    ],
+    "exit_code": 0,
+    "seconds": 0.6034157276153564,
+    "cwd": "/Users/mxc/VScode/test20260708/xc_sx_agent"
+  },
+  {
+    "name": "lint",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-m",
+      "ruff",
+      "check",
+      ".",
+      "--no-cache"
+    ],
+    "exit_code": 0,
+    "seconds": 0.05490398406982422,
+    "cwd": "/Users/mxc/VScode/test20260708/xc_sx_agent"
+  },
+  {
+    "name": "format",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-m",
+      "ruff",
+      "format",
+      "--check",
+      ".",
+      "--no-cache"
+    ],
+    "exit_code": 0,
+    "seconds": 0.03194594383239746,
+    "cwd": "/Users/mxc/VScode/test20260708/xc_sx_agent"
+  },
+  {
+    "name": "compile",
+    "command": [
+      "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/bin/python",
+      "-m",
+      "compileall",
+      "-q",
+      "app",
+      "tests"
+    ],
+    "exit_code": 0,
+    "seconds": 0.054936885833740234,
+    "cwd": "/var/folders/xl/tlps88sn1vj2655jyvrzkm_00000gn/T/xc-final-source-5_i6jx22"
+  }
+]

@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import and_, insert, or_, select, update
+from sqlalchemy import and_, case, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.database import agent_runs_table as runs
@@ -84,6 +84,8 @@ class RunRepository:
         max_attempts=3,
         run_id=None,
         runtime_snapshot=None,
+        max_pending=0,
+        max_pending_per_user=0,
     ):
         if not key or len(key) > 128:
             raise RunError("INVALID_IDEMPOTENCY_KEY")
@@ -116,8 +118,54 @@ class RunRepository:
                 }
             ),
         )
+        if max_pending or max_pending_per_user:
+            from app.infrastructure.database import improvement
+
+            guard = improvement["run_admission_guards"]
+            try:
+                with self.engine.begin() as conn:
+                    conn.execute(insert(guard).values(scope="agent-runs", version=0))
+            except IntegrityError:
+                pass
         try:
             with self.engine.begin() as conn:
+                if max_pending or max_pending_per_user:
+                    from sqlalchemy import func
+
+                    conn.execute(
+                        update(guard)
+                        .where(guard.c.scope == "agent-runs")
+                        .values(version=guard.c.version + 1)
+                    )
+                    # Idempotent retries must work even when capacity is exhausted.
+                    prior = unpack(
+                        conn.execute(
+                            select(runs).where(
+                                runs.c.user_id == user_id, runs.c.idempotency_key == key
+                            )
+                        )
+                        .mappings()
+                        .first()
+                    )
+                    if prior:
+                        if prior["request_hash"] != values["request_hash"]:
+                            raise RunError("RUN_IDEMPOTENCY_CONFLICT")
+                        return prior
+                    pending = runs.c.status.in_(["queued", "running", "retry_wait"])
+                    total = conn.scalar(
+                        select(func.count()).select_from(runs).where(pending)
+                    )
+                    personal = conn.scalar(
+                        select(func.count())
+                        .select_from(runs)
+                        .where(pending, runs.c.user_id == user_id)
+                    )
+                    if (max_pending and total >= max_pending) or (
+                        max_pending_per_user and personal >= max_pending_per_user
+                    ):
+                        raise RunError(
+                            "RUN_QUEUE_FULL", "队列繁忙，请稍后使用原幂等键重试"
+                        )
                 conn.execute(insert(runs).values(**values))
                 self._event(conn, values, "run.queued", {})
         except IntegrityError:
@@ -308,10 +356,39 @@ class RunRepository:
             ),
             and_(runs.c.status == "running", runs.c.lease_until <= now),
         )
+        ranked = (
+            select(
+                runs.c.run_id.label("candidate_id"),
+                func.row_number()
+                .over(
+                    partition_by=runs.c.user_id,
+                    order_by=(runs.c.created_at, runs.c.run_id),
+                )
+                .label("user_position"),
+            )
+            .where(eligible)
+            .subquery()
+        )
+        served = (
+            select(
+                runs.c.user_id.label("served_user"),
+                func.max(case((runs.c.attempt > 0, runs.c.updated_at), else_=0)).label(
+                    "last_served"
+                ),
+            )
+            .group_by(runs.c.user_id)
+            .subquery()
+        )
         query = (
             select(runs)
-            .where(eligible)
-            .order_by(runs.c.created_at, runs.c.run_id)
+            .join(served, served.c.served_user == runs.c.user_id)
+            .join(ranked, runs.c.run_id == ranked.c.candidate_id)
+            .order_by(
+                served.c.last_served,
+                ranked.c.user_position,
+                runs.c.created_at,
+                runs.c.run_id,
+            )
             .limit(32)
         )
         if run_id:

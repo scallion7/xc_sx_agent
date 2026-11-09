@@ -46,7 +46,7 @@ def review_template(manifest, cases):
     }
 
 
-def apply_review(manifest, cases, review):
+def apply_review(manifest, cases, review, *, documents=None):
     if (
         not isinstance(review, dict)
         or review.get("dataset_sha256") != manifest["files"]["cases.json"]
@@ -65,7 +65,8 @@ def apply_review(manifest, cases, review):
         or {r["id"] for r in rows} != {c["id"] for c in cases}
     ):
         raise PlatformError("REVIEW_INCOMPLETE")
-    _, documents, _ = load_frozen()
+    if documents is None:
+        _, documents, _ = load_frozen()
     docs = {d["document_id"]: d["text"] for d in documents}
     mapped = {r["id"]: r for r in rows}
     output = []
@@ -100,6 +101,14 @@ def apply_review(manifest, cases, review):
                 raise ValueError("Timezone required")
         except ValueError as exc:
             raise PlatformError("REVIEW_TIMESTAMP_INVALID") from exc
+        if case.get("requires_second_review"):
+            first = row.get("first_approval", {})
+            if (
+                not first.get("actor")
+                or row.get("second_reviewer") != row["reviewer"]
+                or first["actor"] == row["reviewer"]
+            ):
+                raise PlatformError("REVIEW_SECOND_REVIEW_REQUIRED")
         if modern:
             evidence = row.get("evidence", [])
             if not isinstance(evidence, list):

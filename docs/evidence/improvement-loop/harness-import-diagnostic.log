@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "/tmp/xc-next-dev/migration_accept.py", line 13, in <module>
+    upgrade_database(url)
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/app/infrastructure/migrations/runtime.py", line 25, in upgrade_database
+    command.upgrade(alembic_config(database_url), revision)
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/lib/python3.11/site-packages/alembic/command.py", line 487, in upgrade
+    script.run_env()
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/lib/python3.11/site-packages/alembic/script/base.py", line 550, in run_env
+    util.load_python_file(self.dir, "env.py")
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 114, in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/.venv/lib/python3.11/site-packages/alembic/util/pyfiles.py", line 132, in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/mxc/VScode/test20260708/xc_sx_agent/app/infrastructure/migrations/env.py", line 5, in <module>
+    from logging.config import fileConfig
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15_4/Frameworks/Python.framework/Versions/3.11/lib/python3.11/logging/config.py", line 30, in <module>
+    import logging.handlers
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15_4/Frameworks/Python.framework/Versions/3.11/lib/python3.11/logging/handlers.py", line 28, in <module>
+    import queue
+  File "/private/tmp/xc-next-dev/queue.py", line 2, in <module>
+    patch('app/repositories/runs.py','        runtime_snapshot=None,\n    ):','        runtime_snapshot=None,\n        max_pending=0,\n        max_pending_per_user=0,\n    ):')
+  File "<string>", line 4, in patch
+AssertionError: app/repositories/runs.py

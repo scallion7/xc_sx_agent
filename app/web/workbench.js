@@ -46,6 +46,12 @@ async function refresh() {
       $('session').value = session;
       await refresh()
     }));
+    card.append(button('查看申请资料', async () => {
+      const data = await api(`/v1/admin/conversations/${encodeURIComponent(row.user_id)}/${encodeURIComponent(session)}/after-sale-intakes`);
+      const details = document.createElement('pre');
+      details.textContent = data.intakes.map(i => `${i.intake_id} · 修订 ${i.revision} · ${i.status}\n订单：${i.fields.order_id || '待补充'}\n原因：${i.fields.reason || '待补充'}\n字段来源：${JSON.stringify(i.field_sources || {})}`).join('\n\n') || '此会话尚无申请资料。';
+      card.querySelector('pre')?.remove(); card.append(details);
+    }));
     $('conversations').append(card)
   }
   $('drafts').replaceChildren();

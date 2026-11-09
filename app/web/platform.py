@@ -290,6 +290,14 @@ def register_platform_routes(app, services, require):
             "pending_cases": services.after_sale.list_pending_approvals()["cases"],
         }
 
+    @app.get("/v1/admin/conversations/{user_id}/{session_id}/after-sale-intakes")
+    def conversation_intakes(
+        user_id: str, session_id: str, ctx=Depends(require("after_sale:review"))
+    ):
+        from app.platform.after_sale_intake import AfterSaleIntake
+
+        return {"intakes": AfterSaleIntake(services, user_id).list_session(session_id)}
+
     @app.post("/v1/admin/conversations/{user_id}/{session_id}/take")
     def take(
         user_id: str,

@@ -23,10 +23,10 @@ class ImportReview(BaseModel):
 
 
 def register_review_routes(app, services, require):
-    def workspace():
+    def workspace(project_id=None):
         if services.config.persistence_backend != "sql":
             raise PlatformError("REVIEW_REQUIRES_SQL")
-        return ReviewWorkspace(services.config)
+        return ReviewWorkspace(services.config, project_id=project_id)
 
     @app.get("/review", response_class=HTMLResponse)
     def page():
@@ -38,11 +38,11 @@ def register_review_routes(app, services, require):
 
     @app.get("/v1/admin/evaluation/reviews/{project_id}")
     def cases(project_id: str, ctx=Depends(require("maintenance:run"))):
-        return workspace().list_cases(project_id)
+        return workspace(project_id).list_cases(project_id)
 
     @app.get("/v1/admin/evaluation/reviews/{project_id}/cases/{case_id}")
     def case(project_id: str, case_id: str, ctx=Depends(require("maintenance:run"))):
-        return workspace().detail(project_id, case_id)
+        return workspace(project_id).detail(project_id, case_id)
 
     @app.put("/v1/admin/evaluation/reviews/{project_id}/cases/{case_id}")
     def save(
@@ -51,7 +51,7 @@ def register_review_routes(app, services, require):
         body: SaveReview,
         ctx=Depends(require("maintenance:run")),
     ):
-        return workspace().save(
+        return workspace(project_id).save(
             project_id,
             case_id,
             body.annotation.model_dump(),
@@ -61,17 +61,17 @@ def register_review_routes(app, services, require):
 
     @app.get("/v1/admin/evaluation/reviews/{project_id}/cases/{case_id}/history")
     def history(project_id: str, case_id: str, ctx=Depends(require("maintenance:run"))):
-        return {"events": workspace().history(project_id, case_id)}
+        return {"events": workspace(project_id).history(project_id, case_id)}
 
     @app.post("/v1/admin/evaluation/reviews/{project_id}/cases/{case_id}/diagnostics")
     def diagnostics(
         project_id: str, case_id: str, ctx=Depends(require("maintenance:run"))
     ):
-        return workspace().diagnose(project_id, case_id)
+        return workspace(project_id).diagnose(project_id, case_id)
 
     @app.get("/v1/admin/evaluation/reviews/{project_id}/export")
     def export(project_id: str, ctx=Depends(require("maintenance:run"))):
-        return workspace().export(project_id)
+        return workspace(project_id).export(project_id)
 
     @app.post("/v1/admin/evaluation/reviews/{project_id}/import")
     def import_drafts(
@@ -80,7 +80,7 @@ def register_review_routes(app, services, require):
         if len(encode(body.document)) > 1000000:
             raise HTTPException(413, "REVIEW_IMPORT_TOO_LARGE")
         try:
-            return workspace().import_drafts(
+            return workspace(project_id).import_drafts(
                 project_id, body.document, body.expected_revision, ctx.user_id
             )
         except PlatformError:

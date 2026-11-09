@@ -36,6 +36,10 @@ def register_intake_routes(app, services, require):
     def page():
         return Path(__file__).with_name("after_sale.html").read_text()
 
+    @app.get("/v1/sessions/{session_id}/after-sale-intakes")
+    def listing(session_id: str, ctx=Depends(require("session:read"))):
+        return {"intakes": service(ctx).list_session(session_id)}
+
     @app.post("/v1/after-sale-intakes")
     def create(
         body: CreateIntake,

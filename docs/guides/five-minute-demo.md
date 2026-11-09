@@ -82,3 +82,13 @@ python -m app.scripts.demo_stack --directory app/sessions/interview-demo-01
 ## 可选：展示复杂售后申请
 
 打开 `/after-sale`，使用 `demo-user` 新建申请，先只保存订单 `ORD-20240125-006`，展示还需补充原因；补全原因后生成提案，再修改诉求，展示旧确认失效与新提案重新确认。撤回后刷新或重新查询申请，仍能读取持久化历史。退款断连、补证审批的完整 API 与数据库证据见[售后申请指南](after-sale.md)。本版关联已有材料编号，不提供图片上传或自动识图。
+
+## 展示新增多轮办理
+
+演示启动时加 `--intake`，依次发送“售后申请”“补充订单 ORD-20240125-006”“补充原因：尺寸不合适”“生成提案”。观察缺资料追问、右侧申请资料与单独确认；“改为换货”后旧提案失效，重新生成才能确认。步骤与业务边界见[售后指南](after-sale.md)。
+
+![重新连接后保留申请与待确认提案](../evidence/improvement-loop/conversation-intake.png)
+
+管理员在 `/review` 的“数据版本与失败案例”演示收集、整理、冻结与打开新数据集。截图为合成协议演练，批准数为 0；它不代表已完成人工金标准。
+
+![版本化评测与失败候选](../evidence/improvement-loop/review-versioned.png)

@@ -64,6 +64,7 @@ class RegisteredTool:
     read_only: bool = True
     idempotent: bool = True
     context_aware: bool = False
+    draft_only: bool = False
 
 
 class ToolRegistry:
@@ -95,6 +96,10 @@ class ToolRegistry:
     def is_read_only(self, name: str) -> bool:
         tool = self._tools.get(name)
         return bool(tool and tool.read_only)
+
+    def is_draft_only(self, name: str) -> bool:
+        tool = self._tools.get(name)
+        return bool(tool and tool.draft_only)
 
     def is_idempotent(self, name: str) -> bool:
         tool = self._tools.get(name)
@@ -139,7 +144,11 @@ class ToolRegistry:
                 ensure_ascii=False,
             )
 
-        if not tool.read_only and not execution_context.action_id:
+        if (
+            not tool.read_only
+            and not tool.draft_only
+            and not execution_context.action_id
+        ):
             return json.dumps(
                 {
                     "success": False,
@@ -321,6 +330,15 @@ def create_default_tool_registry(
         return snapshot
 
     registry.business_snapshot = business_snapshot
+    if (
+        runtime_config.conversation_intake_enabled
+        and runtime_config.after_sale_enabled
+        and after_sale_service is not None
+        and runtime_config.persistence_backend == "sql"
+    ):
+        from app.agent.tools.intake import register_intake_tools
+
+        register_intake_tools(registry, runtime_config, commerce, after_sale_service)
     return registry
 
 

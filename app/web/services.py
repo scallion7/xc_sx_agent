@@ -192,6 +192,20 @@ def _invoke_chat(
         if durable
         else runtime_snapshot(services, context.user_id, session_ref)
     )
+    for flag, value in snapshot.get("features", {}).items():
+        if flag in {
+            "conversation_intake_enabled",
+            "answer_evidence_check_enabled",
+            "compiled_retrieval_enabled",
+        }:
+            setattr(agent_config, flag, bool(value))
+    if snapshot.get("intake_schema_hash"):
+        from app.agent.tools.intake import IntakeUpdate
+        from app.platform.common import PlatformError
+        from app.services.actions import digest
+
+        if snapshot["intake_schema_hash"] != digest(IntakeUpdate.model_json_schema()):
+            raise PlatformError("INTAKE_SCHEMA_CHANGED")
     selected = snapshot.get("configuration")
     after_sale = services.after_sale
     if selected:
@@ -264,7 +278,20 @@ def runtime_snapshot(services, user_id, session_key):
         "tenant_id": services.config.tenant_id,
         "trace": carrier(),
         "collaboration": services.config.collaboration_enabled,
+        "features": {
+            name: getattr(services.config, name)
+            for name in (
+                "conversation_intake_enabled",
+                "answer_evidence_check_enabled",
+                "compiled_retrieval_enabled",
+            )
+        },
     }
+    if services.config.conversation_intake_enabled:
+        from app.agent.tools.intake import IntakeUpdate
+        from app.services.actions import digest
+
+        snapshot["intake_schema_hash"] = digest(IntakeUpdate.model_json_schema())
     if services.config.collaboration_enabled:
         from app.platform.conversation_handoff import ConversationHandoffService
 
@@ -298,6 +325,8 @@ def invoke_chat(services, request, context, trace_id):
             session_reference(services, context, request.session_id),
             trace_id,
             max_attempts=services.config.run_max_attempts,
+            max_pending=services.config.run_max_pending,
+            max_pending_per_user=services.config.run_max_pending_per_user,
             run_id=trace_id,
             runtime_snapshot=runtime_snapshot(
                 services,
@@ -306,7 +335,11 @@ def invoke_chat(services, request, context, trace_id):
             ),
         )
     except RunError as exc:
-        raise HTTPException(409, detail={"error_code": exc.code}) from exc
+        raise HTTPException(
+            429 if exc.code == "RUN_QUEUE_FULL" else 409,
+            detail={"error_code": exc.code},
+            headers={"Retry-After": "2"} if exc.code == "RUN_QUEUE_FULL" else None,
+        ) from exc
     RunWorker(services, repository=repository).run_once(row["run_id"])
     row = repository.get(row["run_id"])
     if row["status"] != "completed":

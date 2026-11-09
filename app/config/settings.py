@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     max_react_steps: int = 5
     agent_strategy: Literal["react", "plan_execute", "auto"] = "react"
     max_plan_steps: int = 6
+    conversation_intake_enabled: bool = False
+    answer_evidence_check_enabled: bool = False
+    compiled_retrieval_enabled: bool = False
+    run_max_pending: int = Field(default=0, ge=0)
+    run_max_pending_per_user: int = Field(default=0, ge=0)
     plan_max_concurrency: int = 3
     plan_ttl_seconds: int = 900
     plan_max_resume_count: int = 3

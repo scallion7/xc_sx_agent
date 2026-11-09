@@ -109,7 +109,8 @@ async function selectCase(id) {
 }
 $('openReview').onclick = handle(async () => {
   const epoch = ++generation;
-  const data = await client.request('/v1/admin/evaluation/reviews', 'POST');
+  const id = $('projectId').value.trim();
+  const data = id ? await client.request('/v1/admin/evaluation/reviews/' + encodeURIComponent(id)) : await client.request('/v1/admin/evaluation/reviews', 'POST');
   if (epoch !== generation) return;
   project = data;
   selected = null;
@@ -140,7 +141,7 @@ async function save(state) {
     if (epoch !== generation) return;
     project = listing;
     renderDetail(data);
-    status('已保存：' + labels[state] + '。审核账号与历史已记录。');
+    status(data.annotation.first_approval && data.annotation.status !== 'approved' ? '首位复核已记录：此题需要另一账号对相同内容独立确认。' : '已保存：' + labels[data.annotation.status] + '。审核账号与历史已记录。');
   } finally {
     controls();
   }
@@ -225,7 +226,7 @@ $('reviewToken').oninput = () => {
   project = null;
   selected = null;
   evidence = [];
-  for (const id of ['cases', 'documents', 'evidence', 'diagnostics', 'history', 'suggested']) $(id).replaceChildren();
+  for (const id of ['cases', 'documents', 'evidence', 'diagnostics', 'history', 'suggested', 'candidateList', 'datasetList']) $(id).replaceChildren();
   $('question').textContent = '选择一道题目';
   $('notes').value = '';
   $('conditions').textContent = '';
@@ -233,3 +234,54 @@ $('reviewToken').oninput = () => {
   $('progress').textContent = '身份已切换，请重新打开数据集。';
   controls();
 };
+
+async function candidates() {
+  const epoch = generation;
+  const data = await client.request('/v1/admin/evaluation/candidates');
+  if (epoch !== generation) return;
+  $('candidateList').replaceChildren();
+  for (const row of data.candidates) {
+    const box = node('article', '', 'card');
+    box.append(node('p', `${row.candidate_id} · ${row.classification} · ${row.status} · 修订 ${row.revision}`));
+    const query = node('textarea'); query.value = row.query; query.setAttribute('aria-label', '脱敏案例问题');
+    const notes = node('textarea'); notes.value = row.notes; notes.placeholder = '记录脱敏检查、问题复现与整理说明'; notes.setAttribute('aria-label', '候选整理说明');
+    const save = node('button', '保存整理结果');
+    save.onclick = handle(async () => {
+      if (epoch !== generation) return;
+      const result = await client.request('/v1/admin/evaluation/candidates/' + row.candidate_id, 'PUT', {expected_revision: row.revision, query: query.value, notes: notes.value});
+      if (epoch !== generation) return;
+      await candidates();
+      status('已整理候选，修订 ' + result.revision + '；尚未成为人工金标准。');
+    });
+    box.append(query, notes, save); $('candidateList').append(box);
+  }
+}
+$('loadCandidates').onclick = handle(candidates);
+$('captureCandidate').onclick = handle(async () => {
+  const epoch = generation;
+  const row = await client.request('/v1/admin/evaluation/candidates', 'POST', {run_id: $('captureRun').value.trim(), classification: $('captureClass').value});
+  if (epoch !== generation) return;
+  await candidates(); status('已收集脱敏候选：' + row.candidate_id);
+});
+$('freezeDataset').onclick = handle(async () => {
+  const epoch = generation;
+  const file = $('datasetFile').files[0];
+  if (!file || file.size > 4000000) throw new Error('请选择不超过 4MB 的数据集 JSON');
+  const document = JSON.parse(await file.text());
+  if (epoch !== generation) return;
+  const result = await client.request('/v1/admin/evaluation/datasets', 'POST', document);
+  if (epoch !== generation) return;
+  $('projectId').value = result.project_id;
+  status('新版本已冻结，所有题目待审核。点击打开冻结数据集开始复核。');
+});
+$('listDatasets').onclick = handle(async () => {
+  const epoch = generation;
+  const data = await client.request('/v1/admin/evaluation/datasets');
+  if (epoch !== generation) return;
+  $('datasetList').replaceChildren();
+  for (const row of data.datasets) {
+    const b = node('button', row.name + ' / ' + row.version, 'secondary');
+    b.onclick = () => { $('projectId').value = row.project_id; $('openReview').click(); };
+    $('datasetList').append(b);
+  }
+});

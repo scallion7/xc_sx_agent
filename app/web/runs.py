@@ -26,6 +26,10 @@ def register_run_routes(app, services, require):
         return row
 
     def failure(exc):
+        if exc.code == "RUN_QUEUE_FULL":
+            raise HTTPException(
+                429, detail={"error_code": exc.code}, headers={"Retry-After": "2"}
+            ) from exc
         raise HTTPException(
             404 if exc.code == "RUN_NOT_FOUND" else 409, detail={"error_code": exc.code}
         ) from exc
@@ -48,6 +52,8 @@ def register_run_routes(app, services, require):
                 session_reference(services, context, request.session_id),
                 idempotency_key,
                 max_attempts=services.config.run_max_attempts,
+                max_pending=services.config.run_max_pending,
+                max_pending_per_user=services.config.run_max_pending_per_user,
                 runtime_snapshot=runtime_snapshot(
                     services,
                     context.user_id,

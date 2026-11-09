@@ -35,10 +35,14 @@ python -m app.scripts.demo_stack --directory app/sessions/intake-demo
 
 `status` 描述申请资料和提案阶段；`business_state` 从工单、退款操作实时派生。特别是幂等重放可能返回原始“已受理”回执，最新退款结果必须查询业务状态，不能把该回执当作失败再退款。
 
-这是结构化申请流程与业务执行契约，复用原有 Agent 工具的确认、快照和业务服务。没有新增未经评测的自然语言槽位提取能力；真实模型如何完成复杂多轮对话，留待后续真实模型评测验证。
+## 在对话中分轮办理
+
+使用 `python -m app.scripts.demo_stack --intake --directory app/sessions/dialogue-demo`，打开 `/workspace`，依次发送“售后申请”“补充订单 ORD-20240125-006”“补充原因：尺寸不合适”“生成提案”。缺资料会追问；“改为换货”使旧提案失效；再次生成后通过按钮确认并执行。未执行业务前可“撤回申请”，之后“新申请”创建独立草稿。确认成功后不会自动退款，审批和执行授权仍分别进行。
+
+这是受控模型的确定性演示用语，不能证明真实模型抽取质量。开启功能时，字段来源校验、修订、租约 fencing 与人工接管版本由服务端保证。详见[实现与边界](../engineering/improvement-loop.md)。客户 API `GET /v1/sessions/{session_id}/after-sale-intakes` 可查看本会话资料；客服工作台“查看申请资料”显示接管前保存的状态。
 
 ## 迁移与验证
 
-已有数据库启动新版本前执行 `python -m app.scripts.manage_migrations upgrade`，新增迁移 `20261105_0008`；旧迁移保持不变。已有售后申请或回执时拒绝降级，不能为降级删除真实历史。SQLite 空库升级、drift、专用租户 smoke、降级与重建已验证，[迁移日志](../evidence/complex-after-sale-round3/sqlite-migration.log)可复查；既有真实业务数据库未自动迁移。
+已有数据库启动新版本前执行 `python -m app.scripts.manage_migrations upgrade`，申请表最初来自 `20261105_0008`，当前应升级至 head（`20261109_0009`）；旧迁移保持不变。已有售后申请或回执时拒绝降级，不能为降级删除真实历史。SQLite 空库升级、drift、专用租户 smoke、降级与重建已验证，[迁移日志](../evidence/complex-after-sale-round3/sqlite-migration.log)可复查；既有真实业务数据库未自动迁移。
 
 [任务基线](../evaluation/task-baseline.md)说明补证审批、变更撤回、退款未知恢复三条 HTTP 场景；[验收状态](../evaluation/acceptance.md)统一列出本地与 CI 结果。

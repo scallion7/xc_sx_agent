@@ -450,6 +450,9 @@ from app.infrastructure.review_schema import review_tables  # noqa: E402
 platform = platform_tables(metadata)
 review = review_tables(metadata)
 intake = intake_tables(metadata)
+from app.infrastructure.improvement_schema import improvement_tables  # noqa: E402
+
+improvement = improvement_tables(metadata)
 
 
 def _prepare_sqlite_path(database_url: str) -> None:

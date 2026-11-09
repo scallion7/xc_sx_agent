@@ -23,7 +23,9 @@ def port():
 
 
 class DemoStack:
-    def __init__(self, directory=None):
+    def __init__(
+        self, directory=None, *, database_url=None, environment=None, workers=1
+    ):
         self.temp = tempfile.TemporaryDirectory() if directory is None else None
         self.directory = Path(directory or self.temp.name).resolve()
         self.directory.mkdir(parents=True, exist_ok=True)
@@ -31,7 +33,10 @@ class DemoStack:
         self.logs = []
         self.api_port, self.model_port, self.mcp_port = port(), port(), port()
         self.url = f"http://127.0.0.1:{self.api_port}"
-        self.database_url = "sqlite:///" + str(self.directory / "agent.db")
+        self.database_url = database_url or "sqlite:///" + str(
+            self.directory / "agent.db"
+        )
+        self.worker_count = workers
         self.env = dict(
             os.environ,
             PYTHONUNBUFFERED="1",
@@ -70,6 +75,7 @@ class DemoStack:
             DEMO_MODEL_RECORD_PATH=str(self.directory / "model.jsonl"),
             ENVIRONMENT="test",
         )
+        self.env.update(environment or {})
         if self.env.get("PYTHONPATH"):
             self.env["PYTHONPATH"] = os.pathsep.join(
                 str(Path(x).resolve()) for x in self.env["PYTHONPATH"].split(os.pathsep)
@@ -85,6 +91,15 @@ class DemoStack:
             collaboration_enabled=True,
             telemetry_enabled=True,
             mcp_identity_secret=self.env["MCP_IDENTITY_SECRET"],
+        )
+
+        self.config = Settings.model_validate(
+            self.config.model_dump()
+            | {
+                k.lower(): v
+                for k, v in (environment or {}).items()
+                if k.lower() in Settings.model_fields
+            }
         )
 
     def spawn(self, name, command):
@@ -130,6 +145,11 @@ class DemoStack:
             self.api = self.spawn("api", ["-m", "app.scripts.run_api"])
             self.wait(self.url + "/ready")
             self.worker = self.spawn("worker", ["-m", "app.scripts.run_worker"])
+            self.workers = [self.worker]
+            for i in range(1, self.worker_count):
+                self.workers.append(
+                    self.spawn(f"worker-{i}", ["-m", "app.scripts.run_worker"])
+                )
             self.inventory = self.spawn(
                 "inventory", ["-m", "mcp_server.inventory_server"]
             )
@@ -162,12 +182,12 @@ class DemoStack:
             method, self.url + path, headers=headers, timeout=30, **kwargs
         )
 
-    def run(self, message="你好", session="demo", **kwargs):
+    def run(self, message="你好", session="demo", *, request_id=None, **kwargs):
         response = self.request(
             "POST",
             "/v1/runs",
             json={"message": message, "session_id": session, **kwargs},
-            headers={"Idempotency-Key": session},
+            headers={"Idempotency-Key": request_id or session},
         )
         response.raise_for_status()
         return response.json(), response.headers
@@ -194,8 +214,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", default="app/sessions/platform-demo")
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument(
+        "--intake", action="store_true", help="Enable durable conversational intake"
+    )
     args = parser.parse_args()
-    with DemoStack(args.directory) as stack:
+    with DemoStack(
+        args.directory,
+        environment={"CONVERSATION_INTAKE_ENABLED": str(args.intake).lower()},
+    ) as stack:
         print(
             json.dumps(
                 {

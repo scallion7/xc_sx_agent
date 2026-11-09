@@ -59,7 +59,25 @@ class AfterSaleIntake:
             **json.loads(row["payload_json"]),
         }
 
-    def create(self, session, key):
+    def list_session(self, session):
+        with self.engine.connect() as conn:
+            rows = (
+                conn.execute(
+                    select(TABLE)
+                    .where(
+                        TABLE.c.tenant_id == self.tenant,
+                        TABLE.c.user_id == self.user,
+                        TABLE.c.session_id == session,
+                    )
+                    .order_by(TABLE.c.updated_at.desc())
+                    .limit(100)
+                )
+                .mappings()
+                .all()
+            )
+        return [self.public(row) for row in rows]
+
+    def create(self, session, key, *, durable=None):
         identity = digest([self.tenant, self.user, key])
         payload = {
             "status": "collecting",
@@ -69,6 +87,8 @@ class AfterSaleIntake:
         }
         try:
             with self.engine.begin() as conn:
+                if durable:
+                    durable.guard_transaction(conn)
                 conn.execute(
                     insert(TABLE).values(
                         tenant_id=self.tenant,
@@ -129,9 +149,16 @@ class AfterSaleIntake:
             )
         return result
 
-    def command(self, identity, command, expected, key, fields=None, manager=None):
+    def command(
+        self, identity, command, expected, key, fields=None, manager=None, source=None
+    ):
         fingerprint = digest(
-            {"command": command, "revision": expected, "fields": fields}
+            {
+                "command": command,
+                "revision": expected,
+                "fields": fields,
+                **({"source": source} if source else {}),
+            }
         )
         with self.engine.connect() as conn:
             old = self.row(conn, identity)
@@ -178,6 +205,7 @@ class AfterSaleIntake:
                 "order_id"
             ] and "evidence_ids" not in (fields or {}):
                 parsed["evidence_ids"] = []
+                payload.get("field_sources", {}).pop("evidence_ids", None)
             payload.update(
                 fields=parsed,
                 missing=[k for k in ("order_id", "reason") if not parsed[k]],
@@ -231,10 +259,28 @@ class AfterSaleIntake:
             ConversationHandoffService(self.config).ensure(
                 self.user, manager._execution_context.session_id
             )
+        if fields:
+            provenance = payload.setdefault("field_sources", {})
+            for field in fields:
+                provenance[field] = (
+                    source or {"origin": "authenticated_api", "actor": self.user}
+                ) | {"revision": expected + 1}
         now = time.time()
         try:
             with self.engine.begin() as conn:
-                # First acquire this flow's write fence; external dispatch never occurs here.
+                if source:
+                    from app.services.run_context import current_run
+
+                    durable = current_run()
+                    if (
+                        not durable
+                        or durable.run_id != source["run_id"]
+                        or durable.user_id != self.user
+                        or durable.session_key != source["session_key"]
+                    ):
+                        raise PlatformError("INTAKE_RUN_SCOPE_MISMATCH")
+                    durable.guard_transaction(conn)
+                # Acquire the intake revision fence after run/ownership locks.
                 changed = conn.execute(
                     update(TABLE)
                     .where(*self.scope(TABLE, identity), TABLE.c.revision == expected)
@@ -242,6 +288,14 @@ class AfterSaleIntake:
                 )
                 if changed.rowcount != 1:
                     raise PlatformError("INTAKE_VERSION_CONFLICT")
+                if source and self.config.collaboration_enabled:
+                    from app.platform.conversation_handoff import (
+                        ConversationHandoffService,
+                    )
+
+                    ConversationHandoffService(self.config).guard_agent(
+                        conn, self.user, source["session_key"]
+                    )
                 previous = json.loads(old["payload_json"])["action_id"]
                 if previous and command in {"update", "withdraw"}:
                     current = (

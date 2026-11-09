@@ -41,10 +41,20 @@ class Annotation(BaseModel):
 
 
 class ReviewWorkspace:
-    def __init__(self, config):
+    def __init__(self, config, *, project_id=None):
         self.engine = get_engine(config.database_url)
         self.tenant = config.tenant_id
         self.manifest, self.documents, self.cases = load_frozen()
+        legacy = hashlib.sha256(encode(self.manifest).encode()).hexdigest()
+        if project_id and project_id != legacy:
+            from app.platform.corpora import CorpusRegistry
+
+            data = CorpusRegistry(config).get(project_id)
+            self.manifest, self.documents, self.cases = (
+                data["manifest"],
+                data["documents"],
+                data["cases"],
+            )
         self.project_id = hashlib.sha256(encode(self.manifest).encode()).hexdigest()
 
     def where(self, table, project_id):
@@ -177,6 +187,20 @@ class ReviewWorkspace:
         if (existing["revision"] if existing else 0) != expected_revision:
             raise PlatformError("REVIEW_VERSION_CONFLICT")
         now = time.time()
+        if (
+            self.case(case_id).get("requires_second_review")
+            and value["status"] == "approved"
+        ):
+            prior = json.loads(existing["annotation_json"]) if existing else {}
+            fingerprint = hashlib.sha256(encode(value).encode()).hexdigest()
+            approval = prior.get("first_approval", {})
+            if approval.get("hash") != fingerprint or approval.get("actor") == actor:
+                value = value | {
+                    "status": "draft",
+                    "first_approval": {"hash": fingerprint, "actor": actor, "at": now},
+                }
+            else:
+                value = value | {"first_approval": approval, "second_reviewer": actor}
         values = dict(
             revision=expected_revision + 1,
             annotation_json=encode(value),
@@ -265,6 +289,8 @@ class ReviewWorkspace:
                     "outcome": a.get("outcome", case["outcome"]),
                     "evidence": a.get("evidence", []),
                     "revision": row["revision"] if row else 0,
+                    "first_approval": a.get("first_approval", {}),
+                    "second_reviewer": a.get("second_reviewer", ""),
                 }
             )
         return {
@@ -358,12 +384,16 @@ class ReviewWorkspace:
             if exported["status"] != "human_reviewed":
                 raise PlatformError("HOLDOUT_REVIEW_REQUIRED")
             # Do not reveal held-out retrieval predictions before full corpus review.
-            cases = apply_review(self.manifest, self.cases, exported)
+            cases = apply_review(
+                self.manifest, self.cases, exported, documents=self.documents
+            )
             case = next(c for c in cases if c["id"] == case_id)
         elif exported["status"] == "human_reviewed":
             case = next(
                 c
-                for c in apply_review(self.manifest, self.cases, exported)
+                for c in apply_review(
+                    self.manifest, self.cases, exported, documents=self.documents
+                )
                 if c["id"] == case_id
             )
         with offline_retriever(self.documents) as retriever:
