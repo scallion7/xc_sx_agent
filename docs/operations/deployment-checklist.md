@@ -1,13 +1,12 @@
 # 部署与维护清单
 
-[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+[文档中心](../README.md) · [配置与运行](../guides/configuration.md) · [当前验收](../evaluation/acceptance.md)
 
-> 当前验证范围见[验收状态](../evaluation/acceptance.md)：镜像构建/扫描与 PostgreSQL 迁移/smoke 已通过 CI；完整 Compose 与 PostgreSQL/独立沙箱恢复已通过独立 CI 验收，提交与证据见该页。下列检查项不等于生产就绪认证。
+本清单用于把本机演示接到独立部署环境。当前提交的测试、镜像扫描、PostgreSQL 与 Compose 结果集中在[验收状态](../evaluation/acceptance.md)；这些结果不代表已完成真实身份、支付供应商或生产流量联调。
 
-本清单用于部署前验收，不代表仓库已经完成真实组织、供应商或生产流量联调。所有密钥、
-Token 和数据库凭据应由部署平台的密钥管理服务注入，不写入 `.env`、镜像或日志。
+## 1. 装配身份、模型和业务依赖
 
-## 1. 必需配置
+依赖安装使用[配置指南](../guides/configuration.md)中的 Python 3.11 锁定环境。以下值是配置模板，密钥、Token 和数据库凭据由部署平台注入；不要将实际值提交到仓库、写入镜像或记录到命令日志。
 
 ```dotenv
 ENVIRONMENT=production
@@ -18,8 +17,8 @@ DATABASE_AUTO_CREATE=false
 COMMERCE_SEED_DEMO_DATA=false
 
 AUTH_MODE=oidc
-OIDC_ISSUER=https://<tenant>/
-OIDC_AUDIENCE=<api-audience>
+OIDC_ISSUER=https://identity.example/
+OIDC_AUDIENCE=ecom-api
 OIDC_JWKS_PATH=/run/secrets/oidc-jwks.json
 OIDC_REQUIRED_SCOPES=chat:use
 OIDC_ALGORITHMS=RS256
@@ -30,121 +29,105 @@ PROVIDER_READ_MAX_ATTEMPTS=2
 PROVIDER_WEBHOOK_SECRET=<secret-manager-injected>
 ```
 
-生产模式会拒绝占位模型密钥、默认开发 Token、Mock Provider、自动建表和演示业务数据。
-若部署平台动态获取 JWKS，应构造 `OidcJwtProvider` 并通过
-`create_app(auth_provider=...)` 注入；本地文件加载仅是默认适配器。
+production 会拒绝占位模型密钥、默认开发 Token、mock/sandbox Provider、自动建表和演示业务数据。通过配置检查不等于业务适配器已接入：`PROVIDER_MODE=external` 不会自动发现第三方 SDK。
 
-真实订单、物流、退款和补偿适配器应分别实现 `OrderProvider`、`LogisticsProvider`、
-`RefundProvider` 和 `CompensationProvider`，再通过 `create_runtime(...)` 注入。退款与补偿
-必须在供应商侧持久化识别幂等键；查询可以有限重试，副作用调用不得由通用执行器自动重试。
+真实订单、物流、退款和补偿适配器分别实现 `OrderProvider`、`LogisticsProvider`、`RefundProvider`、`CompensationProvider`，通过 `create_runtime(...)` 装配，再传给 `create_app(runtime=...)`。API 与 Worker 都须使用相同的装配逻辑；直接运行默认 CLI 不会获得自定义 Provider。供应商须持久化识别幂等键并支持结果查询，副作用调用不能套用通用读请求重试。
 
-## 2. 数据库迁移与启动检查
+OIDC 的内部身份来自经过验证的完整 issuer/sub，`preferred_username` 仅供显示；JWT 通过 `X-API-Key` 头传入。已有显示名账号必须按[OIDC 迁移步骤](../guides/configuration.md#oidc-配置和旧账号迁移)核验 `OIDC_IDENTITY_MAP_PATH`，所有实例长期使用同一映射文件。不要仅凭同名认领旧订单或删除映射来切换身份。
 
-部署新版本前执行：
+默认 JWKS 加载器读取本地文件；远程刷新需自定义 `OidcJwtProvider` 并注入 `create_app(auth_provider=...)`。上线前实际验证 issuer、audience、scope、签名、过期 Token 和密钥轮换；`/ready` 不替代这些验证。
 
-工单唯一约束升级前暂停工单写入并备份数据库。迁移会拒绝历史重复活跃工单，须先核对
-对应审批、退款与审计记录，不能直接删除重复行。旧库即使启用自动建表也不会绕过
-迁移；具体步骤和降级数据边界见[第24期文档](../history/第24期-工单并发唯一约束与业务幂等.md)。
+## 2. 备份、迁移与启动
+
+旧库先备份，暂停受影响的写入，再升至当前 head（`20261109_0009`）。迁移发现重复活跃工单等历史冲突时会拒绝升级，应核对关联审批、退款和审计后修复根因；不要删除账本或修改旧迁移文件绕过保护。自动建表不能升级旧库。
 
 ```bash
 python -m app.scripts.manage_migrations upgrade
 python -m app.scripts.manage_migrations check
+python -m alembic check
 python -m app.scripts.doctor
 ```
 
-启动 API 后检查：
+`upgrade` 默认目标为 head；第二条检查迁移版本，第三条检查 ORM 与迁移的结构漂移。`doctor` 输出诊断报告，不能仅凭进程退出成功判断报告中的每项正常。降级前另行核对[迁移说明](../../app/infrastructure/migrations/README)和业务数据保护条件。
+
+在不同进程启动 API 与 Agent Worker：
+
+```bash
+python -m app.scripts.run_api
+python -m app.scripts.run_worker
+```
+
+它们使用相同数据库、身份与业务配置。API 地址由 `API_HOST`/`API_PORT` 控制，默认 `0.0.0.0:8000`；反向代理、TLS、网络访问控制和进程管理由部署环境配置。自定义 external Provider 使用前述装配入口启动。
 
 ```bash
 curl --fail http://127.0.0.1:8000/health
 curl --fail http://127.0.0.1:8000/ready
 ```
 
-`/health` 只表示进程存活；`/ready` 必须确认迁移、认证、风险规则、四类 Provider 和回调
-签名配置。诊断输出不得包含密钥、Token 或带凭据的数据库 URL。
+`/health` 只表示进程存活。`/ready` 检查迁移、认证配置存在性、规则文件和 Provider 装配/回调密钥配置，**不会实际请求身份提供方、模型或商务供应商**；OIDC 路径非空也不证明 JWKS 可读或 Token 有效。开发配置允许自动建表时，迁移不在 head 可能返回 HTTP 200 的 `degraded`，部署必须检查响应内容并关闭自动建表。随后用部署身份执行真实的受控读请求和授权负向用例。
 
-## 3. 回调、权限与副作用验收
+## 3. 发布与操作边界验收
 
-- 用真实身份系统验证普通用户、管理员、过期 Token、错误 audience、缺少 scope 和密钥轮换；
-- 验证订单与售后数据按 `user_id` 隔离，普通用户不能访问管理端点；
-- 在隔离数据库运行 `python -m app.scripts.case_creation_smoke`，确认 50 个创建请求
-  收敛为一个活跃工单、50 个幂等记录；该命令会写测试工单，不应直接在生产库运行；
-- 验证 Provider 回调的正确签名、错误签名、重复事件和乱序事件；
-- 验证相同退款/补偿幂等键只产生一次外部效果，不同请求不能复用同一幂等键；
-- 演练超时、取消、租约过期接管和旧 worker fencing，确认取消后不再启动副作用；
-- 由法务、风控和客服运营审批风险规则与 Policy RAG 文档版本。
+先在干净检出、临时数据库中执行质量门禁，不把业务 `DATABASE_URL` 注入全套测试：
 
-## 4. 备份、恢复与脱敏导出
+```bash
+python -m app.scripts.quality_platform
+python -m playwright install chromium
+python -m app.scripts.quality_platform --browser
+```
 
-维护命令中的清理默认只预览：
+CI 的 Python 兼容矩阵、覆盖率、迁移与 smoke、依赖审计、SBOM、容器扫描、持续负载和 Compose 均应对应待发布提交。浏览器是否启用及通过数量以[当前验收](../evaluation/acceptance.md)为准，不把配置跳过算作通过。
+
+部署环境还需验证以下行为：
+
+- 普通用户不能读取他人订单、会话、材料或提案，管理接口需要相应权限；旧 OIDC 账号仅由核验后的 issuer/sub 绑定访问。
+- 在隔离库运行 `case_creation_smoke`，确认并发创建收敛与幂等记录；该命令会写合成工单，不能对业务库执行。
+- 回调正确/错误签名、重复/乱序事件，以及供应商同键同内容只产生一次效果、同键改内容被拒绝。
+- 表单 `INTAKE_VERSION_CONFLICT` 表示本次修订未提交；网络/5xx 和其他未知响应保留原键原内容核对，不能统一清空后重发。
+- 工作台接管、审批、人工消息及完整刷新期间保持 busy；刷新结束后再确认当前用户/会话。按钮禁用不能替代服务端权限、版本与幂等约束。
+- 任务取消、租约接管和旧 Worker fencing；业务已经开始或未知时禁止用新授权重复执行。
+
+真实模型质量与费用、组织政策、供应商能力、峰值流量和灾备目标须在相应环境另行验收。
+
+## 4. SQLite 备份、恢复与维护
+
+以下命令针对配置中的 SQLite 源库。备份与平台恢复共用 SQLite backup API，包含已提交而尚未 checkpoint 的 WAL；不能只复制主 `.db` 文件。源库以只读模式打开，不存在即拒绝，不会创建一个空库假装备份成功。
+
+```bash
+python -m app.scripts.maintain_data backup --destination /safe/backup/agent-01.db
+python -m app.scripts.maintain_data verify --source /safe/backup/agent-01.db
+python -m app.scripts.maintain_data restore --source /safe/backup/agent-01.db --destination /safe/restore/agent-01.db
+```
+
+备份目标必须为新文件；同一路径或硬链接指向同库时拒绝。恢复默认不覆盖已有文件；确需 `--replace` 时先停止目标应用与 Worker，确认目标路径和保留的原始备份。`verify` 只执行 SQLite 完整性检查，不证明业务行数、状态或外部退款结果一致。
+
+需要可审查的恢复指纹时，先停写并使用独立新目标：
+
+```bash
+mkdir -p test-results/recovery-01
+python -m app.scripts.backup_restore --backup test-results/recovery-01/agent.db --restore-url sqlite:///test-results/recovery-01/restored.db --report test-results/recovery-01/report.json
+```
+
+源连接来自 `DATABASE_URL`，输出目录每次使用新名称。该脚本将备份和恢复后的所有表行数、哈希及审计指纹比较并记录耗时。PostgreSQL 使用匹配版本的 `pg_dump`/`pg_restore` 与独立空目标库，指纹比对期间源库必须停写；完整受控用例见[Compose 验收](compose-acceptance.md)。脚本不提供持续备份、PITR 或跨区域策略。
 
 ```bash
 python -m app.scripts.maintain_data cleanup
 python -m app.scripts.maintain_data cleanup --apply
-```
-
-SQLite 仅用于本地演练，可执行：
-
-```bash
-python -m app.scripts.maintain_data backup --destination /safe/backup/xc-sx-agent.db
-python -m app.scripts.maintain_data verify --source /safe/backup/xc-sx-agent.db
-python -m app.scripts.maintain_data restore --source /safe/backup/xc-sx-agent.db \
-  --destination /safe/restore/xc-sx-agent.db
 python -m app.scripts.maintain_data export --destination /safe/export/plans-redacted.json
 ```
 
-维护命令与平台恢复演练共用 SQLite backup API，包含已提交而尚未 checkpoint 的 WAL。
-源库以只读模式打开；源文件不存在时拒绝操作，不创建空库。备份目标必须是新文件；
-恢复默认拒绝覆盖已有目标，显式使用 `--replace` 前须停止目标应用写入。
-同一路径或硬链接指向同一个数据库时均拒绝备份/恢复。
+`cleanup` 默认预览候选，仍写维护审计；`--apply` 才执行受状态与保留期保护的清理。当前不自动清理 Agent 任务/事件或 HTTP 退款账本。`export` 仅导出计划 ID、用户哈希、状态和更新时间等脱敏元数据，不能作为完整数据库备份。
 
-生产 PostgreSQL 应使用平台原生备份、时间点恢复和跨区域策略；仍需在隔离环境实际恢复，
-核对校验结果、RPO/RTO、访问权限和审计记录。不得把“备份命令成功”等同于恢复演练通过。
+## 5. Worker、会话阻塞与人工结案
 
-## 5. 发布门禁
+配置 `RUN_LEASE_SECONDS`、`RUN_MAX_ATTEMPTS`、`RUN_POLL_SECONDS` 并保持多机时钟同步；监控 queued/retry_wait、dead_letter、needs_reconciliation 和接管次数。验证 SIGTERM、崩溃接管、旧 owner 拒绝写入、SSE `Last-Event-ID` 补发，以及模型可能重复计费的账本处理。
 
-```bash
-python -m unittest discover -s tests -v
-ruff check .
-ruff format --check .
-python -m app.scripts.validate_plan_quality
-python -m app.scripts.validate_openapi
-```
+`SESSION_RUN_ACTIVE` 时查询原任务；不要不断生成新键。管理员可按规则重放 dead_letter，但 `needs_reconciliation` 必须先核对可信业务回执和在途投递，再经带版本与凭证哈希的 `/reconciliation` → `/resolve` 流程结案。`resolved` 释放原会话，不重放旧任务，也不把原调用改成成功。接口需要 `after_sale:recover`，工作台没有强制解锁按钮；完整步骤见[恢复手册](incident-runbook.md#agent-任务人工核对结案)。
 
-同时确认 GitHub Actions 的 Python 3.10–3.12、PostgreSQL 迁移、覆盖率、依赖审计、
-SBOM 和容器扫描均针对当前提交成功；真实模型质量、费用、供应商故障、峰值流量、SLA、
-WAF、网络策略和容灾仍需在部署环境单独验收。
+## 6. HTTP 退款沙箱与可选功能
 
-## 6. Worker 与任务恢复
+独立 HTTP 沙箱仅用于隔离演示，production 禁止 `PROVIDER_MODE=sandbox`。应用、沙箱和库存服务各用独立数据库；全部先按各自入口初始化，应用迁移至当前 head，再启动 API、Agent Worker 与 `python -m app.scripts.run_refund_worker --mode both`。退款 Worker 与 Agent Worker 不是同一进程。固定供应商地址、Token 和回调密钥须在相关进程保持一致；故障控制使用单独管理员 Token。
 
-- 迁移到当前 head（`20261109_0009`）后再启动 API/Worker，双方使用相同 SQL 数据库与业务配置；
-- 配置 `RUN_LEASE_SECONDS`、`RUN_MAX_ATTEMPTS`、`RUN_POLL_SECONDS`，确保多机时钟同步；
-- 独立运行 `python -m app.scripts.run_worker`；监控 queued/retry_wait 积压、dead_letter、
-  needs_reconciliation、租约接管和模型可能重复计费的调用记录；
-- 实测 SIGTERM 优雅停止、强制退出后接管、旧 owner 拒绝写入和 `Last-Event-ID` 补发；
-- 同一会话返回 `SESSION_RUN_ACTIVE` 时查询原任务，不生成新幂等键反复提交；
-- dead_letter 重放需要管理员权限；needs_reconciliation 不允许强制重放或通过取消伪造补偿；
-- 不将模型输出缓存复用、状态 completed 或本地故障测试称为外部业务 exactly-once；
-- 确定任务/调用快照的数据保留与备份权限，本期维护命令不自动删除新任务和事件；
-- 降级前停写并处理/导出任务，新表降级会删除任务与事件，不会回滚业务效果。
+unknown/needs_reconciliation 不代表退款失败。沙箱恢复接口只查询原操作，不能换键补发；Outbox、查询对账与退款终态都需要收敛。供应商未声明冲正能力时补偿进入 needs_manual，不能将原退款改成“未发生”。应用快照不包含独立供应商库，恢复后仍需按原业务键核对外部效果。已有 HTTP operation 或 needs_manual 补偿时，不得绕过降级保护删除账本。
 
-恢复协议和本地实测范围见[第25期文档](../history/第25期-可恢复的异步Agent任务执行.md)。
-
-
-## 7. HTTP 沙箱与退款账本
-
-- 先备份并迁移到 `20261023_0005`，再运行新版 API、Agent Worker 和退款 Worker；
-- `PROVIDER_MODE=sandbox` 仅用于演示，production 禁止。沙箱与应用必须独立数据库；
-- API/退款 Worker 使用相同 SQL、固定供应商 URL、Token、回调密钥；故障控制使用独立管理员 Token；
-- 默认不支持模拟冲正；供应商能力未声明时补偿进入 needs_manual，不能把原退款改成“未发生”；
-- unknown/needs_reconciliation 不等于退款失败；管理员 recover 仅查询，不换键补发；
-- 应监控 Outbox/对账 dead、积压和 unknown 数量；已提供只读告警接口与 firing/resolved 检测器，接收端通知仍由部署环境配置；
-- 新 HTTP 账本暂不自动清理。已有 HTTP operation 或 needs_manual 补偿时禁止降级删除队列表；
-- 应用备份不覆盖独立供应商/沙箱数据，必须分别备份并核对恢复窗口内的外部效果；
-- 本地真实 HTTP + SQLite 已验收；PostgreSQL/Compose 以独立验收作业的实际结果为准；
-- 生产供应商需独立验证幂等键保留期限、请求指纹、结果查询、回调签名与冲正能力，不能用沙箱测试代替。
-
-启动、故障演示、状态与验收见[第26期文档](../history/第26期-HTTP业务沙箱与退款对账.md)。
-
-## 8. 可选扩展启用与容量
-
-升级后再逐项开启对话草稿、证据检查和预编译检索；三个开关默认 false。新数据集与候选非空时禁止降级。队列 admission 默认 0 保留兼容，自行部署时应根据[持续负载验收](sustained-load.md)设置总量与单用户上限，验证 429 客户端按原幂等键重试。不要用演示环境阈值直接承诺生产容量。
+对话草稿、答案证据检查、预编译检索默认关闭，升级后逐项开启并验收。队列总量和单用户 admission 默认 0，即不限制；参照[持续负载验收](sustained-load.md)设置所有 API 实例的一致上限，验证 429 与原键重试。受控模型的模拟预算和本机吞吐不能作为真实费用或生产容量承诺。

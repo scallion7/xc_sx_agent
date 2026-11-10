@@ -1,46 +1,41 @@
-# 项目背景与个人工程贡献说明
+# 维护者与工程演进
 
 [文档中心](README.md) · [当前验收](evaluation/acceptance.md)
 
-此页帮助说明项目演进与可展示的工程扩展，不把已有教学原型全部列为个人从零原创。仓库事实以提交和代码为依据；个人实际职责、独立完成程度和上游来源由项目维护者如实补充。
+项目维护者与仓库贡献者为 **[scallion7](https://github.com/scallion7)**。文档署名、Git 提交作者和提交者统一使用此账号，不添加工具或其他共同作者署名。
 
-## 已有基础与新增范围
+## 贡献者记录
 
-初始导入提交 [`f63c810`](https://github.com/scallion7/xc_sx_agent/commit/f63c810) 已包含电商客服原型与教学记录。Prompt、对话、ReAct、MCP、RAG、Memory、Skills 和评测的基础能力，应作为项目既有基础说明。初始导入之前的作者、外部来源和授权信息在当前材料中不足以确定，标记为**待维护者核验**，不推测归属或补造许可证。
+2026-11-10 核对 GitHub Contributors 接口，返回的贡献者只有 `scallion7`。历史提交中的 `scallion` 与 `scallion7` 使用同一邮箱；仓库 [.mailmap](../.mailmap) 将该邮箱下的显示名称统一为 `scallion7`，保留原始提交及其哈希。GitHub 页面归属与 Git 作者显示是不同的数据来源，修改 Markdown 不会直接改写 GitHub 的贡献统计。
 
-项目扩展使用 AI 辅助实现、测试和文档整理。Git 提交作者字段不能证明全部代码由个人独立手写；简历应突出实际能解释、验证和维护的设计与功能。个人职责若与下表不一致，应按真实参与范围调整。
+仓库使用的框架、协议与依赖按其实际技术名称说明；技术来源引用不作为本项目的共同作者名单。项目开发中使用的自动化工具也不单独列为贡献者。
 
-## 可核验的工程扩展
+## 从原型到可恢复服务
 
-| 扩展 | 重点解释的工程问题 | 提交与代码依据 |
+初始提交 [`f63c810`](https://github.com/scallion7/xc_sx_agent/commit/f63c810) 包含电商客服原型与阶段学习记录。项目随后围绕业务状态、可信确认、可靠执行、人工协作和可复现评测持续扩展。以下按工程问题说明演进，具体行为以当前代码、测试及验收证据为准。
+
+| 工程范围 | 实现内容 | 代码与提交依据 |
 |---|---|---|
-| 运行时与服务分层 | 隔离实例状态、统一装配、降低工具与存储耦合 | [`2ca43f5`](https://github.com/scallion7/xc_sx_agent/commit/2ca43f5)、[bootstrap.py](../app/bootstrap.py) |
-| 计划与执行治理 | 依赖调度、检查点、租约、取消与权限边界 | [计划执行模块](../app/agent/strategies/)、[阶段演进](history/README.md) |
-| 可信操作确认 | 模型参数不能伪造授权，参数变更使旧确认失效 | [`da17ba4`](https://github.com/scallion7/xc_sx_agent/commit/da17ba4)、[actions.py](../app/services/actions.py) |
-| 工单并发与幂等 | 唯一约束、创建回执与工单同事务提交 | [`287216c`](https://github.com/scallion7/xc_sx_agent/commit/287216c)、[工单创建](../app/agent/after_sale/creation.py) |
-| 异步恢复与退款对账 | 处理 Worker 退出、远端响应丢失和重复回调 | [`5a68204`](https://github.com/scallion7/xc_sx_agent/commit/5a68204)、[`2653a8f`](https://github.com/scallion7/xc_sx_agent/commit/2653a8f) |
-| 知识与模型治理 | 知识快照、共享预算、评测发布、人工接管与 MCP 契约 | [`8b4d456`](https://github.com/scallion7/xc_sx_agent/commit/8b4d456)、[platform](../app/platform/) |
-| 质量与供应链修复 | 复现 CI 失败、审计真实部署锁文件、更新漏洞依赖 | [`7d720b6`](https://github.com/scallion7/xc_sx_agent/commit/7d720b6)、[修复记录](history/CI-第27-34期上传修复.md) |
-| 检索诊断与人工复核 | 冻结标签、原文定位、CAS 审核、逐阶段检索诊断与任务级断言 | [`b2df06d`](https://github.com/scallion7/xc_sx_agent/commit/b2df06d)、[复核工作台](guides/review-workbench.md)、[任务基线](evaluation/task-baseline.md) |
-| 接管与复杂售后 | 所有权版本检查、提案失效、申请修订幂等与未知退款恢复 | [`7565683`](https://github.com/scallion7/xc_sx_agent/commit/7565683)、[人工接管](engineering/human-handoff.md)、[售后申请](guides/after-sale.md) |
-| 多轮办理与评测闭环 | 来源校验、事务 fencing、版本数据与双人复核、预编译索引、PostgreSQL 持续负载 | 实现与验收：[机制](engineering/improvement-loop.md)、[数据协议](evaluation/versioned-datasets.md)、[容量方法](operations/sustained-load.md) |
+| 服务分层与运行时 | 应用装配、实例状态隔离、存储和工具依赖解耦 | [`2ca43f5`](https://github.com/scallion7/xc_sx_agent/commit/2ca43f5)、[bootstrap.py](../app/bootstrap.py) |
+| 计划与执行治理 | 依赖调度、检查点、租约、取消、工具权限与预算 | [策略实现](../app/agent/strategies/)、[阶段记录](history/README.md) |
+| 可信操作确认 | 参数与身份绑定、有效期、拒绝及失效后的新提案 | [`da17ba4`](https://github.com/scallion7/xc_sx_agent/commit/da17ba4)、[actions.py](../app/services/actions.py) |
+| 工单唯一性与幂等 | 并发创建约束，工单和请求回执同事务提交 | [`287216c`](https://github.com/scallion7/xc_sx_agent/commit/287216c)、[工单创建](../app/agent/after_sale/creation.py) |
+| 任务恢复与退款对账 | 持久化执行、fencing、Outbox/Inbox、查单与人工核对 | [`5a68204`](https://github.com/scallion7/xc_sx_agent/commit/5a68204)、[`2653a8f`](https://github.com/scallion7/xc_sx_agent/commit/2653a8f) |
+| 知识与模型治理 | 不可变快照、CAS 发布、共享额度、调用账本、配置版本和 MCP 契约 | [`8b4d456`](https://github.com/scallion7/xc_sx_agent/commit/8b4d456)、[platform](../app/platform/) |
+| 评测与人工复核 | 原文定位、逐阶段检索诊断、CAS 审核、任务级数据库断言 | [`b2df06d`](https://github.com/scallion7/xc_sx_agent/commit/b2df06d)、[任务基线](evaluation/task-baseline.md) |
+| 多轮售后与失败回流 | 来源追踪、申请修订、旧确认失效、版本数据、双审配置和预编译索引 | [`7565683`](https://github.com/scallion7/xc_sx_agent/commit/7565683)、[`2526710`](https://github.com/scallion7/xc_sx_agent/commit/2526710)、[实现说明](engineering/improvement-loop.md) |
+| 身份、检索与恢复边界 | OIDC issuer/sub、WAL 快照、凭证结案、截断前冲突检查、多轮上下文隔离与可靠重试 | [`7222467`](https://github.com/scallion7/xc_sx_agent/commit/722246758b87315feff0876be803e2e1ee9a08fa) |
+| 客服工作台并发控制 | 接管与完整刷新期间锁定操作，避免回复落入旧会话或状态被覆盖 | [`c5aee67`](https://github.com/scallion7/xc_sx_agent/commit/c5aee6716723ae5a4243497db919e094d3b238a5)、[人工接管](engineering/human-handoff.md) |
 
-## 简历表述与证据
+## 项目介绍口径
 
-以下是候选表述，使用前确认与你实际承担的职责一致：
+> 电商售后 Agent 应用，将查询与政策证据、可信操作确认、持久化任务、退款对账和人工接管整合到统一流程；通过真实 HTTP/MCP、浏览器回归、SQL 并发约束和恢复演练验证执行边界。
 
-> 基于电商客服 Agent 原型开展工程扩展，实现可信操作确认、并发工单幂等、持久化任务与退款对账；建设知识版本管理、检索诊断和人工复核工作台，并通过 HTTP/MCP、浏览器回归及故障恢复验证执行边界。
+测试、负载和检索结果须标注对应提交及数据范围，统一引用[验收状态](evaluation/acceptance.md)。受控模型与合成数据的结果可以证明已覆盖的工程契约，不能替代真实模型、人工金标准或生产业务验收。
 
-可引用的当前结果统一见[验收状态](evaluation/acceptance.md)，不在各轮贡献说明中重复维护测试数量。可以解释受控任务中接管后调用减少与重复副作用控制；不能宣称真实模型准确率、检索效果提升、生产吞吐或真实支付落地。
+## 文档与署名维护
 
-## 面试时准备解释
-
-1. 用户确认、业务幂等和 API 请求幂等分别约束什么？
-2. Worker 过期后的本地提交如何被 fencing 阻止，哪些远端效果无法撤销？
-3. Outbox 为什么仍需要查单、Inbox 与人工对账？
-4. 知识快照、活动版本切换与删除屏蔽如何共同作用？
-5. 人工接管与调用登记竞争时，以哪个事务边界判断在途请求？
-6. 用户修改申请后，为什么旧授权必须失效？
-7. 如何区别候选召回、证据过滤、真实模型效果和工程契约测试？
-
-[五分钟演示](guides/five-minute-demo.md)提供业务展示路径；[命名与兼容约定](engineering/naming-and-compatibility.md)说明维护性改动。上游来源、本人实际参与及自动化辅助范围仍须按事实说明。
+- 新提交沿用 `scallion7` 的现有 Git 身份，不添加 `Co-authored-by` 尾注。
+- 当前用法写入主题指南；阶段设计与交付记录进入 `history/`，原始证据保留生成时的内容。
+- 修改文档后核对代码、命令参数与证据，并执行文档链接验证；提交作者和 Contributors 列表分别核对。
+- 发布结果链接到具体提交和 CI 运行，避免将旧截图、旧测试数或待办直接写成当前状态。

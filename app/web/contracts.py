@@ -91,8 +91,13 @@ def _install_openapi_contract(app: FastAPI) -> None:
             title=app.title,
             version=app.version,
             description=(
-                "API：所有 HTTP 响应返回 X-Request-ID、X-Trace-ID 和"
-                "限流头；管理写接口使用 Idempotency-Key。"
+                "电商售后 Agent API，提供对话任务、可信操作确认、售后申请、"
+                "人工协作与知识治理。受认证保护的接口通过 X-API-Key 接收"
+                "静态令牌或 OIDC JWT；供应商回调使用独立签名校验。"
+                "响应附带 X-Request-ID、X-Trace-ID 和限流信息。"
+                "需要请求幂等的接口按其参数要求传 Idempotency-Key；"
+                "修订和状态变更按接口契约校验 expected_revision、expected_version"
+                "或动作参数哈希，不能用请求幂等键代替用户确认。"
             ),
             routes=app.routes,
         )

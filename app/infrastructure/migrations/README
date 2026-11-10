@@ -1,2 +1,20 @@
-数据库迁移目录。使用 python -m app.scripts.manage_migrations 统一执行。
-已发布的迁移文件、revision/down_revision 及错误码保持兼容，不按展示命名重写。
+Ecom Service Agent 数据库迁移
+
+从仓库根目录运行，DATABASE_URL 指向需要管理的数据库：
+  python -m app.scripts.manage_migrations current
+  python -m app.scripts.manage_migrations upgrade
+  python -m app.scripts.manage_migrations check
+
+upgrade 默认升级到 head。check 在数据库未达到 head 时返回非零退出码；
+它不等同于 SQLAlchemy 元数据漂移检查，漂移检查使用 alembic check。
+截至 2026-11-10，head 为 20261109_0009，以版本文件和运行时检查结果为准。
+
+生产设置 DATABASE_AUTO_CREATE=false，先迁移再启动 API 与 Worker。
+自动建表只适用于新的开发库，不会升级旧表结构。
+降级命令 downgrade 默认退一个版本；指定 --revision base 会删除迁移创建的表，
+仅用于可丢弃测试库或已确认有可恢复备份的受控维护，不作为日常回滚方案。
+
+已发布迁移的文件名、revision/down_revision 和错误码保持兼容。
+新结构通过新增迁移演进，不因展示命名或文档整理重写历史迁移。
+完整步骤与备份恢复要求见 docs/operations/deployment-checklist.md 和
+docs/operations/incident-runbook.md。

@@ -1,0 +1,85 @@
+{
+  "description": "GitHub Actions result snapshot for the boundary fixes and workbench race fix; historical local checks.json remains unchanged.",
+  "head_sha": "c5aee6716723ae5a4243497db919e094d3b238a5",
+  "workflow_run_id": 42813941711,
+  "html_url": "https://github.com/scallion7/xc_sx_agent/actions/runs/42813941711",
+  "status": "completed",
+  "conclusion": "success",
+  "completed_at": "2026-11-10T12:24:09Z",
+  "jobs": [
+    {
+      "id": 129822108799,
+      "name": "migrations (sqlite:////tmp/ecom-service-agent-ci.db)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822108880,
+      "name": "compose-acceptance",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822108883,
+      "name": "python-matrix (3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822108885,
+      "name": "supply-chain",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822109037,
+      "name": "sustained-postgres",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822109077,
+      "name": "python-matrix (3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822109140,
+      "name": "python-matrix (3.12)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822109229,
+      "name": "platform-browser",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129822109351,
+      "name": "migrations (postgresql+psycopg://xc_agent:xc_agent_test@127.0.0.1:5432/xc_sx_agent)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "test_counts": {
+    "python_matrix": {
+      "versions": [
+        "3.10",
+        "3.11",
+        "3.12"
+      ],
+      "discovered_per_version": 468,
+      "passed_per_version": 459,
+      "skipped_browser_per_version": 9,
+      "app_statement_coverage_percent": 83
+    },
+    "platform_browser": {
+      "executed": 18,
+      "passed": 18,
+      "browser_cases": 9,
+      "http_cases": 9
+    }
+  },
+  "scope": "Controlled models and synthetic business data. Does not establish paid-model quality, human gold labels, production payment correctness or a production SLA."
+}

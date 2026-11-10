@@ -2,7 +2,7 @@
 
 [文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
 
-面向开发者定位召回、排序和证据过滤损失。只使用 development 与本地哈希投影；真实审核流程见[复核工作台](../guides/review-workbench.md)，当前验证范围见[验收状态](acceptance.md)。
+核验基线：2026-11-10，代码 `c5aee67`。本文面向开发者定位召回、排序和证据过滤损失。只使用 development 与本地哈希投影；真实审核流程见[复核工作台](../guides/review-workbench.md)，当前验证范围见[验收状态](acceptance.md)。
 
 ## 查看单次检索诊断
 
@@ -38,11 +38,11 @@ python -m app.scripts.compare_retrieval \
 
 `RetrievalProfile` 是不可变、有校验的实验配置，包含 tokenizer 版本、Unicode NFKC 规范化、候选池大小、RRF 参数/权重、词法重排权重和证据支持门槛。完整配置参与 SHA256 与缓存键；同名配置改参数也不会共享旧缓存。支持的 tokenizer 当前仍只有既有版本，不能填写任意名称伪装切换分词器。
 
-默认配置保留原检索行为。候选 v2 仅增加 NFKC 规范化和 20 条候选池：先召回候选，再按原证据门槛过滤，最后截取 top K，从而允许候选池内的合格证据递补。没有自动降低门槛或上线候选配置。测试以受控排序复现“第一候选被拒、后续合格证据应递补”的机制。
+默认仍使用 legacy-v1 的配置参数；输出状态遵循当前代码的作用域与政策冲突检查，不能因 profile 名称相同而假定新旧代码输出完全一致。候选 v2 仅增加 NFKC 规范化和 20 条候选池：先召回候选，再按原证据门槛过滤，最后截取 top K，从而允许候选池内的合格证据递补。没有自动降低门槛或上线候选配置。测试以受控排序复现“第一候选被拒、后续合格证据应递补”的机制。
 
 对比使用同一知识快照、同一批 development 题目与四种模式，独立统计候选召回、最终证据召回、结果状态、错误放行、无依据引用及不必要拒答。缺失证据归因分为：索引缺失、适用性过滤、无正分、候选池之外、证据筛选拒绝、最终 top K 之外。逐题报告标识变化、改善与退化，并保存两侧完整诊断轨迹、配置哈希、原始文件哈希与代码树哈希。
 
-本次 16 题 × 4 模式 = **64 组配对比较**，使用尚未人工审核的初始标签：
+以下是 [retrieval-handoff-round2 历史摘要](../evidence/retrieval-handoff-round2/comparison.json)中的 16 题 × 4 模式 = **64 组配对比较**，使用当时尚未人工审核的初始标签，不是当前提交重新取得的质量分数：
 
 | 观测 | 基线与候选结果 |
 |---|---|
@@ -52,6 +52,14 @@ python -m app.scripts.compare_retrieval \
 | 输出变化、改善、退化 | 64 组均无变化 |
 | BM25 / hybrid 缺失证据归因 | 9 次文档实例被证据门槛拒绝；不是 9 个独立业务家族 |
 
-这批数据的主要损失位于证据判断阶段，扩大候选池没有改善其最终表现。**这些结果不支持语义质量提升结论。** 原始标签仍需真实审核，再决定如何调整证据策略。[摘要](../evidence/retrieval-handoff-round2/comparison.json)关联完整压缩轨迹。实验入口只接受 development，报告始终 `release_eligible=false`；`--review` 可应用全量审核通过的标签，但不会解锁本脚本对 holdout 的运行。
+该历史批次的主要损失位于证据判断阶段，扩大候选池没有改善其最终表现。**这些结果不支持语义质量提升结论。** 原始标签仍需真实审核，再决定如何调整证据策略。[摘要](../evidence/retrieval-handoff-round2/comparison.json)关联完整压缩轨迹。实验入口只接受 development，报告始终 `release_eligible=false`；`--review` 可应用全量审核通过的标签，但不会解锁本脚本对 holdout 的运行。
+
+## 结果与复现边界
+
+当前提交的 CI 会执行上述开发集脚本，其结果位于[最新运行](https://github.com/scallion7/xc_sx_agent/actions/runs/42813941711)的 `platform-acceptance` 产物；不要将当前运行状态与历史表格的数值合并。摘要的 `raw_artifact` 连接压缩完整轨迹与 SHA256，比较时同时核对源码树哈希、输入文件哈希、profile 哈希及标签状态。
+
+自定义数据版本通过 `--dataset dataset-export.json` 指定；可另加 `--review review-approved.json` 应用与之匹配的完整真实审核。数据集导出和审核导出是两个文件。脚本没有 `--split holdout`、真实模型或自动发布开关，只接受 development；如果版本没有开发题，比较会被拒绝。版本准备见[数据集流程](versioned-datasets.md)。
+
+预编译索引的速度测量见[持续负载与索引验收](../operations/sustained-load.md)。索引结果一致、缓存命中或有效引用都不等于答案语义正确；当前原文支持检查也只是一套保守规则。
 
 实现：[配置定义](../../app/platform/retrieval_profile.py)、[比较器](../../app/platform/retrieval_experiment.py)、[CLI](../../app/scripts/compare_retrieval.py)。

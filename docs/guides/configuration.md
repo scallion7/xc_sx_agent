@@ -1,66 +1,81 @@
 # 配置与运行
 
-[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
+[文档中心](../README.md) · [当前验收](../evaluation/acceptance.md) · [部署清单](../operations/deployment-checklist.md)
 
-所有命令从仓库根目录执行。推荐 Python 3.11；CI 另覆盖 Python 3.10–3.12。当前项目展示名为 Ecom Service Agent，目录和数据库仍沿用 `xc_sx_agent` 以保持兼容。
+以下命令从仓库根目录执行，Shell 示例使用 Bash/Zsh。推荐 Python 3.11；CI 另外验证 Python 3.10 和 3.12。展示名为 Ecom Service Agent，仓库、部分路径与数据库仍使用 `xc_sx_agent`。
 
-## 三种使用方式
+## 选择运行方式
 
-| 方式 | 用途 | 入口 |
+| 方式 | 命令入口 | 实际运行的内容 |
 |---|---|---|
-| 隔离演示 | 面试、业务流程展示，无真实模型费用 | `python -m app.scripts.demo_stack` |
-| 自动化测试 | 协议、业务、迁移、浏览器回归 | `python -m app.scripts.quality_platform --browser` |
-| 自行配置服务 | CLI/API/Worker、真实兼容模型或外部业务联调 | `.env.example` 与部署清单 |
+| 本机业务演示 | `python -m app.scripts.demo_stack --intake` | 隔离 SQLite、API、Agent Worker、受控 HTTP 模型、库存 MCP；商务 Provider 为 mock |
+| 代码与协议检查 | `python -m app.scripts.quality_platform` | Ruff、编译、覆盖率回归、OpenAPI、文档链接与计划质量门禁 |
+| 浏览器回归 | `python -m app.scripts.quality_platform --browser` | 上述检查，并启用需要 Chromium 的测试 |
+| 完整部署与恢复 | `python -m app.scripts.accept_deployment --output test-results/deployment-01/deployment.json` | Docker Compose、PostgreSQL、双 Agent Worker、独立退款 Worker、HTTP 商务沙箱与恢复演练 |
+| 自行配置服务 | `.env.example`、`run_api`、`run_worker` | 读取部署环境；真实模型、身份与业务适配器须自行接入 |
 
-演示启动器注入自己的端口、数据库、令牌与受控模型 URL。自行配置服务时需要明确准备相应凭据和数据库，不能直接套用演示令牌。
+本机演示不调用付费模型，也不启动独立 HTTP 退款沙箱。`--intake` 只开启 `/workspace` 的多轮售后草稿；`/after-sale` 表单页面不依赖这个开关。演示与完整 Compose 的令牌、订单及端口不同，分别按各自指南使用。
 
-## 安装与测试
+## 安装与验证
+
+Python 3.11 的可复现安装：
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-lock.txt
 python -m pip check
-python -m playwright install chromium
-RUN_BROWSER_E2E=1 python -m coverage run -m unittest discover -s tests
-python -m coverage report --fail-under=65
-python -m app.scripts.validate_openapi
+python -m app.scripts.quality_platform
 ```
 
-测试应在干净检出中运行，让各项测试自行配置隔离数据库。不要给整个测试进程设置全局 `DATABASE_URL`；它可能覆盖迁移测试创建的数据库目标。独立 OpenAPI 校验如需绕开旧默认数据库，可仅对该命令设置 `DATABASE_URL=sqlite:///:memory:`。
+Windows PowerShell 创建与激活环境使用 `py -3.11 -m venv .venv` 和 `.venv\Scripts\Activate.ps1`；随后执行相同的 `python` 命令。Python 3.10/3.12 的兼容性检查按 CI 安装 `requirements-dev.txt`。该文件使用支持范围依赖；`requirements-lock.txt` 固定 Python 3.11 的完整闭包，包含测试与格式工具。
 
-`requirements-lock.txt` 是已验收的 Python 3.11 完整依赖闭包；`requirements.txt` 为运行依赖范围。两者均通过 CI 审计。手动安装旧 Chroma 会偏离支持范围。
+浏览器文件不包含在 Python 依赖中，首次另外安装：
 
-## 主要配置
+```bash
+python -m playwright install chromium
+python -m app.scripts.quality_platform --browser
+```
 
-完整字段与默认值以 [.env.example](../../.env.example) 和 [Settings](../../app/config/settings.py) 为准。
+Linux CI 使用 `python -m playwright install --with-deps chromium` 同时安装系统依赖。未设置 `RUN_BROWSER_E2E=1` 且未传 `--browser` 时，相应浏览器测试会按配置跳过；不能把跳过记为浏览器验收通过。需要与 CI 对照时，以[当前验收](../evaluation/acceptance.md)的提交、作业及覆盖率口径为准。
 
-| 配置 | 作用与注意事项 |
+在干净检出中运行测试，让用例自行创建临时数据库；不要给整个测试进程注入业务 `DATABASE_URL` 或沿用生产 `.env`。`quality_platform --database` 会在同一进程环境的完整检查后增加迁移、drift 和平台 smoke；它不是只读检查，也不是独立数据库选择器。推荐把数据库验收拆成下文的专用命令。
+
+## 配置来源与主要开关
+
+[Settings](../../app/config/settings.py) 从环境变量与仓库根目录 `.env` 读取配置；完整示例见 [.env.example](../../.env.example)。演示启动器覆盖端口、模型 URL、令牌和数据库等关键项，但仍继承进程环境；演示和测试应使用独立环境，不混入生产身份配置。
+
+| 配置 | 当前行为 |
 |---|---|
-| `DATABASE_URL` / `DATABASE_AUTO_CREATE` | 正式服务先迁移；旧数据库不靠自动建表升级 |
-| `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 自行接模型时设置；勿提交密钥 |
-| `API_USER_TOKENS` / `API_ADMIN_TOKENS` | 本机演示之外需使用自己的身份配置 |
-| `OIDC_IDENTITY_MAP_PATH` | 可选的已核验旧账号绑定文件；新账号默认按 issuer/sub 生成稳定内部 ID |
-| `KNOWLEDGE_VERSIONED_ENABLED` | 启用 SQL 版本化知识，不代表已部署分布式向量库 |
-| `CONVERSATION_INTAKE_ENABLED` | 默认 false；持久化多轮售后草稿与来源检查，演示用 `demo_stack --intake` |
-| `ANSWER_EVIDENCE_CHECK_ENABLED` | 默认 false；保守原文分句支持规则，未支持结论转人工 |
-| `COMPILED_RETRIEVAL_ENABLED` | 默认 false；按知识版本预编译 token 计数，原路径兼容 |
-| `RUN_MAX_PENDING` / `RUN_MAX_PENDING_PER_USER` | 默认 0 不限制；生产需按测量设置，同步配置所有 API 实例 |
-| `MODEL_BUDGET_ENABLED` | 启用共享累计 token 配额与调用账本 |
-| `COLLABORATION_ENABLED` | 启用会话所有权和人工协作 |
-| `TELEMETRY_ENABLED` | W3C Trace 与持久化指标；业务审计独立存在 |
-| `MCP_IDENTITY_SECRET` | 连接器身份签名，真实部署使用独立密钥 |
-| `RAG_BACKEND` | 默认 `cosine`；旧 `numpy` 别名兼容；`chroma` 已安全暂停 |
+| `PERSISTENCE_BACKEND` | 默认 `sql`；持久化任务队列和平台功能要求 SQL |
+| `DATABASE_URL` / `DATABASE_AUTO_CREATE` | 默认本地 SQLite / true；部署先迁移，再将自动建表关闭。自动建表不负责升级旧结构 |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `MODEL_NAME` | 真实兼容模型连接参数；默认普通启动可能访问外部服务，离线演示请使用 `demo_stack` |
+| `AUTH_MODE` | `static` 或 `oidc`；OIDC JWT 也通过 HTTP `X-API-Key` 头传入 |
+| `API_USER_TOKENS` / `API_ADMIN_TOKENS` | static 模式的 `token:user_id` 列表；演示值不用于部署 |
+| `PROVIDER_MODE` | `mock`、`sandbox` 或 `external`；external 只声明模式，不自动提供真实业务适配器 |
+| `KNOWLEDGE_VERSIONED_ENABLED` / `KNOWLEDGE_EMBEDDING_MODE` | 默认 false / `local_hash`；版本化知识与本地确定性 embedding，不等同于分布式向量库或真实语义质量 |
+| `CONVERSATION_INTAKE_ENABLED` | 默认 false；开启持久化对话草稿及字段来源检查 |
+| `ANSWER_EVIDENCE_CHECK_ENABLED` | 默认 false；保守的原文分句支持检查，无法支持的结论转人工 |
+| `COMPILED_RETRIEVAL_ENABLED` | 默认 false；按知识版本预编译 token 计数，保留原检索路径 |
+| `RUN_MAX_PENDING` / `RUN_MAX_PENDING_PER_USER` | 默认 0，即不限制；统计 queued/running/retry_wait，所有 API 实例须使用一致值 |
+| `RUN_LEASE_SECONDS` / `RUN_MAX_ATTEMPTS` / `RUN_POLL_SECONDS` | 默认 30 秒 / 3 次 / 1 秒；与计划步骤自身的租约配置分开 |
+| `MODEL_BUDGET_ENABLED` | 默认 false；共享累计 token 配额和调用账本，不按日自动重置 |
+| `COLLABORATION_ENABLED` | 默认 false；会话接管、人工消息及新自动调用阻断 |
+| `TELEMETRY_ENABLED` / `OBSERVABILITY_ENABLED` | 前者启用平台 Trace/指标，后者控制本地事件日志；二者不是同一开关 |
+| `MCP_IDENTITY_SECRET` | 非空时至少 16 字符，用于连接器身份签名 |
+| `RAG_BACKEND` | 默认 `cosine`；旧 `numpy` 别名兼容，`chroma` 已暂停支持 |
 
-## 迁移与部署
+多项平台功能要求 SQL；production 还要求关闭自动建表、关闭演示数据、提供非占位模型密钥与外部 Provider 配置。单独设置 `ENVIRONMENT=production` 不会完成外部接入，详见[部署清单](../operations/deployment-checklist.md)。
 
-### OIDC 身份升级与旧数据
+## OIDC 配置和旧账号迁移
 
-OIDC 账号现在按已验证的完整 `iss` 和 `sub` 生成 `oidc_` 加 SHA-256 的内部 ID；`preferred_username` 只作为显示名。同名账号、长用户名或改名不会改变授权边界，签名主体中的路径字符也不会进入文件路径。issuer 按完整字符串精确校验，结尾的 `/` 不会自动删除。
+默认适配器要求 `OIDC_ISSUER`、`OIDC_AUDIENCE`、`OIDC_JWKS_PATH`。`OIDC_REQUIRED_SCOPES` 和 `OIDC_ALGORITHMS` 使用空格分隔；默认分别为 `chat:use`、`RS256`，JWKS 缓存默认 300 秒。默认 JWKS 加载器读取本地 JSON 文件；若需要远程刷新，使用自定义 `OidcJwtProvider` 并通过 `create_app(auth_provider=...)` 注入。
 
-**已有 OIDC 数据的部署应先核验账号绑定再升级。** 旧实现把显示名（最多 80 字符）作为账号 ID。未提供下面的显式映射时，升级后的账号会使用新的作用域，旧订单、会话和提案仍保留在旧 ID 下，不会自动转移或被同名账号认领。服务无法从旧用户名推断可信主体；历史上已经发生的同名混用需要人工核对，不能自动合并。
+内部账号 ID 来自经验证的完整 `iss` 与 `sub`：`oidc_` 加 SHA-256。`preferred_username` 只作为显示名，不授予历史账号权限。同名、改名、长用户名及主体中的路径字符都不会改变这条授权规则；issuer 按完整字符串精确校验，末尾 `/` 不自动删除。
 
-完成一致性备份并停止账号写入后，运维通过身份提供方及现有账号记录核验唯一的 issuer/sub，再准备受权限保护的文件，例如 `/etc/ecom/oidc-identities.json`：
+**已有 OIDC 数据须先核验绑定再升级。** 旧实现以显示名截取到 80 字符作为账号 ID。未提供显式绑定时，新版会使用新的账号作用域，旧订单、会话和提案保留在旧 ID 下。系统不会根据用户名自动认领或合并旧数据。
+
+完成一致性备份、暂停相关账号写入后，由运维结合身份提供方和原账号记录核验唯一主体，准备受权限保护的文件：
 
 ```json
 {
@@ -75,20 +90,32 @@ OIDC 账号现在按已验证的完整 `iss` 和 `sub` 生成 `oidc_` 加 SHA-25
 }
 ```
 
-设置 `OIDC_IDENTITY_MAP_PATH=/etc/ecom/oidc-identities.json` 并重启所有 API 实例。该映射按精确 issuer/sub 使用原内部 ID，因此现有订单、会话、确认提案及审计引用无需改写；用户改名仍访问原账户，其他同名主体不会继承它。对每个迁移账户验证历史会话、订单和权限，再恢复写入。映射是长期身份配置，应纳入受控备份并保持所有实例一致，不能在迁移后随意删除或修改。
+设置 `OIDC_IDENTITY_MAP_PATH=/etc/ecom/oidc-identities.json`，在所有实例加载同一份文件并重启，再核对迁移账户的历史订单、会话与权限。文件按精确 issuer/sub 继续使用原内部 ID，不改写历史业务引用；它属于长期身份配置，须纳入受控备份，不能在迁移后随意删除。
 
-文件必须使用上述严格格式，主体与旧 ID 均一对一；旧 ID 限于 1–80 位字母、数字、`_`、`-`，且不能占用 `oidc_` 前缀。重复主体、重复目标、路径字符或不可读文件会阻止服务启动，不会退回不安全的用户名映射。无法明确核验的旧账号继续保留隔离，待人工处理。
+格式严格要求版本 1 和 `bindings` 数组；主体、目标旧 ID 均一对一。旧 ID 只允许 1–80 位字母、数字、`_`、`-`，不能占用 `oidc_` 前缀。重复主体/目标、路径字符、额外字段或不可读文件会阻止启动。无法核验的旧账号保持隔离。
 
-静态 Token 账号保留现有 ID，但不能使用 `oidc_` 命名空间。OIDC 模式不会启用或校验未使用的静态演示 Token；如切回 static，仍须保留绑定文件，静态账号与映射中的 OIDC 旧账号发生重叠时启动失败，需先移除冲突的静态凭据。自定义 AuthProvider 同样必须提供稳定、路径安全且不与其他身份来源混用的内部 ID。
+static 账号也不能使用 `oidc_` 命名空间。OIDC 模式不启用未使用的静态演示令牌；切回 static 时仍保留绑定文件，静态账号若占用已绑定的 OIDC 旧 ID 会启动失败。自定义认证适配器须同样使用稳定、路径安全且来源不冲突的内部 ID。
 
-只在明确指定的测试数据库上执行迁移演练：
+## 数据库和独立进程
+
+以下仅是新建的可丢弃 SQLite 示例；每条命令明确限定目标，不把该 URL 全局传给测试：
 
 ```bash
-DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m app.scripts.manage_migrations upgrade
-DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m alembic check
-DATABASE_URL=sqlite:////tmp/ecom-migration-demo.db python -m app.scripts.platform_smoke
+DATABASE_URL=sqlite:////tmp/ecom-migration-demo-01.db DATABASE_AUTO_CREATE=false python -m app.scripts.manage_migrations upgrade
+DATABASE_URL=sqlite:////tmp/ecom-migration-demo-01.db DATABASE_AUTO_CREATE=false python -m alembic check
+DATABASE_URL=sqlite:////tmp/ecom-migration-demo-01.db DATABASE_AUTO_CREATE=false python -m app.scripts.database_smoke
+DATABASE_URL=sqlite:////tmp/ecom-migration-demo-01.db DATABASE_AUTO_CREATE=false python -m app.scripts.platform_smoke
 ```
 
-旧库先做一致性备份，再执行迁移并核对业务行；非空新账本拒绝破坏性降级。完整 Compose 隔离部署与恢复已通过指定提交的 CI，范围见[当前验收](../evaluation/acceptance.md)；真实生产环境仍需独立验收。操作细节见[部署清单](../operations/deployment-checklist.md)，沙箱参数见[历史 HTTP 沙箱说明](../history/第26期-HTTP业务沙箱与退款对账.md)。
+`upgrade` 默认升至 head；`manage_migrations check` 判断修订是否到 head，`alembic check` 判断模型与迁移是否有结构漂移，两者用途不同。smoke 会写入合成记录，只在隔离数据库运行；平台 smoke 和任务核对 smoke 清理各自作用域的临时账本，不删除真实审计。
 
-代码入口和配置别名的升级说明见[命名与兼容约定](../engineering/naming-and-compatibility.md)。旧索引、数据库及 `COLLABORATION_ENABLED` 配置键无需因展示或模块命名调整而迁移。
+自行配置好同一数据库、模型与业务依赖后，在不同终端/进程运行：
+
+```bash
+python -m app.scripts.run_api
+python -m app.scripts.run_worker
+```
+
+只有配置 `PROVIDER_MODE=sandbox` 并启动独立商务沙箱后，才增加 `python -m app.scripts.run_refund_worker --mode both`。Agent Worker 和退款 Worker 不是同一进程。真实 external Provider 需要在 API 与 Worker 的应用装配入口中一致注入，默认 CLI 不会自动发现第三方适配器。
+
+旧库先备份再迁移到 head（当前 `20261109_0009`）。业务非空时的破坏性降级受保护；备份、恢复和人工核对操作见[部署清单](../operations/deployment-checklist.md)与[告警恢复手册](../operations/incident-runbook.md)。兼容别名见[命名约定](../engineering/naming-and-compatibility.md)。

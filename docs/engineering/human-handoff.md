@@ -2,20 +2,33 @@
 
 [文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
 
-用户操作演示见[五分钟演示](../guides/five-minute-demo.md)；本页解释 Worker、调用登记与最终回复如何遵守会话所有权。
+人工接管改变会话的服务端所有权。它既要阻止旧 Agent 继续发起操作，也要保留已经发生或可能发生的业务事实。用户操作见[五分钟演示](../guides/five-minute-demo.md)；本页解释执行和界面如何配合。
 
-## 版本检查与任务交接
+## 所有权版本与在途调用
 
-任务提交时保存会话所有权版本。Worker 创建 Agent 前检查所有权，每次模型/工具调用登记 `call.started` 时在 SQL 事务中再次检查并锁定该版本；最终回复提交也检查版本。人工接管再释放会增加版本，旧任务不能因为当前状态重新变成 agent 而继续旧诉求。
+任务提交时保存会话所有权版本。Worker 创建 Agent 前检查所有权；每次模型或工具调用登记 `call.started` 时，在 SQL 事务中再次检查并锁定该版本；最终回复提交也检查版本。接管后再释放会增加版本，因此旧任务不能因为当前状态重新变成 agent 而继续旧诉求。
 
-已接管或版本已变更的任务不创建 Agent，不产生新的模型账本记录；保留用户输入和 `run.handoff` 事件。为兼容已有任务 API，任务终态仍为 `completed`，结果 `reply=""`、`requires_human=true`、`evidence_state="awaiting_human"`，内部记录 `requires_new_request=true`。这表示已完成交接，不表示原业务诉求已经执行。人工释放后必须由用户提交新请求，不自动恢复旧授权；新请求会读取保存的会话上下文。
+写 action 的领取和人工接管争用同一所有权记录。接管会使待确认、已确认的旧提案失效；已有执行中的 action 时，服务端拒绝直接接管，要求先处理在途执行。人工修订也会使旧确认失效。释放后用户可以重新发起相同内容的提案并重新确认，但旧 action ID 不会恢复执行资格。
 
-调用登记完成后与外部网络之间存在不可消除的窗口，因此已经登记的请求按在途处理，仍可能执行并产生费用；随后禁止新调用。已返回但不能发送的回复仍保存在内部草稿，保持原审计兼容。未知的写副作用仍进入 `needs_reconciliation`，不能当作普通接管完成。
+若交接发生在 Agent 创建前，任务不创建 Agent，也不新增模型调用账本记录；保留用户输入和 `run.handoff` 事件。没有未知写副作用时，交接任务以 `completed` 结束，结果为 `reply=""`、`requires_human=true`、`evidence_state="awaiting_human"`，内部标记 `requires_new_request=true`。这里的完成指已交接，不表示原业务诉求已执行。释放后需提交新请求，新请求会读取已保存的会话上下文。
 
-相同 18 项冻结离线任务全部通过；三种策略在“先接管、后提交”场景的模拟调用数由 **3 / 3 / 4 降为 0 / 0 / 0**。整个矩阵模拟 usage 由 **2010 降为 1710 tokens**，差值 300；这是受控服务用量，不是实际账单。[当前任务报告](../evidence/retrieval-handoff-round2/task-baseline.json)与[优化前报告](../evidence/review-round1/task-baseline.json)使用相同任务文件。
+调用登记和外部网络发送之间仍存在窗口。已登记的调用按在途处理，可能继续执行并产生费用；接管后的版本检查阻止后续新调用。已生成但不允许发送的回复可以保存为内部草稿，不能当作已送达客户的回答。发生未知写副作用时进入 `needs_reconciliation`，不能按普通交接完成处理。
+
+## 人工消息与浏览器串行操作
+
+客服工作台的接管操作包含三个连续步骤：提交所有权 CAS、更新目标用户与会话、完成会话和知识待办刷新。全局 `busy` 从操作开始持续到整条异步链结束，禁用按钮和输入框；刷新中新建的按钮、修订框和审批输入也继承该状态。发送人工回复因此不能抢在接管完成前使用旧会话，也不会被尚未结束的刷新覆盖发送结果。
+
+该门禁覆盖工作台各操作，失败后在 `finally` 中解锁。长时间刷新会暂时阻止同页其他操作，这是当前采用全局串行化的交互取舍。它只协调当前页面；其他标签页或客户端仍由服务端权限、所有权版本、CAS 和消息幂等处理。
+
+人工回复通过共享 `RequestClient` 保存请求键和原始内容。双击中的相同请求共用结果，响应丢失后的重试复用原键；未核对的内容不能被悄悄替换成另一条消息。成功后清空仍与已发送内容一致的输入框。详见[浏览器请求与兼容约定](naming-and-compatibility.md)。
+
+## 释放、核对与继续会话
+
+释放会话不会恢复旧授权、重放旧调用或自动执行内部草稿。若原 run 仍为 `needs_reconciliation`，管理员须先核实每个写调用对应的持久化业务回执，再以版本和证据哈希提交结案。成功后状态为 `resolved`，会话才解除该任务的阻塞；缺失回执或未结算操作仍不能结案。完整契约见[可信执行](reliable-execution.md)。
 
 ## 实现与回归
 
 - [所有权服务](../../app/platform/conversation_handoff.py)、[运行上下文](../../app/services/run_context.py)、[任务仓储](../../app/repositories/runs.py)。
-- [执行竞争回归](../../tests/test_handoff_execution.py)、[HTTP 接管回归](../../tests/test_handoff_http.py)。
-- [离线任务基线](../evaluation/task-baseline.md)保存跨策略的调用与数据库断言。
+- [执行竞争](../../tests/test_handoff_execution.py)、[HTTP 接管](../../tests/test_handoff_http.py)、[旧提案失效与重新申请](../../tests/test_trusted_actions.py)。
+- [工作台浏览器回归](../../tests/test_browser_retries.py)分别扣住接管响应和刷新响应，验证两阶段均不能发送、旧会话无新增消息、目标会话只收到一条回复。
+- [离线任务基线](../evaluation/task-baseline.md)保存跨策略的调用与数据库断言；历史模拟 token 用量不是实际账单。当前测试结果及环境统一见[验收状态](../evaluation/acceptance.md)。

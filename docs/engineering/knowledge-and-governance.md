@@ -2,32 +2,51 @@
 
 [文档中心](../README.md) · [当前验收](../evaluation/acceptance.md)
 
-## 知识生命周期
+知识检索的职责不仅是找到相似文本，还要判断材料是否适用于当前问题、是否需要补充条件、是否存在冲突。模型预算、配置发布和连接器治理分别保存自己的状态，不把一次模型回答当作授权或业务回执。
 
-导入 MD/TXT/文本 PDF 后，任务持久化经历解析、切分、embedding 和 ready 阶段。内容哈希支持去重与增量向量缓存；发布先构建不可变快照，再通过 expected_version 切换活动版本。支持撤回、保留期内回滚、删除屏蔽和受引用保护的索引 GC。
+## 知识生命周期与检索
 
-检索组合中文 BM25、余弦相似度和 RRF，可启用词法重排；返回稳定 chunk/version/release 引用。默认本地哈希投影是词法表示，词法 reranker 不是 cross-encoder。未将合成数据上的结果视为真实语义效果。
+导入 MD、TXT 或文本 PDF 后，持久化任务经历解析、切分、embedding 和 ready 阶段。内容哈希支持去重与增量向量缓存；发布先构建不可变快照，再通过 `expected_version` 切换活动版本。支持撤回、保留期内回滚、删除屏蔽和受引用保护的索引 GC。删除标记覆盖旧快照及缓存，不能通过回滚重新暴露已删除材料。
 
-本地 JSON 知识检索使用 `CosineBackend`，以标准库进行精确余弦计算；旧 `NumpyBackend` 导入与 `RAG_BACKEND=numpy` 保持兼容，新默认值为 `cosine`。详见[命名与兼容约定](naming-and-compatibility.md)。Chroma 已因安全公告暂停，不推荐绕过停用保护。
+版本化检索组合中文 BM25、余弦相似度和 RRF，可启用词法重排，返回稳定的 chunk、文档版本和 release 引用。默认本地哈希投影是词法表示，词法 reranker 不是 cross-encoder；不能把合成数据上的测试结果视为真实语义效果。
 
-## 模型与配置
+本地 JSON 检索使用 `CosineBackend`，由标准库执行精确余弦计算；旧 `NumpyBackend` 导入与 `RAG_BACKEND=numpy` 保持兼容，新默认值为 `cosine`。该本地路径与平台的版本化知识生命周期不同，配置区别见[命名与兼容约定](naming-and-compatibility.md)。Chroma 当前处于停用保护中，不应绕过保护接入。
+
+## 政策条件及其来源
+
+Agent 的版本化知识工具为每个用户、会话保存独立 `knowledge_context`，随会话运行状态恢复。地域、渠道、商品条件只能来自用户明确说出的值，或当前用户所属订单的结构化政策信息。订单归属通过业务查询核验；收货地址、商品名称或模型自行生成的条件不能代替供应商明确提供的政策字段。
+
+用户条件记录消息哈希；订单条件记录订单来源，并优先于用户推测。新订单会清空旧订单上下文。若用户明确换单而模型没有选择新订单，或用户否定、冲突于权威订单条件，工具清空上下文并转入澄清；同一轮模型删掉冲突参数后重试也不能恢复旧条件。下一轮使用新的 turn ID，可以重新选择订单，即使用户文字与上一轮相同。
+
+对已保存的非订单条件，用户明确否定旧值时会移除对应字段，避免模型漏传修改后继续套用旧政策。这些检查采用保守的字面来源、订单号和否定模式；没有实现完整自然语言指代解析或任意多订单推理。无法确定条件时应澄清，不能宣称已理解所有换单表达。
+
+## 展示结果与安全判断分开
+
+检索先按政策类型、日期、已知适用范围和删除状态过滤，再计算候选与排序。`candidate_pool` 和 `top_k` 控制评分候选及展示数量，不控制政策安全检查的范围。
+
+得到最终命中后，系统按其中的 `policy_key` 回看整个适用快照中的相关材料，包括落在候选池和 `top_k` 之外的条款，并再次核对删除状态。同一政策存在尚未明确的适用条件时返回 `needs_clarification`；适用条款带有不同非空 `decision` 时返回 `policy_conflict`。其他政策键、已过期或尚未生效、明确不匹配的范围不制造本次冲突。返回引用仍受 `top_k` 限制，诊断信息可以列出冲突政策键。
+
+该判断依赖知识材料的结构化元数据，不能自动发现任意文本中的语义矛盾。缓存键包含发布版本、检索 profile、模型与分词配置、日期和查询条件；冲突语义版本也进入 fingerprint，避免复用旧规则下的安全结论。最终回答对 `no_evidence`、`needs_clarification`、`policy_conflict` 使用保守路径；可选的逐结论原文支持检查见[证据与索引扩展](improvement-loop.md)。
+
+## 模型与配置发布
 
 - 模型能力与路由由目录配置，SQL 账户控制跨进程 RPM、并发和累计 token 配额。
-- 每次实际模型尝试单独记账；缺少 usage 或结果不确定时保守预留并进入待对账，不把估算冒充账单。
-- 配置 manifest 固定模型、Prompt、工具 schema、知识版本、风险规则、数据集和策略等信息；新会话稳定分桶，旧会话保留既有版本。
-- 配置发布经过评测门禁；生产模式要求真实模型与人工复核证据，当前合成报告不能满足这一门禁。
+- 每次实际模型尝试单独记账；缺少 usage 或结果不确定时保守预留并进入待对账，不把估算当作账单。
+- 配置 manifest 固定模型、Prompt、工具 schema、知识版本、风险规则、数据集和策略等信息；新会话稳定分桶，旧会话保留既有版本。知识删除仍作为安全覆盖生效。
+- 配置发布经过评测门禁；生产模式要求真实模型与人工复核证据，当前合成报告不能替代这些材料。
 - 模型调用账本不包含真实 embedding 服务的全部外部费用，接入时需另行管理预算。
 
-## MCP 与人工协作
+## MCP、人工协作与输出处理
 
-连接器按 allowlist、契约/schema hash、权限、签名身份和输出限制管理；schema 漂移停用。库存写操作经可信确认与专用持久化适配器执行，重试前查单。客服工作台提供会话接管、草稿修订、工单审批和知识发布入口。
+连接器按 allowlist、契约及 schema hash、权限、签名身份和输出限制管理；schema 漂移时停止调用。MCP 只读调用由 `GovernedMCPToolCaller` 执行契约检查。库存写操作经过可信确认与专用持久化适配器，重试前查单；不能把远端自然语言成功文案当作可对账回执。
 
-人工接管由 [ConversationHandoffService](../../app/platform/conversation_handoff.py) 管理；MCP 只读调用由 `GovernedMCPToolCaller` 执行契约检查。
+客服工作台提供会话接管、草稿修订、工单审批和知识发布入口，所有权由 `ConversationHandoffService` 管理。工具 JSON 输出及恢复后的历史工具消息按结构脱敏，保留数值和合法 action 控制引用，机制与限制见[对话与证据处理](improvement-loop.md)。
 
-实现入口：[knowledge.py](../../app/platform/knowledge.py)、[retrieval.py](../../app/platform/retrieval.py)、[budget.py](../../app/platform/budget.py)、[releases.py](../../app/platform/releases.py)、[connectors.py](../../app/platform/connectors.py)。
+## 实现与验证入口
 
-详细参数与历史实现见[第 27–34 期归档](../history/第27-34期-知识平台与工程交付.md)，当前验证范围见[验收状态](../evaluation/acceptance.md)。
+- [知识生命周期](../../app/platform/knowledge.py)、[混合检索](../../app/platform/retrieval.py)、[会话政策上下文](../../app/agent/tools/knowledge_context.py)。
+- [配额](../../app/platform/budget.py)、[配置发布](../../app/platform/releases.py)、[连接器](../../app/platform/connectors.py)。
+- [政策上下文与结构化输出回归](../../tests/test_policy_context.py)、[知识平台回归](../../tests/test_knowledge_platform.py)、[检索诊断](../../tests/test_retrieval_diagnostics.py)。
+- 可选预编译索引与逐结论检查见[扩展说明](improvement-loop.md)，数据闭环见[版本化评测](../evaluation/versioned-datasets.md)。数据集版本不等同于线上知识版本，冻结数据不会自动触发发布。
 
-## 可选扩展
-
-当前增加按 release/profile 固定的预编译索引、逐结论原文支持检查以及版本化评测数据入口。详细机制与开关见[对话与索引扩展](improvement-loop.md)，数据集版本不等同于线上知识版本；冻结数据不会自动触发发布。
+历史演进见[第 27–34 期归档](../history/第27-34期-知识平台与工程交付.md)，当前验证范围以[验收状态](../evaluation/acceptance.md)为准。

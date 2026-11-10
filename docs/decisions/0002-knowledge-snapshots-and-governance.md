@@ -29,3 +29,15 @@ flowchart LR
   A -. W3C .-> V[(脱敏 Trace)]
   W -. spans .-> V
 ```
+
+## 实施更新：2026-11-10
+
+以上保留 2026-10-25 的决策及当时的架构图。以下记录后续实现对边界的补充，不表示这些机制在原决策日期已经全部具备，也不替代当前验收证据。
+
+- **身份不再依赖显示名。** OIDC 以验证后的精确 `issuer` / `sub` 生成稳定内部标识；`preferred_username` 仅用于显示。旧账号通过经管理员核实的显式映射继续访问，禁止自动按用户名认领；静态账号不能占用 OIDC 或映射目标身份。详见[身份升级约定](../engineering/naming-and-compatibility.md)及[配置指南](../guides/configuration.md)。
+- **快照安全判断独立于展示数量。** 政策条件记录用户消息或所属订单来源，并按用户会话恢复；换单、否定和冲突会清除或阻断旧条件。同一已命中政策的冲突检查覆盖 `top_k` 和候选池之外的适用材料。删除覆盖仍然生效。这依赖结构化元数据与保守来源规则，不构成通用语义冲突识别。详见[知识治理](../engineering/knowledge-and-governance.md)。
+- **运行结案依赖业务回执。** 写调用在分发前绑定 action；`needs_reconciliation` 只有在全部写调用证据、业务终态及投递状态满足要求后，才能通过 CAS 进入 `resolved`。结案和审计同事务，原任务不自动重放；旧日志没有可绑定回执时仍阻断。详见[可信执行](../engineering/reliable-execution.md)。
+- **撤销旧授权不阻塞新申请。** 已拒绝、失效或过期的普通提案可以被新提案替代，但新 action 需要重新确认，旧 action 保持不可执行。接管再释放不恢复旧 run 或授权。工作台以全局忙碌状态覆盖接管和刷新，服务端所有权锁继续负责跨客户端竞争。详见[人工接管](../engineering/human-handoff.md)。
+- **脱敏与恢复保留结构。** 工具 JSON 递归脱敏字符串，保留数值类型及合法 action 控制引用。浏览器保存未确认请求的原始 payload 与幂等键；明确的申请版本拒绝可以释放请求，未知冲突和网络错误仍保留待核对意图。详见[对话与证据处理](../engineering/improvement-loop.md)及[请求兼容约定](../engineering/naming-and-compatibility.md)。
+
+第 7 项中的 `0006` 是原决策对应的迁移，不是当前迁移头。后续新增数据集、候选、admission 锁和派生索引的迁移见[扩展与迁移说明](../engineering/improvement-loop.md)。最新架构见[系统架构](../architecture/overview.md)；测试环境、结果及未完成的生产和真实模型验证统一见[当前验收](../evaluation/acceptance.md)。

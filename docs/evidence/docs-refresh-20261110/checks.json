@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-10",
+  "base_commit": "c5aee6716723ae5a4243497db919e094d3b238a5",
+  "worktree_dirty_at_validation": true,
+  "scope": "Current documentation, runtime business skill instructions, configuration comments, migration guidance, OpenAPI description and contributor attribution.",
+  "checks": {
+    "full_unittest": {
+      "command": "RUN_BROWSER_E2E=1 python -m unittest discover -s tests -v",
+      "status": "passed",
+      "total": 468,
+      "passed": 468,
+      "skipped": 0,
+      "seconds": 95.859,
+      "note": "Executed after updating all three runtime business skills. The later OpenAPI description-only edit was separately validated."
+    },
+    "offline_skill_loading": {
+      "status": "passed",
+      "checks": 6,
+      "paid_model_calls": 0
+    },
+    "environment_example": {
+      "status": "passed",
+      "documented_keys": 119,
+      "unknown_keys": []
+    },
+    "openapi": {
+      "status": "passed",
+      "paths": 103
+    },
+    "ruff_check": {
+      "status": "passed"
+    },
+    "ruff_format": {
+      "status": "passed",
+      "files": 364
+    },
+    "demo_smoke": {
+      "status": "passed",
+      "command": "python -m app.scripts.demo_stack --intake --smoke --directory <fresh-temporary-directory>",
+      "run_status": "completed",
+      "provider": "mock",
+      "model": "controlled local HTTP"
+    },
+    "documented_python_entrypoints": {
+      "status": "passed",
+      "modules": 21
+    },
+    "historical_notices": {
+      "status": "passed",
+      "archive_entries": 35
+    },
+    "documentation_links": {
+      "status": "passed",
+      "markdown_files": 61,
+      "local_links_and_images": 660
+    },
+    "local_heading_links": {
+      "status": "passed",
+      "checked": 5
+    },
+    "diff_whitespace": {
+      "status": "passed"
+    }
+  },
+  "coverage": {
+    "remeasured": false,
+    "previous_baseline_percent": 83,
+    "source": "../boundary-fixes-20261110/ci.json"
+  },
+  "contributors": {
+    "github_logins": [
+      "scallion7"
+    ],
+    "normalized_git_authors": [
+      "scallion7"
+    ],
+    "normalized_git_committers": [
+      "scallion7"
+    ],
+    "co_author_trailers": 0,
+    "history_rewritten": false
+  }
+}
