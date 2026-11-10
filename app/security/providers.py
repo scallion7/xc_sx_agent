@@ -12,6 +12,11 @@ from typing import Any
 import jwt
 
 from app.security.auth import AuthContext, AuthService
+from app.security.identities import (
+    load_identity_bindings,
+    oidc_user_id,
+    validate_identity_bindings,
+)
 
 USER_PERMISSIONS = frozenset(
     {"chat:use", "session:read", "session:delete", "after_sale:read", "plan:cancel"}
@@ -30,8 +35,16 @@ ADMIN_PERMISSIONS = USER_PERMISSIONS | frozenset(
 class StaticTokenProvider:
     """兼容原配置格式的本地认证 Provider。"""
 
-    def __init__(self, user_tokens: str = "", admin_tokens: str = "") -> None:
-        self._service = AuthService(user_tokens, admin_tokens)
+    def __init__(
+        self,
+        user_tokens: str = "",
+        admin_tokens: str = "",
+        *,
+        reserved_user_ids: frozenset[str] = frozenset(),
+    ) -> None:
+        self._service = AuthService(
+            user_tokens, admin_tokens, reserved_user_ids=reserved_user_ids
+        )
 
     def authenticate(self, token: str) -> AuthContext | None:
         return self._service.authenticate(token)
@@ -54,8 +67,9 @@ class OidcJwtProvider:
         allowed_algorithms: frozenset[str] = frozenset({"RS256"}),
         cache_seconds: int = 300,
         clock: Callable[[], datetime] | None = None,
+        identity_bindings: Mapping[tuple[str, str], str] | None = None,
     ) -> None:
-        self.issuer = issuer.rstrip("/")
+        self.issuer = issuer
         self.audience = audience
         self.jwks_loader = jwks_loader
         self.required_scopes = required_scopes
@@ -67,6 +81,7 @@ class OidcJwtProvider:
         self._expires_at = datetime.min.replace(tzinfo=timezone.utc)
         self._lock = RLock()
         self.last_error_code = ""
+        self.identity_bindings = validate_identity_bindings(identity_bindings or {})
 
     def authenticate(self, token: str) -> AuthContext | None:
         self.last_error_code = ""
@@ -108,15 +123,22 @@ class OidcJwtProvider:
             return None
         roles = self._roles(claims)
         role = "admin" if roles & self.admin_roles else "user"
-        subject = str(claims["sub"])
-        user_id = str(claims.get("preferred_username") or subject)
+        subject = claims["sub"]
+        if not isinstance(subject, str) or not subject:
+            self.last_error_code = "OIDC_SUBJECT_INVALID"
+            return None
+        user_id = self.identity_bindings.get(
+            (self.issuer, subject), oidc_user_id(self.issuer, subject)
+        )
+        display_name = claims.get("preferred_username", "")
         return AuthContext(
-            user_id=user_id[:80],
+            user_id=user_id,
             role=role,
             permissions=ADMIN_PERMISSIONS if role == "admin" else USER_PERMISSIONS,
             subject=subject,
             provider="oidc",
             scopes=scopes,
+            display_name=display_name[:256] if isinstance(display_name, str) else "",
         )
 
     def _key(self, kid: str, *, force: bool) -> Any | None:
@@ -159,8 +181,13 @@ class OidcJwtProvider:
 
 
 def build_auth_provider(config) -> StaticTokenProvider | OidcJwtProvider:
+    bindings = load_identity_bindings(config.oidc_identity_map_path)
     if config.auth_mode == "static":
-        return StaticTokenProvider(config.api_user_tokens, config.api_admin_tokens)
+        return StaticTokenProvider(
+            config.api_user_tokens,
+            config.api_admin_tokens,
+            reserved_user_ids=frozenset(bindings.values()),
+        )
 
     path = Path(config.oidc_jwks_path)
 
@@ -179,4 +206,5 @@ def build_auth_provider(config) -> StaticTokenProvider | OidcJwtProvider:
         required_scopes=frozenset(config.oidc_required_scopes.split()),
         allowed_algorithms=frozenset(config.oidc_algorithms.split()),
         cache_seconds=config.oidc_jwks_cache_seconds,
+        identity_bindings=bindings,
     )

@@ -27,6 +27,36 @@ python -m app.scripts.check_alerts --watch --interval 15 --state-file app/sessio
 
 `*_DEAD`：查看 error_code、请求摘要与审计，定位确定性失败或重试耗尽。修复根因后，使用相应管理接口按原业务键重试；先核对外部结果。`needs_reconciliation` 不是可直接重放的死信。清除记录不能证明恢复成功。
 
+### Agent 任务人工核对结案
+
+管理员以 `after_sale:recover` 权限读取 `GET /v1/admin/runs/{run_id}/reconciliation`。
+响应包含 `expected_version` 和每条写调用的 `ready`、`evidence`、`evidence_hash`。
+这些凭证由服务端读取已绑定的操作提案和业务账本生成，不能用人工备注代替。
+
+- 创建工单必须存在绑定 `action:<action_id>`、用户与订单的创建回执。
+- 执行退款必须先通过原退款对账链路获得 `succeeded` 或 `failed` 终态；商务沙箱的 Outbox 与查询任务也必须全部为 `sent`。`pending`、`running`、`unknown`、`needs_reconciliation` 或仍可投递的消息均不允许结案。
+- 尚未领取的提案在结案事务内撤销，避免旧工作线程稍后领取；无法关联凭证的旧版不确定写调用继续阻断。不得修改数据库状态绕过检查，也不得重新发起退款来“验证”结果。
+
+所有写调用 `ready=true` 后，将刚读取的版本和**完整**凭证集合提交至
+`POST /v1/admin/runs/{run_id}/resolve`：
+
+```json
+{
+  "expected_version": 12,
+  "evidence": [{"call_id": "从核对响应复制", "evidence_hash": "从核对响应复制的64位哈希"}],
+  "note": "已核对业务回执和投递终态"
+}
+```
+
+结案会在同一事务内复核凭证、执行版本 CAS、撤销未执行授权、写入 `run.resolved`
+事件与平台审计，并将任务置为 `resolved`。原调用日志不改写为成功，任务不会重放；
+同一会话可以提交新的消息。原幂等键仍返回已结案任务。
+
+此接口使用 `expected_version` 与凭证哈希作为重试契约，不要求 `Idempotency-Key`。
+并发结案或重复 POST 返回 409；若提交响应丢失，应重新 GET 核对详情，检查
+`status=resolved` 及 `resolution` 中的操作者、备注和凭证。版本或凭证变化时重新核对，
+不要自动换版本重试。缺少业务凭证的旧记录不提供强制解锁按钮，需要先补齐可信业务账本。
+
 <a id="refund-unknown"></a>
 ## 退款结果未知
 

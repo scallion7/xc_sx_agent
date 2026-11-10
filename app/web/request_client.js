@@ -26,9 +26,23 @@ export class RequestClient {
     if (!response.ok) {
       const error = new Error((data.error_code || response.status) + ': ' + JSON.stringify(data.detail || '请求未完成'));
       error.status = response.status;
+      error.code = data.error_code;
       throw error;
     }
     return data;
+  }
+
+  async pending(path, scope, token = this.token()) {
+    const slot = await this.scopeKey(`pending:${scope}:${path}`, token);
+    return JSON.parse(sessionStorage.getItem(slot) || 'null');
+  }
+
+  async retryPending(path, scope, token = this.token()) {
+    const pending = await this.pending(path, scope, token);
+    if (!pending) throw new Error('没有待核对的提交，请刷新处理进度。');
+    // Replay the saved revision and payload, even after a page reload has read
+    // newer state. The server checks the receipt before its revision fence.
+    return this.write(path, JSON.parse(pending.payload), scope, token);
   }
 
   async write(path, body, scope, token = this.token()) {
@@ -57,8 +71,12 @@ export class RequestClient {
         return data;
       })
       .catch(error => {
-        // Validation/auth failures are definitive; transport, 5xx and conflict outcomes are not.
-        if ([400, 401, 403, 404, 405, 413, 422].includes(error.status)) sessionStorage.removeItem(slot);
+        // This specific CAS rejection guarantees no command was committed.
+        // Other conflicts, transport failures and 5xx keep the original intent.
+        if ([400, 401, 403, 404, 405, 413, 422].includes(error.status) ||
+            (error.status === 409 && error.code === 'INTAKE_VERSION_CONFLICT')) {
+          sessionStorage.removeItem(slot);
+        }
         if (!error.status) error.message = '连接中断，处理结果待确认。请保持原内容重试，将复用同一请求编号。';
         throw error;
       })

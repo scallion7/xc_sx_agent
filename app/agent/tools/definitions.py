@@ -74,7 +74,9 @@ TOOL_DEFINITIONS: list[ToolDefinition] = [
             "常见问题 FAQ）。当顾客询问规则、流程、时效、是否支持等政策类"
             "问题时使用，比如「能退货吗」「多久到账」「钻石会员有什么权益」"
             "「偏远地区包邮吗」。返回 Top-K 命中片段及来源文档，请基于检索"
-            "结果回答，不要编造政策"
+            "结果回答，不要编造政策。缺少适用条件时追问用户，下一轮把用户明确补充的"
+            "地域、渠道、商品分类分别传入 region/channel/product；已核实条件可沿用。"
+            "办理具体订单时传用户选择的 order_id，订单事实优先，冲突或缺字段应澄清。"
         ),
         properties={
             "query": {
@@ -90,6 +92,26 @@ TOOL_DEFINITIONS: list[ToolDefinition] = [
                 "type": "string",
                 "enum": ["", "after_sale", "shipping", "membership", "faq"],
                 "description": "可选的政策类型过滤；售后工单应使用 after_sale",
+                "default": "",
+            },
+            "region": {
+                "type": "string",
+                "description": "用户明确提供的适用地域；不得猜测。后续轮可沿用已核实条件。",
+                "default": "",
+            },
+            "channel": {
+                "type": "string",
+                "description": "用户明确提供的购买渠道，如门店、商城；不得猜测。",
+                "default": "",
+            },
+            "product": {
+                "type": "string",
+                "description": "用户明确提供的商品适用分类；不得从商品名猜测。",
+                "default": "",
+            },
+            "order_id": {
+                "type": "string",
+                "description": "用户明确选择的订单号；服务端验证归属并优先采用订单中的适用条件，切换订单清除旧条件。",
                 "default": "",
             },
         },

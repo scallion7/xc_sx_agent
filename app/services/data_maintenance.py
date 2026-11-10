@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
-import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -28,6 +26,7 @@ from app.infrastructure.database import (
     plans_table,
     sessions_table,
 )
+from app.infrastructure.sqlite_snapshot import snapshot_sqlite, verify_sqlite
 
 
 class DataMaintenanceService:
@@ -387,10 +386,7 @@ class DataMaintenanceService:
         if not self.config.database_url.startswith(prefix):
             raise ValueError("自动文件备份仅支持 SQLite")
         source = Path(self.config.database_url[len(prefix) :])
-        self.verify_sqlite(source)
-        target = Path(destination)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        target = snapshot_sqlite(source, destination)
         return self._manifest([target])
 
     def restore_sqlite(
@@ -400,14 +396,7 @@ class DataMaintenanceService:
         *,
         replace: bool = False,
     ) -> dict[str, Any]:
-        source = Path(backup)
-        target = Path(destination)
-        self.verify_sqlite(source)
-        if target.exists() and not replace:
-            raise FileExistsError("恢复目标已存在；必须显式允许替换")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        self.verify_sqlite(target)
+        target = snapshot_sqlite(backup, destination, replace=replace)
         return self._manifest([target])
 
     def redacted_export(self, destination: str | Path) -> dict[str, Any]:
@@ -450,13 +439,7 @@ class DataMaintenanceService:
 
     @staticmethod
     def verify_sqlite(path: str | Path) -> None:
-        connection = sqlite3.connect(Path(path))
-        try:
-            result = connection.execute("PRAGMA integrity_check").fetchone()
-        finally:
-            connection.close()
-        if result is None or result[0] != "ok":
-            raise ValueError("SQLite 完整性检查失败")
+        verify_sqlite(path)
 
     @staticmethod
     def verify_json(path: str | Path) -> dict[str, Any]:

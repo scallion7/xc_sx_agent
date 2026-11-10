@@ -134,6 +134,7 @@ class Settings(BaseSettings):
     oidc_issuer: str = ""
     oidc_audience: str = ""
     oidc_jwks_path: str = ""
+    oidc_identity_map_path: str = ""
     oidc_required_scopes: str = "chat:use"
     oidc_algorithms: str = "RS256"
     oidc_jwks_cache_seconds: int = Field(default=300, ge=30, le=86400)
@@ -215,7 +216,7 @@ class Settings(BaseSettings):
                 "sk-replace-me",
             }:
                 raise ValueError("生产环境必须配置非占位模型密钥")
-            if (
+            if self.auth_mode == "static" and (
                 "dev-user-token" in self.api_user_tokens
                 or "dev-admin-token" in self.api_admin_tokens
             ):

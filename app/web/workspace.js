@@ -16,6 +16,7 @@ const labels = {
   cancelled: '已取消',
   dead_letter: '执行失败',
   needs_reconciliation: '结果待人工核对',
+  resolved: '已核对结案',
   approved: '已批准',
   pending_review: '等待人工审批',
   pending: '待处理',

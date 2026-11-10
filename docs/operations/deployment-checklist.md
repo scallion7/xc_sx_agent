@@ -92,6 +92,11 @@ python -m app.scripts.maintain_data restore --source /safe/backup/xc-sx-agent.db
 python -m app.scripts.maintain_data export --destination /safe/export/plans-redacted.json
 ```
 
+维护命令与平台恢复演练共用 SQLite backup API，包含已提交而尚未 checkpoint 的 WAL。
+源库以只读模式打开；源文件不存在时拒绝操作，不创建空库。备份目标必须是新文件；
+恢复默认拒绝覆盖已有目标，显式使用 `--replace` 前须停止目标应用写入。
+同一路径或硬链接指向同一个数据库时均拒绝备份/恢复。
+
 生产 PostgreSQL 应使用平台原生备份、时间点恢复和跨区域策略；仍需在隔离环境实际恢复，
 核对校验结果、RPO/RTO、访问权限和审计记录。不得把“备份命令成功”等同于恢复演练通过。
 

@@ -1,0 +1,186 @@
+{
+  "base_commit": "25267109093736f58b8f57c7af7eb00e8837f862",
+  "working_tree": true,
+  "date": "2026-11-10",
+  "source_code_sha256": "1dd8570be8d1777d831d3a4652fc6476d365866bd5e7b33d471caebb15153d3b",
+  "source_code_files": 323,
+  "python": "3.11.15",
+  "browser": "Playwright 1.55.0 Chromium build 1187",
+  "unittest": {
+    "total": 467,
+    "new_tests": 39,
+    "skipped": 0,
+    "seconds": 103.184,
+    "passed": true
+  },
+  "app_coverage_percent": 83,
+  "checks": [
+    {
+      "check": "ruff-check",
+      "exit_code": 0,
+      "seconds": 0.037
+    },
+    {
+      "check": "ruff-format",
+      "exit_code": 0,
+      "seconds": 0.04
+    },
+    {
+      "check": "compileall",
+      "exit_code": 0,
+      "seconds": 0.077
+    },
+    {
+      "check": "openapi",
+      "exit_code": 0,
+      "seconds": 0.722
+    },
+    {
+      "check": "docs",
+      "exit_code": 0,
+      "seconds": 0.077
+    },
+    {
+      "check": "plan-quality",
+      "exit_code": 0,
+      "seconds": 1.477
+    },
+    {
+      "check": "plan-benchmark",
+      "exit_code": 0,
+      "seconds": 0.554
+    },
+    {
+      "check": "unittest",
+      "exit_code": 0,
+      "seconds": 104.725
+    },
+    {
+      "check": "coverage",
+      "exit_code": 0,
+      "seconds": 0.567
+    },
+    {
+      "check": "sqlite-upgrade",
+      "exit_code": 0,
+      "seconds": 0.293
+    },
+    {
+      "check": "sqlite-drift",
+      "exit_code": 0,
+      "seconds": 0.235
+    },
+    {
+      "check": "sqlite-database-smoke",
+      "exit_code": 0,
+      "seconds": 0.827
+    },
+    {
+      "check": "sqlite-platform-smoke",
+      "exit_code": 0,
+      "seconds": 0.889
+    },
+    {
+      "check": "sqlite-downgrade",
+      "exit_code": 0,
+      "seconds": 0.285
+    },
+    {
+      "check": "sqlite-reupgrade",
+      "exit_code": 0,
+      "seconds": 0.341
+    },
+    {
+      "check": "postgres-upgrade",
+      "exit_code": 0,
+      "seconds": 0.394
+    },
+    {
+      "check": "postgres-drift",
+      "exit_code": 0,
+      "seconds": 0.293
+    },
+    {
+      "check": "postgres-database-smoke",
+      "exit_code": 0,
+      "seconds": 0.767
+    },
+    {
+      "check": "postgres-platform-smoke",
+      "exit_code": 0,
+      "seconds": 1.093
+    },
+    {
+      "check": "postgres-restore",
+      "exit_code": 0,
+      "verified": true
+    },
+    {
+      "check": "postgres-downgrade",
+      "exit_code": 0,
+      "seconds": 0.347
+    },
+    {
+      "check": "postgres-reupgrade",
+      "exit_code": 0,
+      "seconds": 0.332
+    },
+    {
+      "check": "sustained-postgres",
+      "exit_code": 0,
+      "seconds": 27.006
+    },
+    {
+      "check": "index-scale",
+      "exit_code": 0,
+      "seconds": 8.436
+    },
+    {
+      "check": "platform-capacity",
+      "exit_code": 0,
+      "seconds": 6.501
+    },
+    {
+      "check": "platform-drills",
+      "exit_code": 0,
+      "seconds": 14.219
+    },
+    {
+      "check": "offline-review",
+      "exit_code": 0,
+      "seconds": 0.772
+    },
+    {
+      "check": "task-baseline",
+      "exit_code": 0,
+      "seconds": 37.905
+    },
+    {
+      "check": "retrieval-comparison",
+      "exit_code": 0,
+      "seconds": 0.834
+    }
+  ],
+  "dependency_audits": {
+    "requirements-lock.txt": {
+      "packages": 58,
+      "known_vulnerabilities": 0
+    },
+    "requirements.txt": {
+      "packages": 53,
+      "known_vulnerabilities": 0
+    }
+  },
+  "scope": "isolated local synthetic data and controlled model; no paid API, production migration, commit or push",
+  "not_run": [
+    "Docker image build and Trivy scan",
+    "Docker Compose acceptance",
+    "Python 3.10 and 3.12 matrix",
+    "real model semantic evaluation"
+  ],
+  "logs": {
+    "unittest": "unittest.log",
+    "coverage": "coverage.log"
+  },
+  "detailed_artifacts": "test-results/boundary-fixes-20261110"
+}

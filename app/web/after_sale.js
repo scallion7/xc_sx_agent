@@ -5,7 +5,8 @@ const $ = id => document.getElementById(id);
 const client = new RequestClient(() => $('token').value);
 let flow = null,
   generation = 0,
-  busy = false;
+  busy = false,
+  pendingCommand = false;
 const labels = {
   collecting: '待补充资料',
   ready: '资料已保存',
@@ -55,6 +56,19 @@ function controls() {
   }
   $('create').disabled = busy;
   $('load').disabled = busy;
+  $('retryPending').disabled = !flow || busy || !pendingCommand;
+  $('pendingHint').textContent = pendingCommand ? '上次提交的结果尚未核对。可重试上次提交，核对完成后再继续编辑。' : '';
+}
+
+async function refreshPending() {
+  const epoch = generation;
+  const identity = flow?.intake_id;
+  if (!identity) {
+    pendingCommand = false;
+    return;
+  }
+  const pending = await client.pending(path() + '/commands', 'intake:' + identity);
+  if (epoch === generation && identity === flow?.intake_id) pendingCommand = Boolean(pending);
 }
 
 function handle(fn) {
@@ -67,8 +81,12 @@ function handle(fn) {
     } catch (e) {
       status(e.message, true);
     } finally {
-      busy = false;
-      controls();
+      try {
+        await refreshPending();
+      } finally {
+        busy = false;
+        controls();
+      }
     }
   };
 }
@@ -135,13 +153,20 @@ async function refresh() {
 }
 async function command(name, fields) {
   const epoch = generation;
-  await client.write(path() + '/commands', {
-    command: name,
-    expected_revision: flow.revision,
-    ...(fields === undefined ? {} : {
-      fields
-    })
-  }, 'intake:' + flow.intake_id);
+  try {
+    await client.write(path() + '/commands', {
+      command: name,
+      expected_revision: flow.revision,
+      ...(fields === undefined ? {} : {
+        fields
+      })
+    }, 'intake:' + flow.intake_id);
+  } catch (error) {
+    if (epoch === generation && error.code === 'INTAKE_VERSION_CONFLICT') {
+      error.message = '申请已在其他页面更新，本次修改未保存。请刷新处理进度后重新编辑并保存。';
+    }
+    throw error;
+  }
   if (epoch !== generation) return;
   await refresh();
   status('申请已更新。');
@@ -174,9 +199,26 @@ $('propose').onclick = handle(() => command('propose'));
 $('withdraw').onclick = handle(() => command('withdraw'));
 $('executeProposal').onclick = handle(() => command('propose_execution'));
 $('refresh').onclick = handle(refresh);
+$('retryPending').onclick = handle(async () => {
+  const epoch = generation;
+  try {
+    await client.retryPending(path() + '/commands', 'intake:' + flow.intake_id);
+  } catch (error) {
+    if (epoch === generation && error.code === 'INTAKE_VERSION_CONFLICT') {
+      await refresh();
+      status('上次提交未保存，已读取最新申请。请重新编辑并保存。');
+      return;
+    }
+    throw error;
+  }
+  if (epoch !== generation) return;
+  await refresh();
+  status('上次提交已核对，请以当前申请和历史为准。');
+});
 $('token').oninput = () => {
   generation++;
   flow = null;
+  pendingCommand = false;
   for (const id of ['action', 'history', 'business']) $(id).replaceChildren();
   for (const id of ['intakeId', 'order', 'reason', 'evidenceIds']) $(id).value = '';
   $('progress').textContent = '身份已切换，请重新查询申请。';

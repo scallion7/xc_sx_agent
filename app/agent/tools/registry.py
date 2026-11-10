@@ -192,6 +192,14 @@ def create_default_tool_registry(
     runtime_config = config or settings
     commerce = commerce_service or CommerceService(MockCommerceRepository())
     knowledge = knowledge_service or KnowledgeService(runtime_config)
+    from app.agent.tools.knowledge_context import KnowledgeContext
+
+    # Direct registries have no authenticated dialogue source. Scoped values
+    # therefore fail closed until the owning Agent binds its user/session state.
+    knowledge_state = {}
+    knowledge.context_resolver = KnowledgeContext(
+        commerce, user_id, messages=lambda: [], state=lambda: knowledge_state
+    )
 
     def memory_handler(query: str = "") -> ToolResult:
         if memory_manager is None:

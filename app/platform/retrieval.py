@@ -147,6 +147,7 @@ class HybridRetrieval:
                     self.service.embedder.model,
                     TOKENIZER_VERSION,
                     self.profile.fingerprint,
+                    "policy-conflicts-v2",
                 ],
                 context={
                     "filters": context or {},
@@ -422,23 +423,6 @@ class HybridRetrieval:
                 trace[items[i]["chunk_id"]]["selection_reason"] = "outside_final_top_k"
         selected = selected[:top_k]
         hits = [items[i] | {"score": scores[i]} for i in selected]
-        missing = any(
-            applicable(x["metadata"], context, day) == "clarify" for x in hits
-        )
-        decisions = {}
-        for hit in hits:
-            meta = hit["metadata"]
-            if meta.get("policy_key") and meta.get("decision"):
-                decisions.setdefault(meta["policy_key"], set()).add(meta["decision"])
-        outcome = (
-            "no_evidence"
-            if not hits
-            else "needs_clarification"
-            if missing
-            else "policy_conflict"
-            if any(len(v) > 1 for v in decisions.values())
-            else "answerable"
-        )
         # Re-check deletion at return time; no cache can resurrect tombstoned text.
         with self.service.engine.connect() as conn:
             live = set(
@@ -450,8 +434,39 @@ class HybridRetrieval:
                 ).scalars()
             )
         hits = [h for h in hits if h["document_id"] in live]
-        if not hits:
-            outcome = "no_evidence"
+        # Display/candidate limits cannot hide another decision for a matched
+        # policy. The eligible snapshot already excludes expired and mismatched
+        # scopes; recheck tombstones for the entire related policy set too.
+        policy_keys = {
+            h["metadata"]["policy_key"] for h in hits if h["metadata"].get("policy_key")
+        }
+        related = hits + [
+            item
+            for item in items
+            if item["document_id"] in live
+            and item["metadata"].get("policy_key") in policy_keys
+        ]
+        missing = any(
+            applicable(x["metadata"], context, day) == "clarify" for x in related
+        )
+        decisions = {}
+        for item in related:
+            meta = item["metadata"]
+            if (
+                applicable(meta, context, day) == "include"
+                and meta.get("policy_key")
+                and meta.get("decision")
+            ):
+                decisions.setdefault(meta["policy_key"], set()).add(meta["decision"])
+        outcome = (
+            "no_evidence"
+            if not hits
+            else "needs_clarification"
+            if missing
+            else "policy_conflict"
+            if any(len(v) > 1 for v in decisions.values())
+            else "answerable"
+        )
         if explain:
             live_hits = {h["chunk_id"] for h in hits}
             for entry in trace.values():

@@ -69,6 +69,7 @@ class ToolExecutionService:
                 "prepare_only": kwargs.get("prepare_only", False),
             },
             lambda: self._execute_logged(name, arguments, context, **kwargs),
+            reconciliation_contract="action-v1" if kwargs.get("remote") is None else "",
         )
 
     def _execute_logged(
@@ -228,6 +229,7 @@ class ToolExecutionService:
                 raise ActionError(
                     "ACTION_ARGUMENTS_CHANGED", "确认不能用于不同工具或参数"
                 )
+            self._bind_run_action(row)
             # Replay must remain available after the business operation changed the order.
             if row["status"] == "completed":
                 return json.loads(row["result_json"]) | {
@@ -243,6 +245,7 @@ class ToolExecutionService:
                 context.user_id, context.session_id, name, parsed, version
             )
         )
+        self._bind_run_action(row)
         self.actions.validate(row, digest(parsed), version)
         if row["status"] == "completed":
             return json.loads(row["result_json"]) | {
@@ -315,6 +318,13 @@ class ToolExecutionService:
             raise
         row = self.actions.get(row["action_id"], context.user_id, context.session_id)
         return result | {"action": self.actions.public(row)}
+
+    @staticmethod
+    def _bind_run_action(row):
+        from app.services.run_context import current_run
+
+        if current_run():
+            current_run().bind_action(row)
 
     def confirm(self, action_id, context, arguments_hash, *, channel="api"):
         row = self.actions.get(action_id, context.user_id, context.session_id)

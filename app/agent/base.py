@@ -210,7 +210,20 @@ class BaseConversationAgent(ABC):
         self.raw_messages: list[dict] = []
         self.summary: str | None = None
         self._runtime_state: dict[str, Any] = {}
+        self._knowledge_turn_id = ""
         self._restore_session()
+        from app.agent.tools.knowledge_context import KnowledgeContext
+
+        knowledge = getattr(
+            self.tool_registry, "knowledge_service", self.knowledge_service
+        )
+        knowledge.context_resolver = KnowledgeContext(
+            self.commerce_service,
+            self.config.memory_user_id,
+            messages=lambda: self.raw_messages,
+            state=lambda: self._runtime_state,
+            turn_id=lambda: self._knowledge_turn_id,
+        )
         self.plan_repository = plan_repository or build_plan_repository(
             self.config,
             session_path=self.session_path,
@@ -284,6 +297,12 @@ class BaseConversationAgent(ABC):
 
     @contextmanager
     def _turn_context(self):
+        from uuid import uuid4
+
+        from app.services.run_context import current_run
+
+        run = current_run()
+        self._knowledge_turn_id = run.run_id if run else uuid4().hex
         with TraceContext(
             trace_id=current_trace_id(),
             session_id=self.session_path,
@@ -436,7 +455,7 @@ class BaseConversationAgent(ABC):
         if not loaded:
             return
         self.summary = self.guardrails.redact(loaded["summary"] or "") or None
-        self.raw_messages = self.guardrails.redact_value(loaded["messages"])
+        self.raw_messages = self.guardrails.redact_messages(loaded["messages"])
         if loaded.get("short_term_memory"):
             memory_state = self.guardrails.redact_value(loaded["short_term_memory"])
             runtime_state = memory_state.get("runtime_state", {})
@@ -633,7 +652,7 @@ class BaseConversationAgent(ABC):
                 }
             )
         messages.extend(self.raw_messages)
-        return self.guardrails.redact_value(messages)
+        return self.guardrails.redact_messages(messages)
 
     def _finalize_turn(
         self,

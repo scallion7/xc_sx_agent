@@ -40,6 +40,7 @@ python -m app.scripts.validate_openapi
 | `DATABASE_URL` / `DATABASE_AUTO_CREATE` | 正式服务先迁移；旧数据库不靠自动建表升级 |
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 自行接模型时设置；勿提交密钥 |
 | `API_USER_TOKENS` / `API_ADMIN_TOKENS` | 本机演示之外需使用自己的身份配置 |
+| `OIDC_IDENTITY_MAP_PATH` | 可选的已核验旧账号绑定文件；新账号默认按 issuer/sub 生成稳定内部 ID |
 | `KNOWLEDGE_VERSIONED_ENABLED` | 启用 SQL 版本化知识，不代表已部署分布式向量库 |
 | `CONVERSATION_INTAKE_ENABLED` | 默认 false；持久化多轮售后草稿与来源检查，演示用 `demo_stack --intake` |
 | `ANSWER_EVIDENCE_CHECK_ENABLED` | 默认 false；保守原文分句支持规则，未支持结论转人工 |
@@ -52,6 +53,33 @@ python -m app.scripts.validate_openapi
 | `RAG_BACKEND` | 默认 `cosine`；旧 `numpy` 别名兼容；`chroma` 已安全暂停 |
 
 ## 迁移与部署
+
+### OIDC 身份升级与旧数据
+
+OIDC 账号现在按已验证的完整 `iss` 和 `sub` 生成 `oidc_` 加 SHA-256 的内部 ID；`preferred_username` 只作为显示名。同名账号、长用户名或改名不会改变授权边界，签名主体中的路径字符也不会进入文件路径。issuer 按完整字符串精确校验，结尾的 `/` 不会自动删除。
+
+**已有 OIDC 数据的部署应先核验账号绑定再升级。** 旧实现把显示名（最多 80 字符）作为账号 ID。未提供下面的显式映射时，升级后的账号会使用新的作用域，旧订单、会话和提案仍保留在旧 ID 下，不会自动转移或被同名账号认领。服务无法从旧用户名推断可信主体；历史上已经发生的同名混用需要人工核对，不能自动合并。
+
+完成一致性备份并停止账号写入后，运维通过身份提供方及现有账号记录核验唯一的 issuer/sub，再准备受权限保护的文件，例如 `/etc/ecom/oidc-identities.json`：
+
+```json
+{
+  "version": 1,
+  "bindings": [
+    {
+      "issuer": "https://identity.example",
+      "subject": "verified-stable-subject",
+      "user_id": "legacy-user-1"
+    }
+  ]
+}
+```
+
+设置 `OIDC_IDENTITY_MAP_PATH=/etc/ecom/oidc-identities.json` 并重启所有 API 实例。该映射按精确 issuer/sub 使用原内部 ID，因此现有订单、会话、确认提案及审计引用无需改写；用户改名仍访问原账户，其他同名主体不会继承它。对每个迁移账户验证历史会话、订单和权限，再恢复写入。映射是长期身份配置，应纳入受控备份并保持所有实例一致，不能在迁移后随意删除或修改。
+
+文件必须使用上述严格格式，主体与旧 ID 均一对一；旧 ID 限于 1–80 位字母、数字、`_`、`-`，且不能占用 `oidc_` 前缀。重复主体、重复目标、路径字符或不可读文件会阻止服务启动，不会退回不安全的用户名映射。无法明确核验的旧账号继续保留隔离，待人工处理。
+
+静态 Token 账号保留现有 ID，但不能使用 `oidc_` 命名空间。OIDC 模式不会启用或校验未使用的静态演示 Token；如切回 static，仍须保留绑定文件，静态账号与映射中的 OIDC 旧账号发生重叠时启动失败，需先移除冲突的静态凭据。自定义 AuthProvider 同样必须提供稳定、路径安全且不与其他身份来源混用的内部 ID。
 
 只在明确指定的测试数据库上执行迁移演练：
 

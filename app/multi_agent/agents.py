@@ -126,11 +126,10 @@ class SubAgent:
                 func_name = tc.function.name
                 func_args = tc.function.arguments
 
-                result_str = self.redactor(
-                    self.tool_manager.execute_tool(
-                        func_name,
-                        func_args,
-                    )
+                # The shared execution boundary has sanitized structured values.
+                result_str = self.tool_manager.execute_tool(
+                    func_name,
+                    func_args,
                 )
 
                 tool_msg = {

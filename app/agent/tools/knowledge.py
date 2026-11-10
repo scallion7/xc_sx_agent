@@ -33,6 +33,7 @@ class KnowledgeService:
     ):
         self.config = config
         self.last_result = None
+        self.context_resolver = None
         self._retriever = retriever
         self._reranker = reranker or PolicyReranker()
         self._lock = threading.Lock()
@@ -100,16 +101,54 @@ class KnowledgeService:
         query: str,
         top_k: int = 3,
         policy_type: str = "",
+        region: str = "",
+        channel: str = "",
+        product: str = "",
+        order_id: str = "",
     ) -> dict:
         if self.config.knowledge_versioned_enabled:
+            from app.platform.common import PlatformError
             from app.platform.retrieval import HybridRetrieval
 
+            context = {
+                k: v
+                for k, v in {
+                    "region": region,
+                    "channel": channel,
+                    "product": product,
+                }.items()
+                if v
+            }
+            sources = {}
+            if self.context_resolver is not None:
+                try:
+                    context, sources = self.context_resolver.resolve(
+                        order_id=order_id, **context
+                    )
+                except PlatformError as exc:
+                    self.last_result = {
+                        "success": False,
+                        "query": query,
+                        "error_code": exc.code,
+                        "outcome": "needs_clarification",
+                        "requires_human": True,
+                        "grounded": False,
+                        "context": {},
+                        "results": [],
+                        "citations": [],
+                    }
+                    return self.last_result
+            elif order_id:
+                raise PlatformError("KNOWLEDGE_ORDER_CONTEXT_REQUIRED", 422)
+            if policy_type:
+                context["policy_type"] = policy_type
             self.last_result = HybridRetrieval(self.config).search(
                 query,
                 top_k=top_k,
                 rerank=self.config.rag_rerank_enabled,
-                context={"policy_type": policy_type} if policy_type else {},
+                context=context,
             )
+            self.last_result = self.last_result | {"context_sources": sources}
 
             return self.last_result
 

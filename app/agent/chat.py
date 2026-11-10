@@ -337,11 +337,11 @@ class EcomAgent(BaseConversationAgent):
                 func_name = tc.function.name
                 func_args = tc.function.arguments
 
-                result_str = self.guardrails.redact(
-                    self.tool_manager.execute_tool(
-                        func_name,
-                        func_args,
-                    )
+                # ToolExecutionService has already redacted structured values.
+                # Redacting serialized JSON again can corrupt numeric scalars.
+                result_str = self.tool_manager.execute_tool(
+                    func_name,
+                    func_args,
                 )
 
                 self.raw_messages.append(

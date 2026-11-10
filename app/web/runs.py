@@ -7,10 +7,24 @@ import json
 
 from fastapi import Depends, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.repositories.runs import TERMINAL, RunError, RunRepository
 from app.web.schemas import ChatRequest
 from app.web.services import runtime_snapshot, session_reference
+
+
+class RunResolutionEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    call_id: str = Field(min_length=1, max_length=160)
+    evidence_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class RunResolutionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    expected_version: int = Field(ge=1, strict=True)
+    evidence: list[RunResolutionEvidence] = Field(max_length=100)
+    note: str = Field(min_length=1, max_length=2000)
 
 
 def register_run_routes(app, services, require):
@@ -82,6 +96,41 @@ def register_run_routes(app, services, require):
         repo = repository()
         try:
             return repo.public(repo.replay(run_id, context.user_id))
+        except RunError as exc:
+            failure(exc)
+
+    @app.get("/v1/admin/runs/{run_id}/reconciliation")
+    def inspect_reconciliation(
+        run_id: str, context=Depends(require("after_sale:recover"))
+    ):
+        from app.services.run_reconciliation import RunReconciliation
+
+        try:
+            return RunReconciliation(
+                repository(), tenant=services.config.tenant_id
+            ).inspect(run_id)
+        except RunError as exc:
+            failure(exc)
+
+    @app.post("/v1/admin/runs/{run_id}/resolve")
+    def resolve_run(
+        run_id: str,
+        request: RunResolutionRequest,
+        context=Depends(require("after_sale:recover")),
+    ):
+        from app.services.run_reconciliation import RunReconciliation
+
+        repo = repository()
+        try:
+            return repo.public(
+                RunReconciliation(repo, tenant=services.config.tenant_id).resolve(
+                    run_id,
+                    context.user_id,
+                    request.expected_version,
+                    [item.model_dump() for item in request.evidence],
+                    request.note,
+                )
+            )
         except RunError as exc:
             failure(exc)
 

@@ -2,9 +2,22 @@
 
 [文档中心](../README.md) · [证据索引](../evidence/README.md)
 
-更新：2026-11-10。以下本地结果于 2026-11-09 在基于 `eccd6eb` 的工作树上生成；源码哈希、命令与限制见[本批检查清单](../evidence/improvement-loop/checks.json)。证据中的未提交状态保留生成时事实；提交后的远端 CI 需按具体提交核验，不能沿用旧提交的绿色状态。
+更新：2026-11-10。本次七项边界修复基于 `2526710`，在不含私有 `.env` 和业务数据的源码副本中验证。本地证据保留提交前的生成状态，远端 CI 应按具体提交独立核验。[检查清单](../evidence/boundary-fixes-20261110/checks.json)记录代码哈希、验证项目及限制。
 
-## 当前本地验收
+## 本次边界修复验收
+
+- **467 项回归通过，无跳过；103.184 秒**，使用 Python 3.11 与项目锁定的 Playwright Chromium；[完整日志](../evidence/boundary-fixes-20261110/unittest.log)。较修复前增加 39 项回归，另包含故障、并发和不同输入的子场景。
+- **app 语句覆盖率 83%**；[覆盖率报告](../evidence/boundary-fixes-20261110/coverage.log)。脚本与独立进程沿用既有排除口径。
+- SQLite/PostgreSQL 升级、schema drift、业务与平台烟测、降级重建通过；新增人工结案烟测在两种数据库验证四名管理员并发只有一次结案，并清理自身测试数据。PostgreSQL 停写备份恢复的数据指纹一致。
+- 隔离 PostgreSQL 的 15 秒短时验证完成 150/150 个受控任务；容量拒绝、worker 退出、数据库停启和模型 HTTP 中断恢复通过。1000/10000 个合成 chunk 的索引结果一致。18 项受控任务、开发集检索比较、平台容量和故障脚本完成，无付费模型调用。
+- Ruff、格式、compileall、OpenAPI、文档链接、40 项计划门禁及计划基准通过。两份依赖清单分别审计 58/53 个包，未发现已知漏洞。
+- 本机没有 Docker 和 Python 3.10/3.12，未重新运行容器构建/镜像扫描/Compose 及另外两个 Python 版本；这些仍需对应提交的 CI。原生 PostgreSQL 验证不能代替 Compose 验收。
+
+OIDC 旧账号需按[配置与迁移说明](../guides/configuration.md)核验主体后显式绑定；无凭证的历史未知写入继续阻断，结案契约见[故障手册](../operations/incident-runbook.md)。本次没有变更数据库 schema、迁移业务库或连接真实模型与支付服务。
+
+## 上一批本地验收
+
+以下结果于 2026-11-09 在基于 `eccd6eb` 的工作树上生成；[原检查清单](../evidence/improvement-loop/checks.json)及证据保持原样，不表示本次修复重新取得同一长期负载测量。
 
 | 范围 | 结果 | 证据与口径 |
 |---|---|---|

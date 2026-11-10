@@ -15,6 +15,7 @@ from app.infrastructure.migrations.runtime import (
     migration_status,
     upgrade_database,
 )
+from app.security.identities import oidc_user_id
 from app.security.providers import OidcJwtProvider, StaticTokenProvider
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import ValidationError
@@ -55,7 +56,10 @@ class OidcProviderTests(unittest.TestCase):
 
     def test_valid_token_maps_identity_and_permissions(self):
         context = self.provider.authenticate(token(self.private))
-        self.assertEqual(context.user_id, "user-1")
+        self.assertEqual(
+            context.user_id, oidc_user_id("https://issuer.example", "subject-1")
+        )
+        self.assertEqual(context.display_name, "user-1")
         self.assertEqual(context.provider, "oidc")
         self.assertIn("chat:use", context.permissions)
 

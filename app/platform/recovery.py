@@ -2,7 +2,6 @@
 
 import hashlib
 import os
-import sqlite3
 import subprocess
 import tempfile
 import time
@@ -12,6 +11,7 @@ from pathlib import Path
 from sqlalchemy import MetaData, create_engine, select
 from sqlalchemy.engine import make_url
 
+from app.infrastructure.sqlite_snapshot import snapshot_sqlite
 from app.platform.common import PlatformError, encode
 
 
@@ -101,16 +101,11 @@ def backup_restore(source_url, backup_path, restore_url):
         path.parent.mkdir(parents=True, exist_ok=True)
         dst.parent.mkdir(parents=True, exist_ok=True)
         start = time.perf_counter()
-        with sqlite3.connect(src) as a, sqlite3.connect(path) as b:
-            a.backup(b)
+        snapshot_sqlite(src, path)
         backup_seconds = time.perf_counter() - start
         start = time.perf_counter()
-        with sqlite3.connect(path) as a, sqlite3.connect(dst) as b:
-            a.backup(b)
+        snapshot_sqlite(path, dst)
         restore_seconds = time.perf_counter() - start
-        with sqlite3.connect(dst) as restored:
-            if restored.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
-                raise PlatformError("RESTORE_INTEGRITY_FAILED")
         expected = fingerprint("sqlite:///" + str(path))
     elif source.drivername.startswith("postgresql") and target.drivername.startswith(
         "postgresql"

@@ -17,7 +17,7 @@ from app.infrastructure.database import run_events_table as events
 from app.platform.telemetry import traced
 from app.services.actions import digest
 
-TERMINAL = {"completed", "cancelled", "dead_letter", "needs_reconciliation"}
+TERMINAL = {"completed", "cancelled", "dead_letter", "needs_reconciliation", "resolved"}
 ACTIVE = {"queued", "running", "retry_wait", "dead_letter", "needs_reconciliation"}
 EXECUTION_VERSION = 1
 

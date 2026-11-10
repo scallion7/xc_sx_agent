@@ -533,6 +533,55 @@ class TrustedActionsTests(unittest.TestCase):
         )
         self.assertEqual(self.count(), 0)
 
+    def test_rejected_proposal_can_be_replaced_but_old_consent_stays_revoked(self):
+        old = self.propose()
+        self.confirm(old)
+        self.actions.reject(
+            old["action_id"], self.context.user_id, self.context.session_id
+        )
+        replacement = self.propose()
+        self.assertNotEqual(replacement["action_id"], old["action_id"])
+        self.assertEqual(replacement["status"], "pending")
+        self.assertEqual(
+            self.invoke(action_id=old["action_id"])["error_code"], "ACTION_REJECTED"
+        )
+        self.assertEqual(self.count(), 0)
+        self.confirm(replacement)
+        self.assertTrue(self.invoke(action_id=replacement["action_id"])["success"])
+        self.assertEqual(self.count(), 1)
+
+    def test_handoff_release_allows_fresh_proposal_without_restoring_old_one(self):
+        from app.platform.conversation_handoff import ConversationHandoffService
+
+        old = self.propose()
+        self.confirm(old)
+        handoff = ConversationHandoffService(self.config)
+        state = handoff.ensure(self.context.user_id, self.context.session_id)
+        state = handoff.transition(
+            self.context.user_id,
+            self.context.session_id,
+            "operator",
+            state["version"],
+            take=True,
+        )
+        handoff.transition(
+            self.context.user_id,
+            self.context.session_id,
+            "operator",
+            state["version"],
+            take=False,
+        )
+        replacement = self.propose()
+        self.assertNotEqual(replacement["action_id"], old["action_id"])
+        self.assertEqual(replacement["status"], "pending")
+        self.assertEqual(
+            self.invoke(action_id=old["action_id"])["error_code"], "ACTION_INVALIDATED"
+        )
+        self.assertEqual(self.count(), 0)
+        self.confirm(replacement)
+        self.assertTrue(self.invoke(action_id=replacement["action_id"])["success"])
+        self.assertEqual(self.count(), 1)
+
     def test_plan_api_execution_then_resume_replays_original_result(self):
         plan = ExecutionPlan(
             goal="创建工单",

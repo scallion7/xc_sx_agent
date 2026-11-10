@@ -129,6 +129,15 @@ class ActionService:
                         proposals.c.arguments_hash == fingerprint,
                         proposals.c.business_version == business_version,
                         proposals.c.expires_at > now.isoformat(),
+                        proposals.c.status.in_(
+                            [
+                                "pending",
+                                "confirmed",
+                                "executing",
+                                "completed",
+                                "unknown",
+                            ]
+                        ),
                     )
                     .order_by(proposals.c.created_at.desc())
                 )

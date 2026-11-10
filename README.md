@@ -68,7 +68,7 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证证据
 
-当前本地验收：**428 项回归通过、app 语句覆盖率 82%**。3 个 worker 在隔离 PostgreSQL 上完成 180 秒持续负载，接受的 2891 个任务全部完成，709 次按容量上限返回 429；万级合成 chunk 的 BM25 结果保持一致，预编译热读 p50 为 17.85 ms。完整环境、原始报告与限制见[当前验收](docs/evaluation/acceptance.md)。
+本次边界修复验收：**467 项回归通过、app 语句覆盖率 83%**，覆盖身份隔离、WAL 备份、人工结案、政策冲突、多轮澄清与前端重试。SQLite/PostgreSQL 迁移、业务烟测及恢复验证通过；隔离 PostgreSQL 的 150 个受控任务全部完成，千级和万级索引结果保持一致。完整环境、原始报告、历史负载结果与限制见[当前验收](docs/evaluation/acceptance.md)。
 
 新增多轮售后草稿、版本化评测与失败回流、双人复核、原文证据检查、预编译索引及队列 admission。本地验收证据保留生成时的状态；提交后的远端结果以对应 [GitHub Actions](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml) 运行为准。真实人工金标准、原冻结 holdout 和付费模型评测仍未完成。
 

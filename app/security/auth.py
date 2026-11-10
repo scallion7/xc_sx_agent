@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Protocol
 
-_SAFE_USER_ID = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
+from app.security.identities import OIDC_USER_PREFIX, SAFE_USER_ID
 
 
 @dataclass(frozen=True)
@@ -17,6 +16,7 @@ class AuthContext:
     subject: str = ""
     provider: str = "static"
     scopes: frozenset[str] = frozenset()
+    display_name: str = ""
 
 
 class AuthProvider(Protocol):
@@ -29,8 +29,11 @@ class AuthService:
         user_tokens: str = "",
         admin_tokens: str = "",
         provider: AuthProvider | None = None,
+        *,
+        reserved_user_ids: frozenset[str] = frozenset(),
     ):
         self.provider = provider
+        self._reserved_user_ids = reserved_user_ids
         self._tokens: dict[str, AuthContext] = {}
         self._load(user_tokens, role="user")
         self._load(admin_tokens, role="admin")
@@ -64,7 +67,12 @@ class AuthService:
         )
         for item in raw.split(","):
             token, separator, user_id = item.strip().partition(":")
-            if separator and token and _SAFE_USER_ID.fullmatch(user_id):
+            if separator and token and SAFE_USER_ID.fullmatch(user_id):
+                if (
+                    user_id.startswith(OIDC_USER_PREFIX)
+                    or user_id in self._reserved_user_ids
+                ):
+                    raise ValueError("STATIC_IDENTITY_RESERVED_FOR_OIDC")
                 self._tokens[token] = AuthContext(
                     user_id=user_id,
                     role=role,

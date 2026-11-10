@@ -15,6 +15,7 @@ _current: ContextVar = ContextVar("durable_agent_run", default=None)
 
 
 _scope = ContextVar("run_call_scope", default="")
+_active_call = ContextVar("run_active_call", default=None)
 
 
 @contextmanager
@@ -197,6 +198,37 @@ class RunContext:
         row = self.mutate(apply, "run.snapshot")
         return deepcopy(row["payload"]["snapshots"][name])
 
+    def bind_action(self, action):
+        """Persist a server-selected action before it can be claimed or dispatched."""
+        key = _active_call.get()
+        if key is None:
+            return
+        reference = {
+            field: action[field]
+            for field in (
+                "action_id",
+                "tool_name",
+                "arguments_hash",
+                "business_version",
+            )
+        }
+        if (action["user_id"], action["session_id"]) != (
+            self.user_id,
+            self.session_key,
+        ):
+            raise RunInterrupted("RUN_ACTION_SCOPE_MISMATCH")
+
+        def bind(row):
+            call = row["payload"]["calls"][key]
+            if call["kind"] != "write" or call["name"] != action["tool_name"]:
+                raise RunInterrupted("RUN_ACTION_SCOPE_MISMATCH")
+            if call.get("action") not in (None, reference):
+                raise RunInterrupted("RUN_ACTION_SCOPE_MISMATCH")
+            call["action"] = reference
+            return {"payload": row["payload"]}, {"call_id": key, **reference}
+
+        self.mutate(bind, "call.action_bound")
+
     def call(
         self,
         kind,
@@ -206,6 +238,7 @@ class RunContext:
         *,
         serializer=lambda x: x,
         deserializer=lambda x: x,
+        reconciliation_contract="",
     ):
         self.guard_ownership()
         base = digest(
@@ -229,6 +262,7 @@ class RunContext:
                 "name": name,
                 "state": "in_flight",
                 "dispatches": old.get("dispatches", 0) + 1,
+                "reconciliation_contract": reconciliation_contract,
             }
             if kind == "write":
                 row["payload"]["write_started"] = True
@@ -242,7 +276,11 @@ class RunContext:
 
         self.mutate(begin, "call.started")
         # No database transaction is held while this call runs.
-        result = operation()
+        token = _active_call.set(key)
+        try:
+            result = operation()
+        finally:
+            _active_call.reset(token)
         output = serializer(result)
         uncertain = False
         if kind == "write":

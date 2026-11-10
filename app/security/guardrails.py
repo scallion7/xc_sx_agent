@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 
@@ -104,3 +105,35 @@ class GuardrailEngine:
         if isinstance(value, list):
             return [self.redact_value(item) for item in value]
         return value
+
+    def redact_tool_output(self, text):
+        """Keep JSON scalar types and server action references intact on replay."""
+        try:
+            value = json.loads(text)
+        except (TypeError, ValueError):
+            return self.redact(text)
+        sanitized = self.redact_value(value)
+        action = value.get("action") if isinstance(value, dict) else None
+        if isinstance(action, dict):
+            for key, length in (
+                ("action_id", 32),
+                ("arguments_hash", 64),
+                ("business_version", 64),
+            ):
+                identity = action.get(key)
+                if isinstance(identity, str) and re.fullmatch(
+                    rf"[a-f0-9]{{{length}}}", identity
+                ):
+                    sanitized["action"][key] = identity
+        return json.dumps(sanitized, ensure_ascii=False)
+
+    def redact_messages(self, messages):
+        output = []
+        for message in messages:
+            safe = self.redact_value(message)
+            if message.get("role") == "tool" and isinstance(
+                message.get("content"), str
+            ):
+                safe["content"] = self.redact_tool_output(message["content"])
+            output.append(safe)
+        return output
