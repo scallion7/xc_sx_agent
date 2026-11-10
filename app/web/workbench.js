@@ -3,7 +3,8 @@ import {
 } from './request_client.js';
 const $ = id => document.getElementById(id);
 $('token').value = sessionStorage.getItem('adminToken') || '';
-let headVersion = 0;
+let headVersion = 0,
+  busy = false;
 
 function status(message, error = false) {
   $('status').textContent = message;
@@ -12,12 +13,22 @@ function status(message, error = false) {
 const client = new RequestClient(() => $('token').value);
 const api = (...args) => client.request(...args);
 
+function controls() {
+  for (const element of document.querySelectorAll('button, input, textarea, select')) element.disabled = busy;
+}
+
 function handle(fn) {
   return async () => {
+    if (busy) return;
+    busy = true;
+    controls();
     try {
       await fn()
     } catch (error) {
       status(error.message, true)
+    } finally {
+      busy = false;
+      controls();
     }
   }
 }
@@ -25,6 +36,7 @@ function handle(fn) {
 function button(text, fn) {
   const b = document.createElement('button');
   b.textContent = text;
+  b.disabled = busy;
   b.onclick = handle(fn);
   return b
 }
@@ -61,6 +73,7 @@ async function refresh() {
     const label = document.createElement('p');
     label.textContent = action.tool_name + ' / ' + action.status;
     const edit = document.createElement('textarea');
+    edit.disabled = busy;
     edit.value = JSON.stringify(action.arguments, null, 2);
     card.append(label, edit, button('保存修订并使旧确认失效', async () => {
       await api('/v1/admin/actions/' + action.action_id + '/revise', 'POST', {
@@ -78,6 +91,7 @@ async function refresh() {
     pre.textContent = JSON.stringify(item, null, 2);
     card.append(pre);
     const note = document.createElement('input');
+    note.disabled = busy;
     note.placeholder = '审批意见';
     card.append(note);
     for (const decision of ['approve', 'reject']) card.append(button(decision === 'approve' ? '批准' : '拒绝', async () => {
@@ -101,20 +115,14 @@ async function refresh() {
 }
 $('refresh').onclick = handle(refresh);
 $('sendHuman').onclick = handle(async () => {
-  if ($('sendHuman').disabled) return;
   const user = $('user').value,
     sessionId = $('session').value;
   const content = $('reply').value;
-  $('sendHuman').disabled = true;
-  try {
-    await client.write(`/v1/admin/conversations/${encodeURIComponent(user)}/${encodeURIComponent(sessionId)}/messages`, {
-      content
-    }, user + ':' + sessionId);
-    if ($('reply').value === content) $('reply').value = '';
-    status('人工回复已发送');
-  } finally {
-    $('sendHuman').disabled = false;
-  }
+  await client.write(`/v1/admin/conversations/${encodeURIComponent(user)}/${encodeURIComponent(sessionId)}/messages`, {
+    content
+  }, user + ':' + sessionId);
+  if ($('reply').value === content) $('reply').value = '';
+  status('人工回复已发送');
 });
 $('import').onclick = handle(async () => {
   const file = $('file').files[0];

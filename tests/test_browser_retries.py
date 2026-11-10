@@ -8,6 +8,71 @@ from app.scripts.demo_stack import DemoStack
 
 @unittest.skipUnless(os.environ.get("RUN_BROWSER_E2E") == "1", "Requires Chromium")
 class BrowserRetryTests(unittest.TestCase):
+    def test_handoff_refresh_finishes_before_human_reply_is_enabled(self):
+        from playwright.sync_api import expect, sync_playwright
+
+        with DemoStack() as stack, sync_playwright() as playwright:
+            stack.request("GET", "/v1/sessions/delayed-handoff/ownership")
+            browser = playwright.chromium.launch()
+            page = browser.new_page()
+            page.goto(stack.url + "/workbench")
+            page.locator("#token").fill("demo-admin")
+            page.locator("#refresh").click()
+            expect(page.locator("#status")).to_contain_text("待办已刷新")
+            page.locator("#reply").fill("接管刷新完成后发送")
+            delayed = []
+            pattern = "**/v1/admin/knowledge/jobs"
+            page.route(pattern, lambda route: delayed.append(route))
+            takeover = []
+            take_pattern = "**/conversations/user-1/delayed-handoff/take"
+            page.route(take_pattern, lambda route: takeover.append(route))
+            with page.expect_request(take_pattern):
+                page.get_by_role("button", name="接管", exact=True).click()
+            expect(page.locator("#session")).to_have_value("demo")
+            for selector in ("#sendHuman", "#user", "#session", "#token", "#refresh"):
+                expect(page.locator(selector)).to_be_disabled()
+            self.assertEqual(len(takeover), 1)
+            page.evaluate("document.getElementById('sendHuman').click()")
+            self.assertEqual(
+                stack.request("GET", "/v1/sessions/demo/human-messages").json()[
+                    "messages"
+                ],
+                [],
+            )
+            with page.expect_request(pattern):
+                takeover[0].continue_()
+            page.unroute(take_pattern)
+            expect(page.locator("#session")).to_have_value("delayed-handoff")
+            for selector in ("#sendHuman", "#user", "#session", "#token", "#refresh"):
+                expect(page.locator(selector)).to_be_disabled()
+            self.assertEqual(len(delayed), 1)
+            page.evaluate("document.getElementById('sendHuman').click()")
+            self.assertEqual(
+                stack.request(
+                    "GET", "/v1/sessions/delayed-handoff/human-messages"
+                ).json()["messages"],
+                [],
+            )
+            delayed[0].continue_()
+            page.unroute(pattern)
+            expect(page.locator("#sendHuman")).to_be_enabled()
+            page.locator("#sendHuman").click()
+            expect(page.locator("#status")).to_contain_text("人工回复已发送")
+            messages = stack.request(
+                "GET", "/v1/sessions/delayed-handoff/human-messages"
+            ).json()["messages"]
+            self.assertEqual(
+                [item["content"] for item in messages], ["接管刷新完成后发送"]
+            )
+            self.assertEqual(
+                stack.request("GET", "/v1/sessions/demo/human-messages").json()[
+                    "messages"
+                ],
+                [],
+            )
+            expect(page.locator("#sendHuman")).to_be_enabled()
+            browser.close()
+
     def test_lost_run_response_survives_reload_and_reuses_key(self):
         from app.infrastructure.database import agent_runs_table, get_engine
         from playwright.sync_api import expect, sync_playwright
