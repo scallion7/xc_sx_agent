@@ -14,6 +14,8 @@ from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
 
+from app.infrastructure.file_lock import exclusive_file_lock
+
 _trace_id: ContextVar[str] = ContextVar("trace_id", default="")
 _session_id: ContextVar[str] = ContextVar("session_id", default="")
 _user_id: ContextVar[str] = ContextVar("user_id", default="")
@@ -167,13 +169,14 @@ class QueueEventSubscriber:
 
 class JsonlEventSubscriber:
     def __init__(self, path: str | Path):
-        self.path = Path(path)
-        self._lock = threading.Lock()
+        self.path = Path(path).resolve()
 
     def __call__(self, event: AgentEvent) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         line = json.dumps(event.to_dict(), ensure_ascii=False)
-        with self._lock, self.path.open("a", encoding="utf-8") as handle:
+        with (
+            exclusive_file_lock(self.path),
+            self.path.open("a", encoding="utf-8") as handle,
+        ):
             handle.write(line + "\n")
 
 

@@ -40,6 +40,10 @@ from app.services.commerce import CommerceService  # noqa: E402
 
 
 def _service(config: Settings = settings) -> AfterSaleService:
+    if config.provider_mode != "mock":
+        from app.web.services import build_api_services
+
+        return build_api_services(config).after_sale
     if config.persistence_backend == "sql":
         case_repository = SqlAfterSaleRepository(config.database_url)
         operation_repository = SqlAfterSaleOperationRepository(config.database_url)

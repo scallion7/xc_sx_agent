@@ -81,6 +81,9 @@ class RunWorker:
                     row["session_key"],
                     row["user_id"],
                 ).load()
+                if row["payload"].get("handoff"):
+                    # Resume an interrupted handoff checkpoint from older workers.
+                    raise RunInterrupted("RUN_HANDOFF")
                 context.guard_ownership()
                 from app.web.services import _invoke_chat
 
@@ -96,7 +99,9 @@ class RunWorker:
         except RunInterrupted as exc:
             if exc.code == "RUN_HANDOFF":
                 try:
-                    self._handoff(context)
+                    self._finish(
+                        context, getattr(context, "handoff_draft", None), handoff=True
+                    )
                 except RunInterrupted as stopped_exc:
                     if stopped_exc.code != "RUN_FENCED":
                         self._fail(context, stopped_exc.code)
@@ -126,62 +131,7 @@ class RunWorker:
             unsubscribe()
         return True
 
-    def _handoff(self, context):
-        from app.repositories.session import SqlSessionRepository
-        from app.schemas.response import CustomerServiceResponse
-        from app.security.guardrails import GuardrailEngine
-
-        row = context.check()
-        if self.repository.unsafe(row):
-            raise RunInterrupted("RUN_WRITE_UNKNOWN")
-        repository = SqlSessionRepository(
-            self.services.config.database_url, context.session_key, context.user_id
-        )
-        original = repository.load() or {
-            "messages": [],
-            "summary": None,
-            "short_term_memory": None,
-        }
-        message = GuardrailEngine.from_config(self.services.config).redact(
-            row["payload"]["request"]["message"]
-        )
-        repository.save(
-            original["messages"] + [{"role": "user", "content": message}],
-            original.get("summary"),
-            original.get("short_term_memory"),
-        )
-        context.mutate(
-            lambda current: (
-                {
-                    "payload": current["payload"]
-                    | (
-                        {"internal_draft": context.handoff_draft}
-                        if hasattr(context, "handoff_draft")
-                        else {}
-                    )
-                    | {
-                        "handoff": {
-                            "reason": "ownership_changed_or_human_owned",
-                            "requires_new_request": True,
-                        }
-                    }
-                },
-                {"reason": "ownership_changed_or_human_owned"},
-            ),
-            "run.handoff",
-        )
-        self._finish(
-            context,
-            CustomerServiceResponse(
-                intent="other",
-                confidence=1,
-                reply="",
-                requires_human=True,
-                evidence_state="awaiting_human",
-            ).model_dump(mode="json"),
-        )
-
-    def _finish(self, context, result):
+    def _finish(self, context, result, *, handoff=False):
         for _ in range(32):
             row = context.check()
             if self.repository.unsafe(row):
@@ -203,6 +153,7 @@ class RunWorker:
                     ),
                     "run.completed",
                     session=context.session_output,
+                    handoff=handoff,
                 )
                 return
             except RunError as exc:

@@ -35,6 +35,8 @@ from app.agent.after_sale.risk import RiskRouter
 from app.observability import EventBus
 from app.repositories.mock_commerce import MockCommerceRepository
 from app.services.commerce import CommerceService
+from app.services.providers import ProviderError
+from app.services.refund_contracts import ExternalRefundReceipt
 
 
 def _case_conflicts(method):
@@ -335,8 +337,21 @@ class AfterSaleService:
             template.idempotency_key,
             case.user_id,
         )
+        if existing and existing.provider == "external" and existing.completed_at:
+            return self._sync_external_case(case, existing)
+        if existing and (
+            template.provider == "external" or existing.provider == "external"
+        ):
+            return self._unknown_external(case, existing)
         if existing is not None and existing.status == OperationStatus.SUCCEEDED.value:
             return self._replay_success(case, existing)
+        if template.provider == "external" and self._previous_refund_attempt(case):
+            # An older cleanup may have removed the ledger while preserving the case.
+            return {
+                "success": False,
+                "error_code": "REFUND_OUTCOME_UNKNOWN",
+                "case": case.to_dict(),
+            }
         if case.status == CaseStatus.COMPLETED.value:
             return {
                 "success": True,
@@ -355,6 +370,11 @@ class AfterSaleService:
                 "blocked": case.status == CaseStatus.PENDING_REVIEW.value,
                 "error": f"工单当前状态 {case.status}，只有已批准工单可以执行",
             }
+        if (
+            template.provider == "external"
+            and self.commerce_service.refund_provider is None
+        ):
+            return {"success": False, "error_code": "REFUND_PROVIDER_NOT_CONFIGURED"}
         if self.refund_workflow is not None:
             from app.services.refund_workflow import RefundWorkflowError
 
@@ -375,6 +395,8 @@ class AfterSaleService:
         if claim.disposition == "replay":
             return self._replay_success(case, operation)
         if claim.disposition == "in_progress":
+            if template.provider == "external" or operation.provider == "external":
+                return self._unknown_external(case, operation)
             self._emit("after_sale.operation.in_progress", operation)
             return {
                 "success": False,
@@ -423,6 +445,8 @@ class AfterSaleService:
                 "success": False,
                 "error": f"售后执行异常: {type(exc).__name__}",
             }
+        if operation.provider == "external":
+            return self._record_external(case, operation, result)
         effect_applied = bool(result.get("success") or result.get("effect_applied"))
         if effect_applied:
             result = dict(result)
@@ -545,8 +569,37 @@ class AfterSaleService:
             self._idempotency_key(case_id),
             case.user_id,
         )
+        query_claim = False
+        if (
+            operation is None
+            and self._previous_refund_attempt(case)
+            and getattr(self.commerce_service, "external_refunds", False)
+        ):
+            # Reconstruct the original deterministic key for a read-only lookup.
+            claim = self.operation_repository.claim(
+                self._operation_template(case),
+                now=self._now(),
+                lease_seconds=self.operation_lease_seconds,
+            )
+            operation = claim.operation
+            query_claim = claim.disposition == "claimed"
         if operation is None:
             return {"success": False, "error": "该工单没有可恢复的执行记录"}
+        if operation.provider == "external" or (
+            not operation.provider
+            and getattr(self.commerce_service, "external_refunds", False)
+        ):
+            if operation.provider == "external" and operation.completed_at:
+                return self._sync_external_case(case, operation)
+            if (not query_claim and operation.lease_active(self._now())) or not getattr(
+                self.commerce_service, "external_refunds", False
+            ):
+                return self._unknown_external(case, operation)
+            try:
+                receipt = self.commerce_service.lookup_refund(operation.idempotency_key)
+            except ProviderError:
+                receipt = None
+            return self._record_external(case, operation, receipt)
         if self.refund_workflow is not None:
             from app.services.refund_workflow import RefundWorkflowError
 
@@ -564,6 +617,87 @@ class AfterSaleService:
             }
         return self.execute_case(case_id, user_id, actor=actor)
 
+    @staticmethod
+    def _previous_refund_attempt(case):
+        return case.status in {"completed", "processing", "execution_failed"} or any(
+            event.action == "execution_started" for event in case.audit_log
+        )
+
+    @staticmethod
+    def _unknown_external(case, operation):
+        return {
+            "success": False,
+            "in_progress": True,
+            "error_code": "REFUND_OUTCOME_UNKNOWN",
+            "error": "外部退款结果待核对，请按原业务键查单。",
+            "case": case.to_dict(),
+            "operation": operation.to_dict(),
+        }
+
+    def _record_external(self, case, operation, response):
+        receipt = ExternalRefundReceipt.terminal(
+            response,
+            key=operation.idempotency_key,
+            order_id=case.order_id,
+            user_id=case.user_id,
+            amount=case.amount,
+        )
+        if (
+            receipt is None
+            and operation.status == "unknown"
+            and operation.provider == "external"
+        ):
+            return self._sync_external_case(case, operation)
+        now = self._now().isoformat()
+        result = (
+            {"success": receipt.status == "succeeded", "refund": receipt.model_dump()}
+            if receipt
+            else {"success": False, "error_code": "REFUND_OUTCOME_UNKNOWN"}
+        )
+        new = replace(
+            operation,
+            provider="external",
+            updated_at=now,
+            lease_expires_at="",
+            status=receipt.status if receipt else "unknown",
+            completed_at=now if receipt else "",
+            provider_reference=receipt.refund_id if receipt else "",
+            result=result,
+            error=""
+            if result["success"]
+            else ("PROVIDER_REJECTED" if receipt else "REFUND_OUTCOME_UNKNOWN"),
+        )
+        try:
+            saved = self.operation_repository.save(
+                new, expected_version=operation.version
+            )
+        except OperationConflictError:
+            saved = self.operation_repository.get(
+                operation.idempotency_key, case.user_id
+            )
+            if not saved or not saved.completed_at:
+                return self._unknown_external(case, saved or operation)
+        return self._sync_external_case(case, saved)
+
+    def _sync_external_case(self, case, operation):
+        status = {"succeeded": "completed", "failed": "execution_failed"}.get(
+            operation.status, "processing"
+        )
+        if case.status != status or case.result != operation.result:
+            case.status, case.result = status, operation.result
+            case.add_audit(
+                "external_refund_" + operation.status, "system", operation.operation_id
+            )
+            self.repository.save(case)
+        if operation.status not in {"succeeded", "failed"}:
+            return self._unknown_external(case, operation)
+        return {
+            "success": operation.status == "succeeded",
+            "result": operation.result,
+            "case": case.to_dict(),
+            "operation": operation.to_dict(),
+        }
+
     def list_recoverable_operations(
         self,
         user_id: str | None = None,
@@ -571,6 +705,7 @@ class AfterSaleService:
         operations = self.operation_repository.list_recoverable(
             now=self._now(),
             user_id=user_id,
+            legacy_external=getattr(self.commerce_service, "external_refunds", False),
         )
         return {
             "success": True,
@@ -697,6 +832,10 @@ class AfterSaleService:
             case_id=case.case_id,
             user_id=case.user_id,
             operation_type="refund",
+            provider="external"
+            if getattr(self.commerce_service, "external_refunds", False)
+            and self.refund_workflow is None
+            else "",
             request_hash=request_hash,
             status=OperationStatus.PENDING.value,
             attempt_count=0,

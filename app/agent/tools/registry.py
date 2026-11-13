@@ -190,7 +190,10 @@ def create_default_tool_registry(
     from app.services.commerce import CommerceService
 
     runtime_config = config or settings
-    commerce = commerce_service or CommerceService(MockCommerceRepository())
+    commerce = commerce_service or CommerceService(
+        MockCommerceRepository(),
+        require_external_refund=runtime_config.provider_mode == "external",
+    )
     knowledge = knowledge_service or KnowledgeService(runtime_config)
     from app.agent.tools.knowledge_context import KnowledgeContext
 
@@ -330,6 +333,8 @@ def create_default_tool_registry(
                 "complaint": sorted(router.complaint_signals),
                 "evidence_types": sorted(router.evidence_types),
             }
+            if router.require_manual_review:
+                snapshot["rules"]["require_manual_review"] = True
         snapshot["evidence"] = registry.action_service.evidence_snapshot(
             arguments.get("evidence_ids", []),
             context.user_id,

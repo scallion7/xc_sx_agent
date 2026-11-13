@@ -32,6 +32,7 @@ from app.platform.common import audit
 from app.repositories.runs import RunError, unpack
 from app.schemas.response import CustomerServiceResponse
 from app.services.actions import digest
+from app.services.refund_contracts import ExternalRefundReceipt
 
 
 def parsed(value):
@@ -42,10 +43,11 @@ def parsed(value):
 
 
 class RunReconciliation:
-    def __init__(self, repository, *, tenant="default"):
+    def __init__(self, repository, *, tenant="default", external_refunds=False):
         self.repository = repository
         self.engine = repository.engine
         self.tenant = tenant
+        self.external_refunds = external_refunds
 
     def _run(self, conn, run_id):
         row = unpack(
@@ -131,6 +133,48 @@ class RunReconciliation:
                 if operation["status"] not in {"succeeded", "failed"}:
                     raise RunError("RUN_BUSINESS_NOT_SETTLED")
                 value = json.loads(operation["payload_json"])
+                if not value.get("provider") and self.external_refunds:
+                    # Pre-upgrade external successes could mean acceptance only.
+                    # Recover the original receipt before admitting them as proof.
+                    raise RunError("RUN_BUSINESS_NOT_SETTLED")
+                if value.get("provider") == "external":
+                    case = (
+                        conn.execute(
+                            select(cases).where(
+                                cases.c.case_id == operation["case_id"],
+                                cases.c.user_id == row["user_id"],
+                            )
+                        )
+                        .mappings()
+                        .first()
+                    )
+                    result = value.get("result") or {}
+                    receipt = case and ExternalRefundReceipt.terminal(
+                        result.get("refund"),
+                        key=operation["idempotency_key"],
+                        order_id=case["order_id"],
+                        user_id=row["user_id"],
+                        amount=json.loads(case["payload_json"])["amount"],
+                    )
+                    if (
+                        not receipt
+                        or receipt.status != operation["status"]
+                        or case["status"]
+                        != {"succeeded": "completed", "failed": "execution_failed"}[
+                            receipt.status
+                        ]
+                        or json.loads(case["payload_json"]).get("result") != result
+                        or not value.get("completed_at")
+                        or value.get("provider_reference") != receipt.refund_id
+                    ):
+                        raise RunError("RUN_BUSINESS_NOT_SETTLED")
+                elif (
+                    operation["status"] == "failed"
+                    and value.get("provider") != "commerce-sandbox"
+                ):
+                    # Old direct-provider failures (including timeouts) can be retried
+                    # by legacy code and carry no final provider receipt.
+                    raise RunError("RUN_BUSINESS_NOT_SETTLED")
                 queues = []
                 for table in (outbox, jobs):
                     criteria = [table.c.aggregate_id == operation["operation_id"]]
@@ -209,6 +253,8 @@ class RunReconciliation:
                 "ACTION_ARGUMENTS_CHANGED",
                 "TOOL_DEADLINE_EXCEEDED",
                 "REFUND_OUTBOX_REQUIRED",
+                "REFUND_CASE_REQUIRED",
+                "REFUND_PROVIDER_NOT_CONFIGURED",
                 "PERMISSION_DENIED",
                 "INVALID_ARGUMENT",
             }

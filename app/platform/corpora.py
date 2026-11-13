@@ -120,9 +120,9 @@ def _validate_corpus(value):
 
 
 class CorpusRegistry:
-    def __init__(self, config):
+    def __init__(self, config, *, engine=None):
         self.config, self.tenant = config, config.tenant_id
-        self.engine = get_engine(config.database_url)
+        self.engine = engine if engine is not None else get_engine(config.database_url)
 
     def get(self, identity):
         with self.engine.connect() as conn:

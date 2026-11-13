@@ -132,6 +132,9 @@ class AgentEvaluationRunner:
         strategies=("react", "plan_execute", "multi"),
         repeats=1,
         execution_mode="offline",
+        prior_rows=(),
+        quality_index=None,
+        checkpoint=None,
     ):
         dataset_hash = validate_dataset(cases)
         if manifest["dataset_hash"] != dataset_hash:
@@ -142,40 +145,86 @@ class AgentEvaluationRunner:
             and plan.model_dump() != manifest["evaluation_plan"]
         ):
             raise PlatformError("EVALUATION_PLAN_MISMATCH")
-        rows = []
+        rows = list(prior_rows)
         used = 0
+        completed = {(row["id"], row["strategy"], row["repeat"]) for row in rows}
+        if len(completed) != len(rows) or not completed <= plan.keys():
+            raise PlatformError("EVALUATION_RESUME_MISMATCH")
+        # Visit families before a second strategy or repeat of the same sample.
+        from collections import defaultdict
+        from itertools import product, zip_longest
+
+        groups = defaultdict(list)
         for case in cases:
-            for strategy in strategies:
-                for repeat in range(repeats):
-                    if len(rows) >= self.max_runs or used >= self.token_budget:
-                        break
-                    started = time.perf_counter()
-                    result = self.driver(case, strategy, self.token_budget - used)
-                    tokens = int(result.get("tokens", 0))
-                    used += tokens
-                    if tokens < 0 or used > self.token_budget:
-                        raise PlatformError("EVALUATION_BUDGET_EXCEEDED")
-                    # success is separate from justified human handoff; neither
-                    # all handoffs nor every handoff are automatically successful.
-                    expected = case.get("expected", "answered")
-                    passed = (
-                        result.get("outcome") == expected
-                        and not result.get("unsafe_actions", 0)
-                        and result.get("database_assertions_passed", False)
+            groups[case["family"]].append(case)
+        ordered = [c for group in zip_longest(*groups.values()) for c in group if c]
+        for repeat, strategy in product(range(repeats), strategies):
+            for case in ordered:
+                if (case["id"], strategy, repeat) in completed:
+                    continue
+                if (
+                    len(rows) - len(prior_rows) >= self.max_runs
+                    or used >= self.token_budget
+                ):
+                    break
+                started = time.perf_counter()
+                result = self.driver(case, strategy, self.token_budget - used)
+                tokens = int(result.get("tokens", 0))
+                used += tokens
+                if tokens < 0 or used > self.token_budget:
+                    raise PlatformError("EVALUATION_BUDGET_EXCEEDED")
+                expected = case.get("expected", "answered")
+                quality = {}
+                if quality_index is not None:
+                    from app.platform.agent_quality import grade
+
+                    quality = grade(
+                        case
+                        | {"knowledge_release_id": manifest["knowledge_release_id"]},
+                        result["response"],
+                        quality_index,
+                        result["policy_lookups"],
                     )
-                    rows.append(
-                        {
-                            **result,
-                            "expected_outcome": expected,
-                            "id": case["id"],
-                            "family": case["family"],
-                            "split": case["split"],
-                            "strategy": strategy,
-                            "repeat": repeat,
-                            "passed": passed,
-                            "latency_ms": (time.perf_counter() - started) * 1000,
-                        }
+                passed = (
+                    result.get("outcome") == expected
+                    and not result.get("unsafe_actions", 0)
+                    and result.get("database_assertions_passed", False)
+                    and quality.get("passed", True)
+                )
+                rows.append(
+                    {
+                        **result,
+                        "expected_outcome": expected,
+                        "id": case["id"],
+                        "family": case["family"],
+                        "split": case["split"],
+                        "strategy": strategy,
+                        "repeat": repeat,
+                        "passed": passed,
+                        "latency_ms": (time.perf_counter() - started) * 1000,
+                        **({"quality": quality} if quality_index is not None else {}),
+                    }
+                )
+                if checkpoint:
+                    checkpoint(
+                        self.summarize(
+                            rows,
+                            plan,
+                            manifest,
+                            cases,
+                            execution_mode,
+                            quality_index,
+                        )
                     )
+        return self.summarize(
+            rows, plan, manifest, cases, execution_mode, quality_index
+        )
+
+    @staticmethod
+    def summarize(rows, plan, manifest, cases, execution_mode, quality_index):
+        strategies, repeats = plan.strategies, plan.repeats
+        used = sum(r["tokens"] for r in rows)
+        dataset_hash = manifest["dataset_hash"]
         unsafe = sum(r.get("unsafe_actions", 0) for r in rows)
         successes = sum(r["passed"] for r in rows)
         n = len(rows)
@@ -207,7 +256,12 @@ class AgentEvaluationRunner:
                     ),
                 }
         return {
-            "schema_version": 2,
+            "schema_version": 2 if quality_index is None else 3,
+            **(
+                {"task_specifications": cases, "evidence_index": quality_index}
+                if quality_index is not None
+                else {}
+            ),
             "evaluation_plan": plan.model_dump(),
             "manifest_hash": hashlib.sha256(encode(manifest).encode()).hexdigest(),
             "dataset_hash": dataset_hash,

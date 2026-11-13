@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 from fastapi import (
     Depends,
     FastAPI,
@@ -86,6 +89,22 @@ def create_app(
             return context
 
         return dependency
+
+    @app.get("/v1/auth/session", response_model=dict[str, str])
+    def browser_session(context: AuthContext = Depends(authenticate)) -> JSONResponse:
+        """Opaque storage namespace for this tenant and authenticated principal."""
+        identity = [
+            services.config.tenant_id,
+            context.provider,
+            services.config.oidc_issuer if context.provider == "oidc" else "",
+            context.subject,
+            context.user_id,
+        ]
+        encoded = json.dumps(identity, ensure_ascii=False, separators=(",", ":"))
+        return JSONResponse(
+            {"storage_scope": hashlib.sha256(encoded.encode()).hexdigest()},
+            headers={"Cache-Control": "no-store"},
+        )
 
     from app.web.platform import register_platform_routes
 

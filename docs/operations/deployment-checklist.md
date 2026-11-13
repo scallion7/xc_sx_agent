@@ -99,7 +99,7 @@ python -m app.scripts.maintain_data verify --source /safe/backup/agent-01.db
 python -m app.scripts.maintain_data restore --source /safe/backup/agent-01.db --destination /safe/restore/agent-01.db
 ```
 
-备份目标必须为新文件；同一路径或硬链接指向同库时拒绝。恢复默认不覆盖已有文件；确需 `--replace` 时先停止目标应用与 Worker，确认目标路径和保留的原始备份。`verify` 只执行 SQLite 完整性检查，不证明业务行数、状态或外部退款结果一致。
+备份目标必须为新文件。备份、恢复库、JSON 报告与源库分别使用独立路径，检查同时涵盖链接别名及 SQLite 的 WAL、SHM、回滚日志。生成和校验在各目标目录中的私有临时文件完成，校验成功后排他发布。恢复已有库须显式指定 `--replace`，先停写并正常关闭目标应用与 Worker。若目标还有 SQLite 日志文件，先用 SQLite 正常完成 checkpoint 和关闭，再重试。替换失败时原目标保留。`verify` 只执行 SQLite 完整性检查，不证明业务行数、状态或外部退款结果一致。
 
 需要可审查的恢复指纹时，先停写并使用独立新目标：
 
@@ -108,13 +108,17 @@ mkdir -p test-results/recovery-01
 python -m app.scripts.backup_restore --backup test-results/recovery-01/agent.db --restore-url sqlite:///test-results/recovery-01/restored.db --report test-results/recovery-01/report.json
 ```
 
-源连接来自 `DATABASE_URL`，输出目录每次使用新名称。该脚本将备份和恢复后的所有表行数、哈希及审计指纹比较并记录耗时。PostgreSQL 使用匹配版本的 `pg_dump`/`pg_restore` 与独立空目标库，指纹比对期间源库必须停写；完整受控用例见[Compose 验收](compose-acceptance.md)。脚本不提供持续备份、PITR 或跨区域策略。
+源连接来自 `DATABASE_URL`，输出目录每次使用新名称。报告路径同样要求新文件，普通发布失败会撤销本次已发布的本地文件。若进程在多个文件发布中遭强制终止，保留已有产物并选择新路径重跑。PostgreSQL 的恢复命令使用单个事务，恢复后的指纹校验或本地报告发布失败时保留已恢复的目标库供核查，重跑须另备空库。该脚本将备份和恢复后的所有表行数、哈希及审计指纹比较并记录耗时。PostgreSQL 使用匹配版本的 `pg_dump`/`pg_restore` 与独立空目标库，指纹比对期间源库必须停写；完整受控用例见[Compose 验收](compose-acceptance.md)。脚本不提供持续备份、PITR 或跨区域策略。
 
 ```bash
 python -m app.scripts.maintain_data cleanup
 python -m app.scripts.maintain_data cleanup --apply
 python -m app.scripts.maintain_data export --destination /safe/export/plans-redacted.json
 ```
+
+省略 `--destination` 时，备份写入 `app/sessions/backup.db`，恢复写入 `app/sessions/restored.db`，导出写入 `app/sessions/plans-redacted.json`。已有导出文件受保护，重复导出应指定新路径。
+
+API、Worker 的 JSONL 订阅器与事件清理共用日志旁的 `.lock` 文件。部署进程需要共享同一日志目录并能获取操作系统文件锁。轮换在持锁期间保留未过期及畸形旧记录，发布后，等待中的写入者重新打开当前日志追加。
 
 `cleanup` 默认预览候选，仍写维护审计；`--apply` 才执行受状态与保留期保护的清理。当前不自动清理 Agent 任务/事件或 HTTP 退款账本。`export` 仅导出计划 ID、用户哈希、状态和更新时间等脱敏元数据，不能作为完整数据库备份。
 

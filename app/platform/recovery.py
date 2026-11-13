@@ -1,6 +1,7 @@
 """Consistent backup/restore to a distinct database, with row/state/audit hashes."""
 
 import hashlib
+import json
 import os
 import subprocess
 import tempfile
@@ -11,7 +12,12 @@ from pathlib import Path
 from sqlalchemy import MetaData, create_engine, select
 from sqlalchemy.engine import make_url
 
-from app.infrastructure.sqlite_snapshot import snapshot_sqlite
+from app.infrastructure.file_outputs import distinct_paths, staged_files
+from app.infrastructure.sqlite_snapshot import (
+    check_journals,
+    sqlite_paths,
+    write_sqlite_snapshot,
+)
 from app.platform.common import PlatformError, encode
 
 
@@ -85,76 +91,98 @@ def fingerprint(url):
     }
 
 
-def backup_restore(source_url, backup_path, restore_url):
+def backup_restore(source_url, backup_path, restore_url, *, report_path=None):
     source, target = make_url(source_url), make_url(restore_url)
-    path = Path(backup_path).resolve()
-    if path.exists():
+    path = Path(backup_path).absolute()
+    if path.exists() or path.is_symlink():
         raise PlatformError("BACKUP_TARGET_EXISTS")
-    if source.drivername.startswith("sqlite") and target.drivername.startswith(
-        "sqlite"
-    ):
-        src, dst = Path(source.database).resolve(), Path(target.database).resolve()
-        if src == dst or path in {src, dst} or dst.exists():
+    outputs = [path]
+    engine = source.get_backend_name()
+    if engine != target.get_backend_name() or engine not in {"sqlite", "postgresql"}:
+        raise PlatformError("BACKUP_ENGINE_MISMATCH")
+    if engine == "sqlite":
+        src, dst = Path(source.database), Path(target.database)
+        protected = [*sqlite_paths(src), *sqlite_paths(dst), *sqlite_paths(path)[1:]]
+        if dst.exists() or dst.is_symlink():
             raise PlatformError("RESTORE_REQUIRES_NEW_DATABASE")
         if not src.is_file():
             raise PlatformError("SOURCE_DATABASE_MISSING")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        start = time.perf_counter()
-        snapshot_sqlite(src, path)
-        backup_seconds = time.perf_counter() - start
-        start = time.perf_counter()
-        snapshot_sqlite(path, dst)
-        restore_seconds = time.perf_counter() - start
-        expected = fingerprint("sqlite:///" + str(path))
-    elif source.drivername.startswith("postgresql") and target.drivername.startswith(
-        "postgresql"
-    ):
-        # Reject aliases for the same database and all nonempty targets. PostgreSQL
-        # restore requires explicit provision of a separate, empty database.
+        check_journals(dst)
+        check_journals(path)
+        outputs.append(dst)
+    else:
+        protected = []
         if (source.host, source.port, source.database) == (
             target.host,
             target.port,
             target.database,
         ):
             raise PlatformError("RESTORE_REQUIRES_NEW_DATABASE")
-        if fingerprint(restore_url)["row_counts"]:
-            raise PlatformError("RESTORE_TARGET_NOT_EMPTY")
+    extra_files = [path]
+    if report_path is not None:
+        report_path = Path(report_path)
+        outputs.append(report_path)
+        extra_files.append(report_path)
+    try:
+        distinct_paths([*protected, *extra_files])
+    except ValueError as exc:
+        raise PlatformError("RECOVERY_PATH_CONFLICT") from exc
 
-        path.parent.mkdir(parents=True, exist_ok=True)
-        start = time.perf_counter()
-        postgres_command(
-            source,
-            ["pg_dump", "--format=custom", "--file", str(path)],
-            "POSTGRES_BACKUP_FAILED",
-        )
-        backup_seconds = time.perf_counter() - start
-        start = time.perf_counter()
-        postgres_command(
-            target,
-            [
-                "pg_restore",
-                "--exit-on-error",
-                "--no-owner",
-                "--dbname",
-                target.database,
-                str(path),
-            ],
-            "POSTGRES_RESTORE_FAILED",
-        )
-        restore_seconds = time.perf_counter() - start
-        # Run with writes quiesced for equality against the source (documented gate).
-        expected = fingerprint(source_url)
-    else:
-        raise PlatformError("BACKUP_ENGINE_MISMATCH")
-    observed = fingerprint(restore_url)
-    if expected != observed:
-        raise PlatformError("RESTORE_FINGERPRINT_MISMATCH")
-    return {
-        "verified": True,
-        "backup_seconds": backup_seconds,
-        "restore_seconds": restore_seconds,
-        "backup_bytes": path.stat().st_size,
-        "snapshot": observed,
-        "source_overwritten": False,
-    }
+    # Keep partial dumps, unverified restores and JSON reports private. Only
+    # publish complete artifacts after all fingerprints and report writes pass.
+    with staged_files(outputs) as stages:
+        backup = stages[0]
+        if engine == "sqlite":
+            start = time.perf_counter()
+            write_sqlite_snapshot(src, backup)
+            backup_seconds = time.perf_counter() - start
+            start = time.perf_counter()
+            restored = stages[1]
+            write_sqlite_snapshot(backup, restored)
+            restore_seconds = time.perf_counter() - start
+            expected = fingerprint(source.set(database=str(backup)))
+            observed = fingerprint(target.set(database=str(restored)))
+            check_journals(path)
+            check_journals(dst)
+        else:
+            if fingerprint(restore_url)["row_counts"]:
+                raise PlatformError("RESTORE_TARGET_NOT_EMPTY")
+            start = time.perf_counter()
+            postgres_command(
+                source,
+                ["pg_dump", "--format=custom", "--file", str(backup)],
+                "POSTGRES_BACKUP_FAILED",
+            )
+            backup_seconds = time.perf_counter() - start
+            start = time.perf_counter()
+            postgres_command(
+                target,
+                [
+                    "pg_restore",
+                    "--single-transaction",
+                    "--exit-on-error",
+                    "--no-owner",
+                    "--dbname",
+                    target.database,
+                    str(backup),
+                ],
+                "POSTGRES_RESTORE_FAILED",
+            )
+            restore_seconds = time.perf_counter() - start
+            expected = fingerprint(source_url)
+            observed = fingerprint(restore_url)
+        if expected != observed:
+            raise PlatformError("RESTORE_FINGERPRINT_MISMATCH")
+        report = {
+            "verified": True,
+            "backup_seconds": backup_seconds,
+            "restore_seconds": restore_seconds,
+            "backup_bytes": backup.stat().st_size,
+            "snapshot": observed,
+            "source_overwritten": False,
+        }
+        if report_path is not None:
+            stages[-1].write_text(
+                json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+    return report

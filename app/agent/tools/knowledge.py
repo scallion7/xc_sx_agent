@@ -108,6 +108,7 @@ class KnowledgeService:
     ) -> dict:
         if self.config.knowledge_versioned_enabled:
             from app.platform.common import PlatformError
+            from app.platform.evaluation_clock import observe_lookup, policy_day
             from app.platform.retrieval import HybridRetrieval
 
             context = {
@@ -147,8 +148,10 @@ class KnowledgeService:
                 top_k=top_k,
                 rerank=self.config.rag_rerank_enabled,
                 context=context,
+                day=policy_day(),
             )
             self.last_result = self.last_result | {"context_sources": sources}
+            observe_lookup(self.last_result)
 
             return self.last_result
 

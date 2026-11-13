@@ -2,6 +2,16 @@
 
 [文档中心](../README.md) · [证据索引](../evidence/README.md)
 
+## 2026-11-13 可靠性、政策评分与配置发布
+
+本地 Python 3.11 启用 Chromium 后，500 项回归全部通过，无跳过，app 语句覆盖率 82%。SQLite 和 PostgreSQL 的升级、漂移检查、业务烟测及降级重建通过。PostgreSQL 短时负载完成 150/150 个任务，四项故障演练通过。
+
+在隔离测试库中完成从目标草稿、固定知识快照、分批评测、报告校验到激活配置的验收。9 个开发家族 × 3 个 Agent 策略共 27 格，核对实际模型回复、检索日期与条件、逐条原文引用、关键事实和数据库终态。任务契约集另有 18 项 HTTP 验收。检查结果与来源环境见[本地检查清单](../evidence/release-workflow-20261113/checks.json)和[27 格评测报告](../evidence/release-workflow-20261113/evaluation.json)。
+
+首次全矩阵检查中，计划执行策略的 5 个可回答题得到通用问候，评分阻止发布。受控模型接入实际计划步骤中的检索输出后，三个策略各通过 9/9，验证库已激活受评草稿。真实模型生产验收使用单独的审核导出、保留集和调用记录。当前原 32 题人工审核尚未完成，原 16 题保留集未运行，本地受控验证的付费调用数为 0。复现方式见[评测发布协议](offline-review.md)。
+
+## 2026-11-10 历史基线
+
 核验日期：2026-11-10。已归档的功能修复 CI 基线为 [`c5aee67`](https://github.com/scallion7/xc_sx_agent/commit/c5aee6716723ae5a4243497db919e094d3b238a5)，对应 [Actions 42813941711](https://github.com/scallion7/xc_sx_agent/actions/runs/42813941711) **9/9 作业成功**；结构化快照见 [ci.json](../evidence/boundary-fixes-20261110/ci.json)。固定提交的 CI、文档修订本地验收和历史性能测量分别列出，不合并不同环境或代码版本的数字。后续提交的状态查看 [Actions 工作流](https://github.com/scallion7/xc_sx_agent/actions/workflows/offline-quality.yml)，并按提交 SHA 核对。
 
 ## 功能修复基线的 CI

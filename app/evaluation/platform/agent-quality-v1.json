@@ -1,0 +1,287 @@
+{
+  "manifest": {
+    "name": "agent-policy-quality",
+    "version": "v1",
+    "status": "frozen_pending_human_review",
+    "case_count": 9,
+    "candidate_ids": [],
+    "files": {
+      "documents.json": "e3383c0426acf9f7758d42dc44bf439a64fd17ad64a47d761f4a80eecc1a67e6",
+      "cases.json": "c37740d22c6b826ea541cf6fac3c8036b8e11288320709513c10895b93d5097a"
+    }
+  },
+  "documents": [
+    {
+      "document_id": "returns",
+      "text": "七天退货支持申请",
+      "metadata": {
+        "title": "returns",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01"
+      }
+    },
+    {
+      "document_id": "shipping",
+      "text": "快递配送三天送达",
+      "metadata": {
+        "title": "shipping",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01"
+      }
+    },
+    {
+      "document_id": "member",
+      "text": "会员积分有效一年",
+      "metadata": {
+        "title": "member",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01"
+      }
+    },
+    {
+      "document_id": "warranty",
+      "text": "耳机保修服务一年",
+      "metadata": {
+        "title": "warranty",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01"
+      }
+    },
+    {
+      "document_id": "invoice",
+      "text": "电子发票申请开具",
+      "metadata": {
+        "title": "invoice",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01"
+      }
+    },
+    {
+      "document_id": "expiry",
+      "text": "过期活动已停止",
+      "metadata": {
+        "title": "expiry",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01",
+        "expires_at": "2020-02-01"
+      }
+    },
+    {
+      "document_id": "region",
+      "text": "区域补贴仅上海适用",
+      "metadata": {
+        "title": "region",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01",
+        "regions": [
+          "上海"
+        ]
+      }
+    },
+    {
+      "document_id": "channel",
+      "text": "商城渠道优惠活动",
+      "metadata": {
+        "title": "channel",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01",
+        "channels": [
+          "app"
+        ]
+      }
+    },
+    {
+      "document_id": "conflict",
+      "text": "产品售后争议政策",
+      "metadata": {
+        "title": "conflict",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01",
+        "policy_key": "conflict",
+        "decision": "allow"
+      }
+    },
+    {
+      "document_id": "conflict-deny",
+      "text": "产品售后争议政策 不支持",
+      "metadata": {
+        "title": "conflict",
+        "source": "synthetic-corpus-v1",
+        "version": "1",
+        "effective_date": "2020-01-01",
+        "policy_key": "conflict",
+        "decision": "deny"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "quality-returns",
+      "family": "returns",
+      "order_family": "order-returns",
+      "split": "development",
+      "query": "请查询七天退货支持申请政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "answerable",
+      "gold_documents": [
+        "returns"
+      ],
+      "facts": [
+        {
+          "document_id": "returns",
+          "quote": "七天退货支持申请"
+        }
+      ],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-shipping",
+      "family": "shipping",
+      "order_family": "order-shipping",
+      "split": "development",
+      "query": "快递配送三天送达政策？",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "answerable",
+      "gold_documents": [
+        "shipping"
+      ],
+      "facts": [
+        {
+          "document_id": "shipping",
+          "quote": "快递配送三天送达"
+        }
+      ],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-member",
+      "family": "member",
+      "order_family": "order-member",
+      "split": "development",
+      "query": "请核实会员积分有效一年政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "answerable",
+      "gold_documents": [
+        "member"
+      ],
+      "facts": [
+        {
+          "document_id": "member",
+          "quote": "会员积分有效一年"
+        }
+      ],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-warranty",
+      "family": "warranty",
+      "order_family": "order-warranty",
+      "split": "development",
+      "query": "请查询耳机保修服务一年政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "answerable",
+      "gold_documents": [
+        "warranty"
+      ],
+      "facts": [
+        {
+          "document_id": "warranty",
+          "quote": "耳机保修服务一年"
+        }
+      ],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-invoice",
+      "family": "invoice",
+      "order_family": "order-invoice",
+      "split": "development",
+      "query": "请查询电子发票申请开具政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "answerable",
+      "gold_documents": [
+        "invoice"
+      ],
+      "facts": [
+        {
+          "document_id": "invoice",
+          "quote": "电子发票申请开具"
+        }
+      ],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-expiry",
+      "family": "expiry",
+      "order_family": "order-expiry",
+      "split": "development",
+      "query": "过期活动已停止政策是否仍可用？",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "no_evidence",
+      "gold_documents": [],
+      "facts": [],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-region",
+      "family": "region",
+      "order_family": "order-region",
+      "split": "development",
+      "query": "请核实区域补贴仅上海适用政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "needs_clarification",
+      "gold_documents": [
+        "region"
+      ],
+      "facts": [],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-channel",
+      "family": "channel",
+      "order_family": "order-channel",
+      "split": "development",
+      "query": "请核实商城渠道优惠活动政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "needs_clarification",
+      "gold_documents": [
+        "channel"
+      ],
+      "facts": [],
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "quality-conflict",
+      "family": "conflict",
+      "order_family": "order-conflict",
+      "split": "development",
+      "query": "请查询产品售后争议政策",
+      "day": "2026-11-13",
+      "context": {},
+      "outcome": "policy_conflict",
+      "gold_documents": [
+        "conflict",
+        "conflict-deny"
+      ],
+      "facts": [],
+      "review_status": "pending_human_review"
+    }
+  ]
+}

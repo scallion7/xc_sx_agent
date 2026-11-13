@@ -16,7 +16,9 @@ def main() -> None:
     )
     parser.add_argument("--apply", action="store_true", help="实际清理；默认只预览")
     parser.add_argument("--source", default="", help="恢复或校验使用的源文件")
-    parser.add_argument("--destination", default="app/sessions/backup.db")
+    parser.add_argument(
+        "--destination", help="输出文件；导出、备份、恢复各有独立默认路径"
+    )
     parser.add_argument(
         "--replace", action="store_true", help="恢复时允许替换明确指定的目标"
     )
@@ -25,12 +27,14 @@ def main() -> None:
     if args.action == "cleanup":
         result = service.cleanup(dry_run=not args.apply, actor="maintenance-cli")
     elif args.action == "backup":
-        result = service.backup_sqlite(args.destination)
+        result = service.backup_sqlite(args.destination or "app/sessions/backup.db")
     elif args.action == "restore":
         if not args.source:
             parser.error("restore 必须提供 --source")
         result = service.restore_sqlite(
-            args.source, args.destination, replace=args.replace
+            args.source,
+            args.destination or "app/sessions/restored.db",
+            replace=args.replace,
         )
     elif args.action == "verify":
         if not args.source:
@@ -38,7 +42,9 @@ def main() -> None:
         service.verify_sqlite(args.source)
         result = {"verified": True, "source": args.source}
     else:
-        result = service.redacted_export(args.destination)
+        result = service.redacted_export(
+            args.destination or "app/sessions/plans-redacted.json"
+        )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

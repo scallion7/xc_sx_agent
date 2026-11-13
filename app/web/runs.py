@@ -28,6 +28,10 @@ class RunResolutionRequest(BaseModel):
 
 
 def register_run_routes(app, services, require):
+    external_refunds = services.config.provider_mode == "external" or getattr(
+        services.commerce, "external_refunds", False
+    )
+
     def repository():
         if services.config.persistence_backend != "sql":
             raise HTTPException(503, detail={"error_code": "RUNS_REQUIRE_SQL"})
@@ -107,7 +111,9 @@ def register_run_routes(app, services, require):
 
         try:
             return RunReconciliation(
-                repository(), tenant=services.config.tenant_id
+                repository(),
+                tenant=services.config.tenant_id,
+                external_refunds=external_refunds,
             ).inspect(run_id)
         except RunError as exc:
             failure(exc)
@@ -123,7 +129,11 @@ def register_run_routes(app, services, require):
         repo = repository()
         try:
             return repo.public(
-                RunReconciliation(repo, tenant=services.config.tenant_id).resolve(
+                RunReconciliation(
+                    repo,
+                    tenant=services.config.tenant_id,
+                    external_refunds=external_refunds,
+                ).resolve(
                     run_id,
                     context.user_id,
                     request.expected_version,

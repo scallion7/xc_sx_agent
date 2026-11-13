@@ -12,9 +12,11 @@ from sqlalchemy import and_, case, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.infrastructure.database import agent_runs_table as runs
-from app.infrastructure.database import get_engine, sessions_table
+from app.infrastructure.database import get_engine, platform, sessions_table
 from app.infrastructure.database import run_events_table as events
 from app.platform.telemetry import traced
+from app.schemas.response import CustomerServiceResponse
+from app.security.guardrails import GuardrailEngine
 from app.services.actions import digest
 
 TERMINAL = {"completed", "cancelled", "dead_letter", "needs_reconciliation", "resolved"}
@@ -210,7 +212,9 @@ class RunRepository:
         )
 
     @traced("database.run.checkpoint")
-    def change(self, row, changes, event_type, detail=None, *, session=None):
+    def change(
+        self, row, changes, event_type, detail=None, *, session=None, handoff=False
+    ):
         values = dict(changes)
         if "payload" in values:
             values["payload_json"] = json.dumps(
@@ -221,46 +225,16 @@ class RunRepository:
             # Serialize dispatch registration with takeover/release. Once registered,
             # a request is in flight and may still consume provider usage.
             runtime = row["payload"].get("runtime", {})
-            if event_type == "call.started" and runtime.get("collaboration"):
-                from app.infrastructure.database import platform
-
-                own_table = platform["conversation_ownership"]
-                criteria = (
-                    own_table.c.tenant_id == runtime["tenant_id"],
-                    own_table.c.user_id == row["user_id"],
-                    own_table.c.session_key == row["session_key"],
-                )
-                conn.execute(
-                    update(own_table)
-                    .where(*criteria)
-                    .values(version=own_table.c.version)
-                )
-                own_row = (
-                    conn.execute(select(own_table).where(*criteria)).mappings().first()
-                )
-                if own_row and (
-                    own_row["state"] == "human_owned"
-                    or (
-                        "ownership_version" in runtime
-                        and own_row["version"] != runtime["ownership_version"]
-                    )
-                ):
-                    raise RunInterrupted("RUN_HANDOFF")
-            if values.get("status") == "completed" and row["payload"].get(
-                "runtime", {}
-            ).get("collaboration"):
-                from app.infrastructure.database import platform
-
+            completing = event_type == "run.completed"
+            if runtime.get("collaboration") and (
+                completing or event_type == "call.started"
+            ):
                 own = platform["conversation_ownership"]
-                tenant = row["payload"]["runtime"]["tenant_id"]
                 criteria = (
-                    own.c.tenant_id == tenant,
+                    own.c.tenant_id == runtime["tenant_id"],
                     own.c.user_id == row["user_id"],
                     own.c.session_key == row["session_key"],
                 )
-                # Serialize delivery with takeover. Suppress generated external
-                # replies after takeover; preserve only an internal draft in the
-                # protected run payload and do not append it to user history.
                 conn.execute(update(own).where(*criteria).values(version=own.c.version))
                 ownership = (
                     conn.execute(select(own).where(*criteria)).mappings().first()
@@ -272,34 +246,65 @@ class RunRepository:
                         and ownership["version"] != runtime["ownership_version"]
                     )
                 ):
-                    payload = (
-                        json.loads(values["payload_json"])
-                        if "payload_json" in values
-                        else dict(row["payload"])
+                    if not completing:
+                        raise RunInterrupted("RUN_HANDOFF")
+                    handoff = True
+            new_handoff = handoff and not row["payload"].get("handoff")
+            if handoff:
+                payload = json.loads(values["payload_json"])
+                if payload.get("result") is not None:
+                    payload.setdefault("internal_draft", payload["result"])
+                payload["handoff"] = {
+                    "reason": "ownership_changed_or_human_owned",
+                    "requires_new_request": True,
+                }
+                payload["result"] = CustomerServiceResponse(
+                    intent="other",
+                    confidence=1,
+                    reply="",
+                    requires_human=True,
+                    evidence_state="awaiting_human",
+                ).model_dump(mode="json")
+                values["payload_json"] = json.dumps(payload, ensure_ascii=False)
+                original = row["payload"].get("snapshots", {}).get("session") or {}
+                message = GuardrailEngine().redact(row["payload"]["request"]["message"])
+                session = {
+                    "messages": [
+                        *original.get("messages", []),
+                        {"role": "user", "content": message},
+                    ],
+                    "summary": original.get("summary"),
+                    "short_term_memory": original.get("short_term_memory"),
+                }
+                # Reserve consecutive event sequence numbers in the same commit.
+                if new_handoff:
+                    values["version"] += 1
+            criteria = [
+                runs.c.run_id == row["run_id"],
+                runs.c.version == row["version"],
+            ]
+            if completing:
+                criteria.extend(
+                    (
+                        runs.c.status == "running",
+                        runs.c.owner == row["owner"],
+                        runs.c.fence == row["fence"],
+                        runs.c.lease_until > self.clock(),
                     )
-                    payload.setdefault("internal_draft", payload.get("result"))
-                    result_payload = dict(payload.get("result") or {})
-                    result_payload.update(
-                        reply="",
-                        requires_human=True,
-                        follow_up_question=None,
-                        citations=[],
-                    )
-                    payload["result"] = result_payload
-                    values["payload_json"] = json.dumps(payload, ensure_ascii=False)
-                    if not payload.get("handoff"):
-                        session = None
-            result = conn.execute(
-                update(runs)
-                .where(
-                    runs.c.run_id == row["run_id"],
-                    runs.c.version == row["version"],
                 )
-                .values(**values)
-            )
+            result = conn.execute(update(runs).where(*criteria).values(**values))
+            if completing and row["lease_until"] <= self.clock():
+                raise RunInterrupted("RUN_FENCED")
             if result.rowcount != 1:
                 raise RunError("RUN_VERSION_CONFLICT")
             updated = row | values
+            if new_handoff:
+                self._event(
+                    conn,
+                    row | {"version": row["version"] + 1},
+                    "run.handoff",
+                    payload["handoff"],
+                )
             self._event(conn, updated, event_type, detail or {})
             if session is not None:
                 # Session output and terminal result share one transaction.
@@ -311,7 +316,14 @@ class RunRepository:
                     conn.execute(select(sessions_table).where(query)).mappings().first()
                 )
                 current = self.session_state(old)
-                if current != row["payload"].get("snapshots", {}).get("session"):
+                original = row["payload"].get("snapshots", {}).get("session")
+                # Legacy workers could have already persisted precisely this customer
+                # input before a crash. Accept that exact state without appending it.
+                if current != original and not (
+                    handoff
+                    and current == session
+                    and (row["attempt"] > 1 or not new_handoff)
+                ):
                     raise RunError("SESSION_CHANGED")
                 payload = dict(
                     session_key=row["session_key"],

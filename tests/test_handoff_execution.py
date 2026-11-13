@@ -1,13 +1,16 @@
 """Ownership generations fence queued and in-flight runs without replaying old intent."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+from app.agent.chat import EcomAgent
 from app.platform.conversation_handoff import ConversationHandoffService
+from app.repositories.runs import RunError, RunInterrupted
 from app.repositories.session import SqlSessionRepository
 from app.services.run_context import current_run
 from app.services.runs import RunWorker
 from app.web.services import build_api_services, runtime_snapshot
 
+from tests.fakes import FakeOpenAI
 from tests.test_async_runs import AsyncRunTests, FakeAgent, reply
 
 
@@ -132,6 +135,124 @@ class HandoffExecutionTests(AsyncRunTests):
         )
         self.assertEqual(final["payload"]["result"]["reply"], "")
         self.assertTrue(final["payload"]["result"]["requires_human"])
+
+    def test_real_agent_saved_reply_and_user_input_commit_only_handoff(self):
+        def factory(**kwargs):
+            kwargs.pop("mode")
+            return EcomAgent(client=FakeOpenAI(), **kwargs)
+
+        self.setup_handoff(factory)
+        row = self.submit_owned()
+        actual = EcomAgent.save
+
+        def take_after_save(agent):
+            actual(agent)
+            self.assertIsNotNone(current_run().session_output)
+            self.handoff.transition("user-1", "user-1:chat", "operator", 1, take=True)
+
+        with patch.object(EcomAgent, "save", take_after_save):
+            RunWorker(self.services, heartbeat=False).run_once()
+        final = self.repo.get(row["run_id"])
+        self.assertEqual(final["status"], "completed")
+        self.assertTrue(final["payload"]["internal_draft"]["reply"])
+        self.assertEqual(final["payload"]["result"]["evidence_state"], "awaiting_human")
+        self.assertEqual(
+            SqlSessionRepository(self.url, "user-1:chat", "user-1").load()["messages"],
+            [{"role": "user", "content": "你好"}],
+        )
+
+    def test_interrupted_handoff_rolls_back_and_next_owner_appends_once(self):
+        self.setup_handoff(lambda **_: FakeAgent())
+        self.handoff.transition("user-1", "user-1:chat", "operator", 1, take=True)
+        row = self.submit_owned()
+        sessions = SqlSessionRepository(self.url, "user-1:chat", "user-1")
+        worker = RunWorker(self.services, repository=self.repo, heartbeat=False)
+        actual = self.repo._event
+
+        def after_event(conn, run, event_type, detail):
+            actual(conn, run, event_type, detail)
+            if event_type == "run.completed":
+                raise SystemExit(9)
+
+        with patch.object(self.repo, "_event", side_effect=after_event):
+            with self.assertRaises(SystemExit):
+                worker.run_once()
+        self.assertIsNone(sessions.load())
+        self.assertFalse(
+            any(
+                e["event_type"] == "run.handoff"
+                for e in self.repo.events(row["run_id"])
+            )
+        )
+        self.expire(row["run_id"])
+        worker.run_once()
+        self.assertEqual(
+            sessions.load()["messages"], [{"role": "user", "content": "你好"}]
+        )
+        self.assertEqual(
+            [e["event_type"] for e in self.repo.events(row["run_id"])][-2:],
+            ["run.handoff", "run.completed"],
+        )
+        self.submit(key="new")
+
+    def test_legacy_partial_handoff_is_recognized_without_duplicate_or_overwrite(self):
+        self.setup_handoff(lambda **_: FakeAgent())
+        self.handoff.transition("user-1", "user-1:chat", "operator", 1, take=True)
+        row = self.submit_owned()
+        self.repo.claim("old")
+        from app.services.run_context import RunContext
+
+        sessions = SqlSessionRepository(self.url, "user-1:chat", "user-1")
+        with RunContext(self.repo, self.repo.get(row["run_id"])):
+            sessions.load()
+        # Old worker independently committed the exact snapshot + user input.
+        customer = [{"role": "user", "content": "你好"}]
+        sessions.save(customer, None, None)
+        self.expire(row["run_id"])
+        RunWorker(self.services, repository=self.repo, heartbeat=False).run_once()
+        self.assertEqual(self.repo.get(row["run_id"])["status"], "completed")
+        self.assertEqual(sessions.load()["messages"], customer)
+
+    def test_legacy_handoff_preserves_conflicting_external_history(self):
+        self.setup_handoff(lambda **_: FakeAgent())
+        self.handoff.transition("user-1", "user-1:chat", "operator", 1, take=True)
+        row = self.submit_owned()
+        from app.services.run_context import RunContext
+
+        context = RunContext(self.repo, self.repo.claim("old"))
+        sessions = SqlSessionRepository(self.url, "user-1:chat", "user-1")
+        with context:
+            sessions.load()
+        external = [{"role": "user", "content": "different committed history"}]
+        sessions.save(external, None, None)
+        self.expire(row["run_id"])
+        RunWorker(self.services, repository=self.repo, heartbeat=False).run_once()
+        self.assertEqual(self.repo.get(row["run_id"])["status"], "needs_reconciliation")
+        self.assertEqual(sessions.load()["messages"], external)
+        self.assertFalse(
+            any(
+                e["event_type"] == "run.handoff"
+                for e in self.repo.events(row["run_id"])
+            )
+        )
+
+    def test_expired_owner_cannot_commit_handoff_at_final_publish(self):
+        self.setup_handoff(lambda **_: FakeAgent())
+        self.handoff.transition("user-1", "user-1:chat", "operator", 1, take=True)
+        row = self.submit_owned()
+        claimed = self.repo.claim("old")
+        self.expire(row["run_id"])
+        with self.assertRaises((RunInterrupted, RunError)) as error:
+            self.repo.change(
+                claimed,
+                {"status": "completed", "payload": claimed["payload"]},
+                "run.completed",
+                handoff=True,
+            )
+        self.assertIn(error.exception.code, ("RUN_FENCED", "RUN_VERSION_CONFLICT"))
+        self.assertIsNone(
+            SqlSessionRepository(self.url, "user-1:chat", "user-1").load()
+        )
 
 
 def load_tests(loader, tests, pattern):

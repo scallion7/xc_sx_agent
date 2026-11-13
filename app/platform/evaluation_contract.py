@@ -48,7 +48,7 @@ def validate_release_report(report, manifest):
             report.get("manifest_hash")
             != hashlib.sha256(encode(manifest).encode()).hexdigest()
             or report.get("dataset_hash") != manifest["dataset_hash"]
-            or report.get("schema_version") != 2
+            or report.get("schema_version") not in (2, 3)
             or report.get("complete") is not True
             or report.get("passed") is not True
             or report.get("split_leakage") is not False
@@ -59,6 +59,8 @@ def validate_release_report(report, manifest):
             or len(rows) != report["sample_count"]
         ):
             raise ValueError("Incomplete report")
+        if report["schema_version"] == 3:
+            verify_quality_rows(report, manifest)
         keys = []
         used = 0
         for row in rows:
@@ -85,3 +87,68 @@ def validate_release_report(report, manifest):
             raise ValueError("Inconsistent report")
     except (KeyError, TypeError, ValueError, ValidationError) as exc:
         raise PlatformError("EVALUATION_GATE_FAILED") from exc
+
+
+def verify_quality_rows(report, manifest):
+    """Recompute each grade from the frozen tasks, canonical index and actual reply."""
+    from app.platform.agent_quality import grade
+    from app.platform.evaluation import validate_dataset
+
+    try:
+        specs = report["task_specifications"]
+        if validate_dataset(specs) != manifest["dataset_hash"]:
+            raise ValueError("Different rubric")
+        tasks = {c["id"]: c for c in specs}
+        if list(tasks) != manifest["evaluation_plan"]["case_ids"]:
+            raise ValueError("Different cases")
+        planned = EvaluationPlan.model_validate(manifest["evaluation_plan"]).keys()
+        seen = set()
+        for row in report["cases"]:
+            key = (row["id"], row["strategy"], row["repeat"])
+            if key in seen or key not in planned:
+                raise ValueError("Unexpected cell")
+            seen.add(key)
+            case = tasks[row["id"]]
+            result = grade(
+                case | {"knowledge_release_id": manifest["knowledge_release_id"]},
+                row["response"],
+                report["evidence_index"],
+                row["policy_lookups"],
+            )
+            expected = case["expected"]
+            observed = "handoff" if row["response"]["requires_human"] else "answered"
+            passed = (
+                result["passed"]
+                and observed == expected
+                and row["database_assertions_passed"] is True
+                and row["unsafe_actions"] == 0
+            )
+            if (
+                result != row["quality"]
+                or row["passed"] is not passed
+                or row["outcome"] != observed
+                or row["expected_outcome"] != expected
+                or row["split"] != case["split"]
+            ):
+                raise ValueError("Quality result disagrees with response")
+    except (KeyError, AttributeError, ValueError, TypeError, ValidationError) as exc:
+        raise PlatformError("EVALUATION_GATE_FAILED") from exc
+
+
+def require_production_evidence(report, config):
+    from app.platform.agent_dataset import verify_review_source
+    from app.platform.agent_eval_driver import check_live_receipts
+
+    if (
+        report.get("schema_version") != 3
+        or report.get("execution_mode") != "live"
+        or report.get("review_status") != "human_reviewed"
+        or not report.get("review_reference")
+        or any(
+            c.get("split") != "holdout" for c in report.get("task_specifications", [])
+        )
+    ):
+        raise PlatformError("LIVE_REVIEW_REQUIRED")
+    verify_review_source(report, config)
+    for row in report["cases"]:
+        check_live_receipts(row.get("raw_model_responses", []))

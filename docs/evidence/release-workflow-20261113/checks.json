@@ -1,0 +1,175 @@
+{
+  "date": "2026-11-13",
+  "base_commit": "75d364a15f2997953c099c3b16bc8ad80a1a2137",
+  "working_tree_at_validation": true,
+  "local_environment": "Python 3.11 with repository lockfile, Playwright Chromium build 1187, isolated PostgreSQL 17.11, SQLite",
+  "acceptance_commands": {
+    "sqlite-upgrade": {
+      "passed": true,
+      "seconds": 0.26
+    },
+    "sqlite-drift": {
+      "passed": true,
+      "seconds": 0.2
+    },
+    "sqlite-business": {
+      "passed": true,
+      "seconds": 0.67
+    },
+    "sqlite-platform": {
+      "passed": true,
+      "seconds": 0.73
+    },
+    "sqlite-downgrade": {
+      "passed": true,
+      "seconds": 0.24
+    },
+    "sqlite-rebuild": {
+      "passed": true,
+      "seconds": 0.25
+    },
+    "pg-upgrade": {
+      "passed": true,
+      "seconds": 0.34
+    },
+    "pg-drift": {
+      "passed": true,
+      "seconds": 0.24
+    },
+    "pg-business": {
+      "passed": true,
+      "seconds": 0.65
+    },
+    "pg-platform": {
+      "passed": true,
+      "seconds": 0.85
+    },
+    "pg-downgrade": {
+      "passed": true,
+      "seconds": 0.3
+    },
+    "pg-rebuild": {
+      "passed": true,
+      "seconds": 0.29
+    },
+    "plan-gate": {
+      "passed": true,
+      "seconds": 1.26
+    },
+    "plan-benchmark": {
+      "passed": true,
+      "seconds": 0.45
+    },
+    "capacity": {
+      "passed": true,
+      "seconds": 6.46
+    },
+    "recovery": {
+      "passed": true,
+      "seconds": 14.17
+    },
+    "retrieval": {
+      "passed": true,
+      "seconds": 0.78
+    },
+    "tasks": {
+      "passed": true,
+      "seconds": 37.4
+    },
+    "comparison": {
+      "passed": true,
+      "seconds": 0.79
+    },
+    "index": {
+      "passed": true,
+      "seconds": 9.18
+    },
+    "pg-load": {
+      "passed": true,
+      "seconds": 26.87
+    }
+  },
+  "controlled_quality": {
+    "artifact": "evaluation.json",
+    "trials": 27,
+    "passed": true,
+    "correct_by_strategy": {
+      "multi": 9,
+      "plan_execute": 9,
+      "react": 9
+    },
+    "unsafe_actions": 0,
+    "deployment_head_matched_draft": true,
+    "simulated_tokens": 2700,
+    "negative_first_run": {
+      "passed": false,
+      "failed_cells": [
+        [
+          "quality-returns",
+          "plan_execute"
+        ],
+        [
+          "quality-shipping",
+          "plan_execute"
+        ],
+        [
+          "quality-member",
+          "plan_execute"
+        ],
+        [
+          "quality-warranty",
+          "plan_execute"
+        ],
+        [
+          "quality-invoice",
+          "plan_execute"
+        ]
+      ],
+      "finding": "Plan synthesis returned the fixture greeting for supported questions."
+    }
+  },
+  "tasks": {
+    "planned": 18,
+    "passed": 18
+  },
+  "load": {
+    "accepted": 150,
+    "completed": 150,
+    "rejected": 0,
+    "offered_scenarios": 150
+  },
+  "postgres_drills": [
+    "queue_saturated",
+    "worker_exit_after_claim",
+    "postgres_fast_stop_restart",
+    "controlled_model_http_unavailable"
+  ],
+  "compiled_index_equivalence": {
+    "1000": true,
+    "10000": true
+  },
+  "paid_model_calls": 0,
+  "original_holdout_run": false,
+  "human_reviewed_original": false,
+  "infrastructure_checks": "Docker Compose, Trivy, dependency SBOM/audits and Python 3.10/3.12 run in the push workflow; see head commit CI.",
+  "unittest": {
+    "passed": 500,
+    "skipped": 0,
+    "elapsed_seconds": 109.066,
+    "chromium_enabled": true,
+    "command": "RUN_BROWSER_E2E=1 python -m coverage run -m unittest discover -s tests -v"
+  },
+  "app_statement_coverage": {
+    "total": 13499,
+    "missed": 2375,
+    "percent": 82,
+    "gate_percent": 65
+  },
+  "static": {
+    "ruff": "passed",
+    "formatted_python_files": 375,
+    "openapi_paths": 104,
+    "documentation_files": 61,
+    "local_links_and_images": 677
+  }
+}

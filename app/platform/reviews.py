@@ -41,15 +41,15 @@ class Annotation(BaseModel):
 
 
 class ReviewWorkspace:
-    def __init__(self, config, *, project_id=None):
-        self.engine = get_engine(config.database_url)
+    def __init__(self, config, *, project_id=None, engine=None):
+        self.engine = engine if engine is not None else get_engine(config.database_url)
         self.tenant = config.tenant_id
         self.manifest, self.documents, self.cases = load_frozen()
         legacy = hashlib.sha256(encode(self.manifest).encode()).hexdigest()
         if project_id and project_id != legacy:
             from app.platform.corpora import CorpusRegistry
 
-            data = CorpusRegistry(config).get(project_id)
+            data = CorpusRegistry(config, engine=self.engine).get(project_id)
             self.manifest, self.documents, self.cases = (
                 data["manifest"],
                 data["documents"],
@@ -269,6 +269,9 @@ class ReviewWorkspace:
                 conn.exec_driver_sql("BEGIN")
             p = self.project(conn, project_id, lock=True)
             rows = self.annotations(conn, project_id)
+        return self._export_rows(project_id, p, rows)
+
+    def _export_rows(self, project_id, p, rows):
         reviews = []
         for case in self.cases:
             row = rows.get(case["id"])

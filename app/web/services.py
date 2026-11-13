@@ -101,6 +101,7 @@ def build_api_services(
             refund_provider=app_runtime.refund_provider,
             provider_timeout_seconds=config.provider_timeout_seconds,
             provider_read_max_attempts=config.provider_read_max_attempts,
+            require_external_refund=config.provider_mode == "external",
         )
 
     if after_sale_service is None:

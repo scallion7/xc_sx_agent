@@ -120,11 +120,12 @@ class SqlAfterSaleOperationRepository(AfterSaleOperationRepository):
         *,
         now: datetime,
         user_id: str | None = None,
+        legacy_external: bool = False,
     ) -> list[AfterSaleOperation]:
         return [
             operation
             for operation in self.list(user_id=user_id, limit=10_000)
-            if operation.recoverable(now)
+            if operation.recoverable(now, legacy_external=legacy_external)
         ]
 
     def list(

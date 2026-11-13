@@ -3,13 +3,33 @@ export class RequestClient {
   constructor(token) {
     this.token = token;
     this.inflight = new Map();
+    this.identities = new Map();
   }
 
   async scopeKey(scope, token = this.token()) {
-    const bytes = new TextEncoder().encode(token);
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    const identity = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
-    return `ecom:${identity}:${scope}`;
+    // Share concurrent lookups only. A revoked credential cannot select a slot.
+    if (!this.identities.has(token)) {
+      const lookup = this.request('/v1/auth/session', 'GET', undefined, {}, token)
+        .finally(() => this.identities.delete(token));
+      this.identities.set(token, lookup);
+    }
+    const {storage_scope} = await this.identities.get(token);
+    if (!/^[a-f0-9]{64}$/.test(storage_scope)) throw new Error('无法核实当前身份，请重新连接。');
+    const slot = `ecom:v2:${storage_scope}:${scope}`;
+    // An old tab may still have a pending request indexed by this exact credential.
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+    const legacyIdentity = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+    const legacy = `ecom:${legacyIdentity}:${scope}`;
+    const saved = sessionStorage.getItem(legacy);
+    if (saved !== null) {
+      const current = sessionStorage.getItem(slot);
+      if (current !== null && current !== saved && scope.startsWith('pending:')) {
+        throw new Error('同一账号有两笔待核对提交，请先核对处理记录。');
+      }
+      if (current === null) sessionStorage.setItem(slot, saved);
+      sessionStorage.removeItem(legacy);
+    }
+    return slot;
   }
 
   async request(path, method = 'GET', body, headers = {}, token = this.token()) {
@@ -73,7 +93,8 @@ export class RequestClient {
       .catch(error => {
         // This specific CAS rejection guarantees no command was committed.
         // Other conflicts, transport failures and 5xx keep the original intent.
-        if ([400, 401, 403, 404, 405, 413, 422].includes(error.status) ||
+        if ([400, 404, 405, 413, 422].includes(error.status) ||
+            (!pending && [401, 403].includes(error.status)) ||
             (error.status === 409 && error.code === 'INTAKE_VERSION_CONFLICT')) {
           sessionStorage.removeItem(slot);
         }

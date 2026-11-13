@@ -61,6 +61,27 @@ class OidcIdentityTests(unittest.TestCase):
         path.write_text(json.dumps({"version": 1, "bindings": bindings}))
         return str(path)
 
+    def test_browser_scope_binds_verified_principal_and_tenant(self):
+        first = token(self.private, sub="first", jti="one")
+        renewed = token(
+            self.private, sub="first", jti="two", preferred_username="renamed"
+        )
+        other = token(self.private, sub="second", jti="three")
+
+        def read(tenant, credential):
+            client = TestClient(
+                create_app(self.config(tenant_id=tenant), auth_provider=self.provider)
+            )
+            return client.get("/v1/auth/session", headers={"X-API-Key": credential})
+
+        original = read("shop-a", first)
+        self.assertEqual(original.status_code, 200)
+        self.assertEqual(original.headers["cache-control"], "no-store")
+        self.assertEqual(original.json(), read("shop-a", renewed).json())
+        self.assertNotEqual(original.json(), read("shop-a", other).json())
+        self.assertNotEqual(original.json(), read("shop-b", renewed).json())
+        self.assertEqual(read("shop-a", "").status_code, 401)
+
     def test_same_display_name_and_long_subject_prefixes_do_not_collide(self):
         self.assertNotEqual(self.context("alice").user_id, self.context("bob").user_id)
         self.assertNotEqual(

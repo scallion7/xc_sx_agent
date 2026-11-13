@@ -77,9 +77,9 @@ python -m app.scripts.demo_stack --smoke --directory app/sessions/smoke-demo
 
 ## 验证与范围
 
-已归档的功能修复基线 [`c5aee67`](https://github.com/scallion7/xc_sx_agent/commit/c5aee6716723ae5a4243497db919e094d3b238a5) 的 [GitHub Actions](https://github.com/scallion7/xc_sx_agent/actions/runs/42813941711) 已通过全部 9 项作业，覆盖三个 Python 版本、SQLite/PostgreSQL 迁移、真实浏览器、供应链检查、持续负载及完整 Compose 部署恢复。
+本地验收覆盖数据库迁移与恢复、人工接管、令牌续签、退款超时查单、审批阈值固定和多进程日志清理。Agent 政策质量开发集包含 9 个业务家族：ReAct、Plan-and-Execute 和多 Agent 共 27 格，逐题校验关键事实、引用及转人工原因，并在临时目标库验证发布。详细结果见[当前验收](docs/evaluation/acceptance.md)。
 
-后续提交的运行状态见页首 CI 标记。测试数量、跳过原因、覆盖率、原始证据和复现入口统一维护在[当前验收](docs/evaluation/acceptance.md)。受控模型下的工程验证与真实模型质量分别记录：人工金标准、原冻结 holdout、付费模型、真实支付和生产容量尚未验收。
+[评测与发布指南](docs/evaluation/offline-review.md)提供创建草稿、指定知识快照、限额分批续跑、核验原件及切换配置的命令。真实人工审核仍待完成，原 16 题保留集与付费模型评测待审核完成后执行。最近提交的 CI 状态见页首标记。
 
 - 默认余弦检索与版本化 SQL 知识平台可用；Chroma 后端因未修复安全公告停用。
 - 新平台表有租户作用域，但不能据此认为所有历史业务表已经支持共享数据库的 SaaS 多租户。

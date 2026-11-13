@@ -1,6 +1,6 @@
 # 验收证据索引
 
-核验日期：2026-11-10。本目录保存已产生的原始结果；当前结论见[验收状态](../evaluation/acceptance.md)，复现方法见[文档中心](../README.md)。目录名称中的 round、阶段和日期是产物批次标识，保留用于追溯。
+核验日期：2026-11-13。本目录保存已产生的原始结果；当前结论见[验收状态](../evaluation/acceptance.md)，复现方法见[文档中心](../README.md)。目录名称中的 round、阶段和日期是产物批次标识，保留用于追溯。
 
 ## 功能修复基线的远端验收
 
@@ -19,6 +19,7 @@
 
 | 目录 | 阅读入口 | 生成时的证据身份 |
 |---|---|---|
+| [release-workflow-20261113](release-workflow-20261113/) | [验收清单](release-workflow-20261113/checks.json)、[27 格原始数据入口](release-workflow-20261113/evaluation.json) | 基于 `75d364a` 的本地工作树，覆盖受控模型的逐题评分与发布、两种数据库、退款对账和浏览器续签 |
 | [docs-refresh-20261110](docs-refresh-20261110/) | [checks.json](docs-refresh-20261110/checks.json) | 2026-11-10，基于 `c5aee67` 的未提交文档工作树；468 项回归通过、无跳过、95.859 秒，另核验技能 helper、配置键、CLI 模块、OpenAPI、静态检查、文档链接与售后演示；未重新测量覆盖率 |
 | [boundary-fixes-20261110](boundary-fixes-20261110/) | [checks.json](boundary-fixes-20261110/checks.json) | 基于 `2526710` 的未提交源码副本；467 项通过、无跳过、83% 覆盖率，双数据库、原生 PostgreSQL 短时负载、索引与离线契约；早于 `c5aee67` 新增的工作台浏览器回归 |
 | [improvement-loop](improvement-loop/) | [checks.json](improvement-loop/checks.json) | 基于 `eccd6eb` 的 2026-11-09 本地批次；428 项通过、82% 覆盖率、180 秒 PostgreSQL 负载、万级索引、双数据库与版本化数据 CLI |

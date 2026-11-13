@@ -166,7 +166,15 @@ class AfterSaleOperation:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         return expires_at > now
 
-    def recoverable(self, now: datetime) -> bool:
+    def recoverable(self, now: datetime, *, legacy_external: bool = False) -> bool:
+        if not self.provider and legacy_external:
+            return not self.lease_active(now)
+        if self.provider == "external":
+            return (
+                self.status != "succeeded"
+                and not (self.status == "failed" and self.completed_at)
+                and not self.lease_active(now)
+            )
         if self.provider:
             return False  # HTTP operations converge through the query-only workflow.
         if self.attempt_count >= self.max_attempts:

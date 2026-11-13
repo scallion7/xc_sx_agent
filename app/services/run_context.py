@@ -287,18 +287,9 @@ class RunContext:
             import json
 
             parsed = json.loads(output) if isinstance(output, str) else output
-            uncertain = isinstance(parsed, dict) and (
-                parsed.get("action", {}).get("status") in {"unknown", "executing"}
-                or parsed.get("error_code")
-                in {
-                    "ACTION_UNKNOWN",
-                    "ACTION_EXECUTING",
-                    "ACTION_ALREADY_CLAIMED",
-                    "PROVIDER_TIMEOUT",
-                    "PROVIDER_FAILURE",
-                    "TOOL_EXECUTION_FAILED",
-                }
-            )
+            from app.services.refund_contracts import uncertain_tool_result
+
+            uncertain = uncertain_tool_result(parsed)
 
         def finish(row):
             row["payload"]["calls"][key].update(

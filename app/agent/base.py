@@ -139,7 +139,8 @@ class BaseConversationAgent(ABC):
                 seed_demo_data=self.config.commerce_seed_demo_data,
             )
             if use_sql
-            else MockCommerceRepository()
+            else MockCommerceRepository(),
+            require_external_refund=self.config.provider_mode == "external",
         )
         if self.config.provider_mode == "sandbox" and commerce_service is None:
             from app.services.http_commerce import HttpCommerceProvider

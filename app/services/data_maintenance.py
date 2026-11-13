@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import and_, delete, insert, or_, select
+from sqlalchemy import JSON, and_, cast, delete, func, insert, or_, select
+from sqlalchemy.engine import make_url
 
 from app.infrastructure.database import (
     after_sale_operations_table,
@@ -26,7 +27,13 @@ from app.infrastructure.database import (
     plans_table,
     sessions_table,
 )
-from app.infrastructure.sqlite_snapshot import snapshot_sqlite, verify_sqlite
+from app.infrastructure.file_lock import exclusive_file_lock
+from app.infrastructure.file_outputs import distinct_paths, staged_files
+from app.infrastructure.sqlite_snapshot import (
+    snapshot_sqlite,
+    sqlite_paths,
+    verify_sqlite,
+)
 
 
 class DataMaintenanceService:
@@ -137,9 +144,17 @@ class DataMaintenanceService:
                     ["pending", "running", "failed", "needs_manual"]
                 )
             )
-            operation_keys = [
-                row[0]
-                for row in connection.execute(
+            operation_keys = []
+            if self.config.provider_mode != "external":
+                # Older external records have no provider tag. In external mode
+                # they must remain available for lookup by the original key.
+                payload = after_sale_operations_table.c.payload_json
+                provider = (
+                    func.json_extract(payload, "$.provider")
+                    if connection.dialect.name == "sqlite"
+                    else cast(payload, JSON)["provider"].as_string()
+                )
+                operation_keys = connection.scalars(
                     select(after_sale_operations_table.c.idempotency_key)
                     .where(
                         after_sale_operations_table.c.updated_at
@@ -153,6 +168,7 @@ class DataMaintenanceService:
                         after_sale_operations_table.c.operation_id.not_in(
                             active_compensation_sources
                         ),
+                        func.coalesce(provider, "") == "",
                         # Preserve the provider identity and local dedup ledger for
                         # HTTP refunds until a coordinated archival protocol exists.
                         after_sale_operations_table.c.operation_id.not_in(
@@ -160,8 +176,7 @@ class DataMaintenanceService:
                         ),
                     )
                     .limit(max(1, batch_size))
-                )
-            ]
+                ).all()
             compensation_keys = [
                 row[0]
                 for row in connection.execute(
@@ -303,9 +318,14 @@ class DataMaintenanceService:
         return {"dry_run": dry_run, "candidates": counts, "protected": True}
 
     def _event_log_cleanup(self, *, cutoff: str, dry_run: bool) -> dict[str, int]:
-        path = Path(self.config.event_log_path)
+        path = Path(self.config.event_log_path).resolve()
         if not path.is_file():
             return {"candidates": 0, "invalid": 0}
+        with exclusive_file_lock(path):
+            return self._filter_event_log(path, cutoff, dry_run)
+
+    @staticmethod
+    def _filter_event_log(path, cutoff, dry_run):
         kept: list[str] = []
         candidates = 0
         invalid = 0
@@ -321,12 +341,10 @@ class DataMaintenanceService:
             else:
                 kept.append(line)
         if not dry_run and candidates:
-            temporary = path.with_suffix(f"{path.suffix}.tmp")
-            temporary.write_text(
-                ("\n".join(kept) + "\n") if kept else "",
-                encoding="utf-8",
-            )
-            temporary.replace(path)
+            with staged_files([path], replace=True) as (stage,):
+                stage.write_text(
+                    ("\n".join(kept) + "\n") if kept else "", encoding="utf-8"
+                )
         return {"candidates": candidates, "invalid": invalid}
 
     def _cleanup_json(self, *, dry_run: bool, actor: str) -> dict[str, Any]:
@@ -336,7 +354,16 @@ class DataMaintenanceService:
         )
         candidates: list[str] = []
         invalid: list[str] = []
+        case_file = Path(self.config.after_sale_case_path)
+        ledger = (
+            Path(self.config.after_sale_operation_path)
+            if self.config.after_sale_operation_path
+            else case_file.with_name("after_sale_operations.json")
+        )
+        business_files = {case_file.resolve(), ledger.resolve()}
         for path in root.rglob("*.json") if root.exists() else []:
+            if path.resolve() in business_files:
+                continue
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
@@ -362,6 +389,14 @@ class DataMaintenanceService:
                 for item in payload.get("operations", [])
                 if isinstance(item, dict)
             }
+            if "operations" in payload and (
+                self.config.provider_mode == "external"
+                or any(
+                    isinstance(op, dict) and op.get("provider")
+                    for op in payload["operations"]
+                )
+            ):
+                continue
             if (
                 statuses & {"running", "awaiting_confirmation"}
                 or operation_statuses & {"pending", "running", "failed"}
@@ -382,10 +417,10 @@ class DataMaintenanceService:
         }
 
     def backup_sqlite(self, destination: str | Path) -> dict[str, Any]:
-        prefix = "sqlite:///"
-        if not self.config.database_url.startswith(prefix):
+        url = make_url(self.config.database_url)
+        if url.get_backend_name() != "sqlite" or not url.database:
             raise ValueError("自动文件备份仅支持 SQLite")
-        source = Path(self.config.database_url[len(prefix) :])
+        source = Path(url.database)
         target = snapshot_sqlite(source, destination)
         return self._manifest([target])
 
@@ -431,10 +466,13 @@ class DataMaintenanceService:
             ],
         }
         path = Path(destination)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        url = make_url(self.config.database_url)
+        if url.get_backend_name() == "sqlite" and url.database:
+            distinct_paths([*sqlite_paths(url.database), path])
+        with staged_files([path]) as (stage,):
+            stage.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
         return self._manifest([path])
 
     @staticmethod

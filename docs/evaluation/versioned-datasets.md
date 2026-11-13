@@ -72,4 +72,6 @@ python -m app.scripts.compare_retrieval \
 
 `--review` 不解锁保留集，也不把比较结果自动发布到知识库。内置 `review_evaluation --split holdout` 只读取原 review-v1；自定义版本在全量审核通过后可通过工作台逐题诊断 holdout，首次查看后应记录测试集已被使用。仓库当前没有真实人工批准材料或付费模型质量结果，详见[离线评测协议](offline-review.md)。
 
+2026-11-13 起，版本化数据和审核导出也可供 `evaluate_platform --dataset … --review …` 执行 Agent 质量矩阵。已审题以批准的逐字原文为事实检查表，显式选择 holdout 前验证整份复核记录及来源库。开发阶段合成题可在 case 中提供 `facts: [{"document_id": "return-policy", "quote": "未拆吊牌的服饰在签收七天内可申请退货。"}]`。完整命令见[离线评测协议](offline-review.md)。
+
 源码：[corpora.py](../../app/platform/corpora.py)、[reviews.py](../../app/platform/reviews.py)、[管理 CLI](../../app/scripts/manage_evaluation.py)、[比较入口](../../app/scripts/compare_retrieval.py)。

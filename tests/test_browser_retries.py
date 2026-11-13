@@ -8,6 +8,92 @@ from app.scripts.demo_stack import DemoStack
 
 @unittest.skipUnless(os.environ.get("RUN_BROWSER_E2E") == "1", "Requires Chromium")
 class BrowserRetryTests(unittest.TestCase):
+    def test_signed_token_renewal_reuses_pending_message_only_for_same_principal(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from app.security.identities import oidc_user_id
+        from playwright.sync_api import expect, sync_playwright
+
+        from tests.test_auth_and_migrations import key_material, token
+
+        signing_key, keys = key_material()
+        issuer = "https://issuer.example"
+        customer_token = token(signing_key, sub="customer")
+        customer_id = oidc_user_id(issuer, "customer")
+        original, renewed, another = (
+            token(signing_key, sub=sub, jti=jti, roles=["admin"])
+            for sub, jti in [
+                ("operator", "one"),
+                ("operator", "two"),
+                ("other", "three"),
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            jwks = Path(tmp) / "jwks.json"
+            jwks.write_text(json.dumps(keys))
+            config = {
+                "AUTH_MODE": "oidc",
+                "OIDC_ISSUER": issuer,
+                "OIDC_AUDIENCE": "xc-agent",
+                "OIDC_JWKS_PATH": str(jwks),
+            }
+            with (
+                DemoStack(environment=config) as stack,
+                sync_playwright() as playwright,
+            ):
+                session = "renewal"
+                path = f"/v1/admin/conversations/{customer_id}/{session}/messages"
+                scope = f"{customer_id}:{session}"
+                customer = {"X-API-Key": customer_token}
+                stack.request(
+                    "GET", f"/v1/sessions/{session}/ownership", headers=customer
+                ).raise_for_status()
+                browser = playwright.chromium.launch()
+                page = browser.new_page()
+                page.goto(stack.url + "/workbench")
+                page.locator("#token").fill(original)
+                page.locator("#refresh").click()
+                page.get_by_role("button", name="接管", exact=True).click()
+                expect(page.locator("#session")).to_have_value(session)
+                page.locator("#reply").fill("已收到申请")
+                sent_keys = []
+
+                def lose_ack(route):
+                    sent_keys.append(route.request.headers["idempotency-key"])
+                    self.assertEqual(route.fetch().status, 200)
+                    route.abort("failed")
+
+                page.route("**" + path, lose_ack)
+                page.locator("#sendHuman").click()
+                expect(page.locator("#status")).to_contain_text("结果待确认")
+                page.unroute("**" + path, lose_ack)
+                page.reload()
+                pending_key = """async ([path, scope]) => {
+                  const {RequestClient} = await import('/assets/request_client.js');
+                  const c = new RequestClient(() => document.querySelector('#token').value);
+                  return (await c.pending(path, scope))?.key || null;
+                }"""
+                page.locator("#token").fill(another)
+                self.assertIsNone(page.evaluate(pending_key, [path, scope]))
+                page.locator("#token").fill(renewed)
+                self.assertEqual(
+                    page.evaluate(pending_key, [path, scope]), sent_keys[0]
+                )
+                page.locator("#user").fill(customer_id)
+                page.locator("#session").fill(session)
+                page.locator("#reply").fill("已收到申请")
+                with page.expect_request("**" + path) as retried:
+                    page.locator("#sendHuman").click()
+                self.assertEqual(retried.value.headers["idempotency-key"], sent_keys[0])
+                expect(page.locator("#status")).to_contain_text("人工回复已发送")
+                messages = stack.request(
+                    "GET", f"/v1/sessions/{session}/human-messages", headers=customer
+                ).json()["messages"]
+                self.assertEqual([m["content"] for m in messages], ["已收到申请"])
+                browser.close()
+
     def test_handoff_refresh_finishes_before_human_reply_is_enabled(self):
         from playwright.sync_api import expect, sync_playwright
 

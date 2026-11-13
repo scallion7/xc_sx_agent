@@ -23,10 +23,14 @@ def complete(body: dict):
     messages = body.get("messages", [])
     users = [str(m.get("content", "")) for m in messages if m.get("role") == "user"]
     query = users[-1] if users else ""
+    plan_steps = []
     try:
         envelope = json.loads(query)
         if isinstance(envelope, dict) and "request" in envelope:
             query = envelope["request"]
+            execution = envelope.get("execution")
+            if isinstance(execution, dict):
+                plan_steps = execution.get("steps", [])
     except (ValueError, TypeError):
         pass
     names = {t["function"]["name"] for t in body.get("tools", [])}
@@ -102,6 +106,27 @@ def complete(body: dict):
             )
     schema = body.get("response_format", {}).get("json_schema", {}).get("name", "")
     reply = "您好，这是受控离线模型的演示回复。"
+    if os.environ.get("DEMO_MODEL_POLICY_QUOTES") == "1":
+        # Offline evaluation fixture: copy the actual retrieved text; no gold labels.
+        if schema == "CustomerServiceResponse":
+            reply = query
+        elif plan_steps:
+            for step in reversed(plan_steps):
+                lookup = step.get("output", {})
+                if (
+                    step.get("tool_name") == "search_knowledge"
+                    and lookup.get("grounded")
+                    and lookup.get("results")
+                ):
+                    reply = lookup["results"][0]["text"]
+                    break
+        else:
+            for msg in reversed(messages):
+                if msg.get("role") == "tool":
+                    lookup = json.loads(msg["content"])
+                    if lookup.get("grounded") and lookup.get("results"):
+                        reply = lookup["results"][0]["text"]
+                    break
     if schema == "ExecutionPlan":
         content = json.dumps(
             {
@@ -158,6 +183,7 @@ def complete(body: dict):
     result = {
         "id": "chatcmpl-" + uuid4().hex,
         "object": "chat.completion",
+        "system_fingerprint": "xc-sx-controlled-demo-v1",
         "created": int(time.time()),
         "model": body.get("model", "demo-small"),
         "choices": [

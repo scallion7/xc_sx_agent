@@ -31,12 +31,20 @@ class CommerceService:
         provider_executor: ProviderExecutor | None = None,
         provider_timeout_seconds: float = 5.0,
         provider_read_max_attempts: int = 2,
+        require_external_refund: bool = False,
     ):
         self.repository = repository
         repository_provider = CommerceRepositoryProvider(repository)
         self.order_provider = order_provider or repository_provider
         self.logistics_provider = logistics_provider or repository_provider
-        self.refund_provider = refund_provider or repository_provider
+        self.refund_provider = refund_provider or (
+            None if require_external_refund else repository_provider
+        )
+        self.external_refunds = require_external_refund or (
+            refund_provider is not None
+            and not isinstance(refund_provider, CommerceRepositoryProvider)
+            and not getattr(refund_provider, "durable_http", False)
+        )
         self.provider_executor = provider_executor or ProviderExecutor()
         self.provider_timeout_seconds = max(0.001, provider_timeout_seconds)
         self.provider_read_max_attempts = max(1, provider_read_max_attempts)
@@ -139,6 +147,18 @@ class CommerceService:
         *,
         idempotency_key: str = "",
     ) -> dict:
+        if self.external_refunds:
+            if not idempotency_key:
+                return {
+                    "success": False,
+                    "error_code": "REFUND_CASE_REQUIRED",
+                    "error": "外部退款须通过售后工单提交",
+                }
+            if self.refund_provider is None:
+                return {
+                    "success": False,
+                    "error_code": "REFUND_PROVIDER_NOT_CONFIGURED",
+                }
         owned = self.get_order(order_id, user_id)
         if not owned.get("success"):
             return owned
@@ -157,3 +177,11 @@ class CommerceService:
             )
         except ProviderError as exc:
             return self._provider_failure(exc)
+
+    def lookup_refund(self, key: str):
+        return self.provider_executor.call(
+            lambda: self.refund_provider.get_refund(key),
+            timeout_seconds=self.provider_timeout_seconds,
+            retryable=True,
+            max_attempts=self.provider_read_max_attempts,
+        )

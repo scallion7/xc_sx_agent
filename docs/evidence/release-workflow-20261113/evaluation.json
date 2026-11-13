@@ -1,0 +1,249 @@
+{
+  "manifest": {
+    "code_commit": "75d364a15f2997953c099c3b16bc8ad80a1a2137",
+    "dataset_hash": "a2eb282c60275458fbd21082528cbbd66b278e72a786ac0d5489bac8e9b90442",
+    "evaluation_plan": {
+      "case_ids": [
+        "quality-returns",
+        "quality-shipping",
+        "quality-member",
+        "quality-warranty",
+        "quality-invoice",
+        "quality-expiry",
+        "quality-region",
+        "quality-channel",
+        "quality-conflict"
+      ],
+      "repeats": 1,
+      "strategies": [
+        "react",
+        "plan_execute",
+        "multi"
+      ]
+    },
+    "knowledge_release_id": "f9939ac39305450c9e005be95f0ea198",
+    "mode": "single",
+    "model_catalog": {
+      "models": {
+        "planner": {
+          "context_tokens": 65536,
+          "currency": "USD",
+          "input_per_million": "0",
+          "model": "demo-planner",
+          "output_per_million": "0",
+          "price_version": "offline-demo-zero-v1",
+          "structured": true,
+          "timeout_seconds": 60,
+          "tools": true
+        },
+        "small": {
+          "context_tokens": 32768,
+          "currency": "USD",
+          "input_per_million": "0",
+          "model": "demo-small",
+          "output_per_million": "0",
+          "price_version": "offline-demo-zero-v1",
+          "structured": true,
+          "timeout_seconds": 30,
+          "tools": true
+        }
+      },
+      "routes": {
+        "default": [
+          "small",
+          "planner"
+        ],
+        "extract": [
+          "small"
+        ],
+        "plan": [
+          "planner"
+        ],
+        "router": [
+          "small"
+        ]
+      }
+    },
+    "model_config_hash": "cf475bed1d709198eb63b9ab1c4fb070bfd5565915074fbe2499795740c99fae",
+    "prompt": "你是电商客服，只基于工具结果答复。遇到证据不足、冲突或缺少适用条件时明确告知用户。",
+    "prompt_version": "builtin-v1",
+    "risk_amount_limits": {
+      "auto_approve_max_amount": 200.0,
+      "high_risk_amount": 2000.0
+    },
+    "risk_rule_version": "2026.1",
+    "risk_rules": {
+      "complaint_signals": [
+        "投诉",
+        "欺骗",
+        "假货",
+        "质量太差",
+        "非常不满",
+        "赔偿"
+      ],
+      "critical_signals": [
+        "消协",
+        "起诉",
+        "报警",
+        "律师",
+        "人身伤害",
+        "受伤",
+        "触电",
+        "爆炸",
+        "泄露隐私",
+        "盗刷",
+        "媒体曝光",
+        "监管投诉"
+      ],
+      "evidence_required_case_types": [
+        "quality_issue",
+        "missing_item",
+        "logistics_damage"
+      ],
+      "score_thresholds": {
+        "human_escalation": 4,
+        "manual_review": 1
+      },
+      "score_weights": {
+        "amount_high": 4,
+        "amount_over_auto": 1,
+        "complaint": 2,
+        "evidence_missing": 2,
+        "existing_refund": 3,
+        "other_case": 1
+      },
+      "version": "2026.1"
+    },
+    "strategy": "react",
+    "tool_schema_hash": "feaeca08c2f5467cfffc1b73bf4d3c6ec6dc98679901336824d244f8dac418c8"
+  },
+  "configuration_release_id": "20514c4a78c64c5d9f26b3b9dc181012",
+  "diagnostic_only": false,
+  "source_tree_sha256": "20e1a385de8e4553e47704edee09334538a0eaa758c523cec1eba9d2638e80d1",
+  "execution_mode": "controlled_http_model",
+  "dataset_files": {
+    "documents.json": "e3383c0426acf9f7758d42dc44bf439a64fd17ad64a47d761f4a80eecc1a67e6",
+    "cases.json": "c37740d22c6b826ea541cf6fac3c8036b8e11288320709513c10895b93d5097a"
+  },
+  "split": "development",
+  "review_reference": null,
+  "snapshot_sha256": "3db318f104b11b16ddd97a1379f8dd720dcd207bd8ff2a0ce721cf74ba34441e",
+  "scenario_clock": "frozen_case_day",
+  "model_endpoint_sha256": "ff6a926ca222011e47c7f95ca30f8a78fcbf0d3b589c4ad8a258e202c3715bfd",
+  "runtime_sha256": "dd0cac0594e46dcc60ffd1b014906a2ca1a7ebf96d84f08fb71f8180c5a75696",
+  "retrieval": {
+    "dataset_hash": "606d4c7e875f8cb2abbe31cc972f8ff474d83bb9967803d1c0cddfe0596a8d82",
+    "split": "development",
+    "tokenizer": "jieba-0.42.1-search-v2",
+    "review_status": "synthetic_unreviewed",
+    "ablations": {
+      "vector": {
+        "sample_count": 9,
+        "recall_at_k": 1.0,
+        "no_answer_accuracy": 1,
+        "mrr": 0.8888888888888888,
+        "citation_correctness": 1,
+        "outcome_accuracy": 1,
+        "p95_ms": 187.4330830000872
+      },
+      "bm25": {
+        "sample_count": 9,
+        "recall_at_k": 1.0,
+        "no_answer_accuracy": 1,
+        "mrr": 0.8888888888888888,
+        "citation_correctness": 1,
+        "outcome_accuracy": 1,
+        "p95_ms": 0.48695900022721617
+      },
+      "hybrid": {
+        "sample_count": 9,
+        "recall_at_k": 1.0,
+        "no_answer_accuracy": 1,
+        "mrr": 0.8888888888888888,
+        "citation_correctness": 1,
+        "outcome_accuracy": 1,
+        "p95_ms": 0.5840420003551117
+      },
+      "hybrid_rerank": {
+        "sample_count": 9,
+        "recall_at_k": 1.0,
+        "no_answer_accuracy": 1,
+        "mrr": 0.8888888888888888,
+        "citation_correctness": 1,
+        "outcome_accuracy": 1,
+        "p95_ms": 0.6059170000298764
+      }
+    }
+  },
+  "agents": {
+    "schema_version": 3,
+    "evaluation_plan": {
+      "case_ids": [
+        "quality-returns",
+        "quality-shipping",
+        "quality-member",
+        "quality-warranty",
+        "quality-invoice",
+        "quality-expiry",
+        "quality-region",
+        "quality-channel",
+        "quality-conflict"
+      ],
+      "strategies": [
+        "react",
+        "plan_execute",
+        "multi"
+      ],
+      "repeats": 1
+    },
+    "manifest_hash": "9d8e75707e6db0e31d776af3967bfaba45e5f57993a0e25d13ff6a2b118e9f7b",
+    "dataset_hash": "a2eb282c60275458fbd21082528cbbd66b278e72a786ac0d5489bac8e9b90442",
+    "sample_count": 27,
+    "tokens": 2700,
+    "unsafe_actions": 0,
+    "passed": true,
+    "execution_mode": "controlled_http_model",
+    "review_status": "synthetic_unreviewed",
+    "split_leakage": false,
+    "success_rate": 1.0,
+    "strategies": {
+      "react": {
+        "runs": 9,
+        "success_rate": 1,
+        "unsafe_actions": 0,
+        "handoff_rate": 0.4444444444444444,
+        "p95_ms": 210.53529199980403,
+        "tokens": 810,
+        "citation_present_rate": 0.8888888888888888
+      },
+      "plan_execute": {
+        "runs": 9,
+        "success_rate": 1,
+        "unsafe_actions": 0,
+        "handoff_rate": 0.4444444444444444,
+        "p95_ms": 39.662125000177184,
+        "tokens": 810,
+        "citation_present_rate": 0.8888888888888888
+      },
+      "multi": {
+        "runs": 9,
+        "success_rate": 1,
+        "unsafe_actions": 0,
+        "handoff_rate": 0.4444444444444444,
+        "p95_ms": 45.96175000006042,
+        "tokens": 1080,
+        "citation_present_rate": 0.8888888888888888
+      }
+    },
+    "complete": true,
+    "wilson_95": [
+      0.8754409628553641,
+      1
+    ],
+    "review_reference": null
+  },
+  "raw_artifact": {
+    "path": "evaluation.b4c02c377c9969eb.raw.json.gz",
+    "sha256": "b4c02c377c9969ebdfd9fa2db45e146b6cedfdff52bf9b0a3d0c22432ac95003"
+  }
+}

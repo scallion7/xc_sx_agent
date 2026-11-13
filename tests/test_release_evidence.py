@@ -5,7 +5,7 @@ from copy import deepcopy
 from app.platform.common import PlatformError, encode
 from app.platform.evaluation import AgentEvaluationRunner
 from app.platform.releases import RELEASE, ConfigurationReleases
-from sqlalchemy import update
+from sqlalchemy import func, select, update
 
 from tests import test_platform_governance as governance
 from tests.test_knowledge_platform import PlatformTestCase
@@ -14,6 +14,41 @@ from tests.test_platform_governance import release_cases, release_report
 
 class EvidenceGateTests(PlatformTestCase):
     setup_release = governance.ReleaseTests.setup_release
+
+    def test_report_import_validates_before_writing_and_retry_reuses_release(self):
+        draft = self.setup_release()
+        manifest = draft["manifest"]
+        report = release_report(draft)
+
+        def release_count():
+            with self.releases.engine.connect() as conn:
+                return conn.scalar(select(func.count()).select_from(RELEASE))
+
+        baseline = release_count()
+        for target in (None, draft["release_id"]):
+            with self.assertRaisesRegex(PlatformError, "EVALUATION_GATE_FAILED"):
+                self.releases.import_evaluation(
+                    manifest, report | {"cases": []}, "audit", target
+                )
+        self.assertEqual(release_count(), baseline)
+        self.assertEqual(self.releases.get(draft["release_id"])["status"], "draft")
+        measured = self.releases.import_evaluation(
+            manifest, report, "audit", draft["release_id"]
+        )
+        self.assertEqual(measured["release_id"], draft["release_id"])
+        self.assertEqual(measured["status"], "evaluated")
+        self.assertEqual(
+            self.releases.import_evaluation(
+                manifest, report, "audit", draft["release_id"]
+            ),
+            measured,
+        )
+        standalone = self.releases.import_evaluation(manifest, report, "audit")
+        self.assertEqual(standalone["status"], "evaluated")
+        self.assertEqual(
+            self.releases.import_evaluation(manifest, report, "audit"), standalone
+        )
+        self.assertEqual(release_count(), baseline + 1)
 
     def test_partial_budget_and_missing_strategy_cannot_publish(self):
         row = self.setup_release()

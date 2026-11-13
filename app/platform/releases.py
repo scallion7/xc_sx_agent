@@ -7,7 +7,7 @@ import json
 import time
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from sqlalchemy import insert, select, update
 from sqlalchemy.exc import IntegrityError
 
@@ -20,11 +20,24 @@ HEAD = platform["deployment_heads"]
 SESSIONS = platform["session_assignments"]
 
 
+class RiskAmountLimits(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    auto_approve_max_amount: float = Field(ge=0)
+    high_risk_amount: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if self.auto_approve_max_amount >= self.high_risk_amount:
+            raise ValueError("Automatic approval limit must be below high risk amount")
+        return self
+
+
 class VersionManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     code_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     model_catalog: dict
     risk_rules: dict
+    risk_amount_limits: RiskAmountLimits | None = None
     model_config_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
     prompt_version: str = Field(min_length=1)
     prompt: str = Field(min_length=1, max_length=16000)
@@ -59,8 +72,21 @@ class ConfigurationReleases:
             "evaluation": json.loads(row["evaluation_json"]),
         }
 
-    def draft(self, manifest, actor):
-        value = VersionManifest.model_validate(manifest).model_dump()
+    def _validated_manifest(self, manifest):
+        from app.repositories.policies import RiskRuleSchema
+
+        # Existing clients may omit limits when drafting. Capture them exactly once.
+        inputs = dict(manifest)
+        if inputs.get("risk_amount_limits") is None:
+            inputs["risk_amount_limits"] = {
+                "auto_approve_max_amount": self.config.after_sale_auto_approve_max_amount,
+                "high_risk_amount": self.config.after_sale_high_risk_amount,
+            }
+        try:
+            value = VersionManifest.model_validate(inputs).model_dump()
+            RiskRuleSchema.model_validate(value["risk_rules"])
+        except ValidationError as exc:
+            raise PlatformError("CONFIGURATION_MANIFEST_INVALID", 422) from exc
         from app.platform.budget import ModelCatalog
 
         ModelCatalog(value["model_catalog"])
@@ -73,7 +99,6 @@ class ConfigurationReleases:
             raise PlatformError("RISK_CONFIGURATION_VERSION_MISMATCH")
         if tool_schema_hash() != value["tool_schema_hash"]:
             raise PlatformError("TOOL_CONFIGURATION_HASH_MISMATCH")
-        rid = uuid4().hex
         from app.platform.knowledge import KnowledgePlatform
 
         if (
@@ -83,36 +108,97 @@ class ConfigurationReleases:
             != "ready"
         ):
             raise PlatformError("KNOWLEDGE_RELEASE_NOT_READY")
+        return value
+
+    def _create(self, rid, manifest, actor, report=None):
         with self.engine.begin() as conn:
             conn.execute(
                 insert(RELEASE).values(
                     tenant_id=self.tenant,
                     release_id=rid,
-                    status="draft",
-                    manifest_json=encode(value),
-                    evaluation_json="{}",
+                    status="evaluated" if report is not None else "draft",
+                    manifest_json=encode(manifest),
+                    evaluation_json=encode(report or {}),
                     created_at=time.time(),
                 )
             )
             audit(conn, self.tenant, actor, "configuration.draft", rid)
+            if report is not None:
+                audit(
+                    conn,
+                    self.tenant,
+                    actor,
+                    "configuration.evaluated",
+                    rid,
+                    {"manifest_hash": report["manifest_hash"]},
+                )
         return self.get(rid)
+
+    def draft(self, manifest, actor):
+        return self._create(uuid4().hex, self._validated_manifest(manifest), actor)
+
+    def _check_report(self, manifest, report, conn=None):
+        if manifest.get("risk_amount_limits") is None:
+            raise PlatformError("CONFIGURATION_RISK_LIMITS_UNPINNED")
+        if conn is None and (
+            report.get("manifest_hash")
+            != hashlib.sha256(encode(manifest).encode()).hexdigest()
+            or report.get("dataset_hash") != manifest["dataset_hash"]
+        ):
+            raise PlatformError("EVALUATION_VERSION_MISMATCH")
+        validate_release_report(report, manifest)
+        if report.get("schema_version") == 3:
+            from app.platform.evaluation_workspace import index_evidence
+
+            if report["evidence_index"] != index_evidence(
+                self.config, manifest["knowledge_release_id"], conn
+            ):
+                raise PlatformError("EVALUATION_KNOWLEDGE_MISMATCH")
+        if self.config.environment == "production":
+            from app.platform.evaluation_contract import require_production_evidence
+
+            require_production_evidence(report, self.config)
+
+    def import_evaluation(self, manifest, report, actor, release_id=None):
+        """Publishable evidence is validated before the first database write."""
+        if release_id:
+            existing = self.get(release_id)
+            if existing["manifest_json"] != encode(manifest):
+                raise PlatformError("EVALUATION_VERSION_MISMATCH")
+            self._check_report(manifest, report)
+            if existing["status"] == "draft":
+                try:
+                    return self.evaluate(release_id, report, actor)
+                except PlatformError as exc:
+                    if exc.code not in {
+                        "CONFIGURATION_CONFLICT",
+                        "CONFIGURATION_IMMUTABLE",
+                    }:
+                        raise
+                existing = self.get(release_id)
+        else:
+            manifest = self._validated_manifest(manifest)
+            self._check_report(manifest, report)
+            # The same file, including a retry after a lost acknowledgement,
+            # identifies the same imported release in this tenant.
+            release_id = hashlib.sha256(
+                encode([self.tenant, manifest, report]).encode()
+            ).hexdigest()[:32]
+            try:
+                return self._create(release_id, manifest, actor, report=report)
+            except IntegrityError:
+                existing = self.get(release_id)
+        if existing["evaluation_json"] != encode(report) or existing[
+            "manifest_json"
+        ] != encode(manifest):
+            raise PlatformError("CONFIGURATION_IMMUTABLE")
+        return existing
 
     def evaluate(self, release_id, report, actor):
         row = self.get(release_id)
         if row["status"] != "draft":
             raise PlatformError("CONFIGURATION_IMMUTABLE")
-        fingerprint = hashlib.sha256(row["manifest_json"].encode()).hexdigest()
-        if (
-            report.get("manifest_hash") != fingerprint
-            or report.get("dataset_hash") != row["manifest"]["dataset_hash"]
-        ):
-            raise PlatformError("EVALUATION_VERSION_MISMATCH")
-        validate_release_report(report, row["manifest"])
-        if self.config.environment == "production" and (
-            report.get("execution_mode") != "live"
-            or report.get("review_status") != "human_reviewed"
-        ):
-            raise PlatformError("LIVE_REVIEW_REQUIRED")
+        self._check_report(row["manifest"], report)
         with self.engine.begin() as conn:
             result = conn.execute(
                 update(RELEASE)
@@ -131,7 +217,7 @@ class ConfigurationReleases:
                 actor,
                 "configuration.evaluated",
                 release_id,
-                {"manifest_hash": fingerprint},
+                {"manifest_hash": report["manifest_hash"]},
             )
         return self.get(release_id)
 
@@ -155,13 +241,7 @@ class ConfigurationReleases:
             release = self.get(release_id, conn)
             if release["status"] not in {"evaluated", "active", "retired"}:
                 raise PlatformError("CONFIGURATION_NOT_EVALUATED")
-            # Historical releases remain readable, but every new deployment needs complete evidence.
-            validate_release_report(release["evaluation"], release["manifest"])
-            if self.config.environment == "production" and (
-                release["evaluation"].get("execution_mode") != "live"
-                or release["evaluation"].get("review_status") != "human_reviewed"
-            ):
-                raise PlatformError("LIVE_REVIEW_REQUIRED")
+            self._check_report(release["manifest"], release["evaluation"], conn)
             current = (
                 conn.execute(select(HEAD).where(HEAD.c.tenant_id == self.tenant))
                 .mappings()
@@ -277,10 +357,21 @@ def tool_schema_hash():
 
 
 def pinned_after_sale(service, manifest):
-    from copy import copy, deepcopy
+    from copy import copy
+
+    from app.agent.after_sale.risk import RiskRouter
 
     pinned = copy(service)
-    pinned.risk_router = deepcopy(service.risk_router)
-    pinned.risk_router.rules_loader = lambda: manifest["risk_rules"]
+    limits = manifest.get("risk_amount_limits")
+    # Previously published manifests have no recoverable amount thresholds.
+    # Preserve their hash/assignment and require review for every new case.
+    pinned.risk_router = RiskRouter(
+        **(
+            RiskAmountLimits.model_validate(limits).model_dump()
+            if limits is not None
+            else {}
+        ),
+        require_manual_review=limits is None,
+    )
     pinned.risk_router._apply_rules(manifest["risk_rules"])
     return pinned

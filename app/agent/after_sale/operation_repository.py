@@ -15,15 +15,8 @@ from app.agent.after_sale.models import (
     OperationClaim,
     OperationStatus,
 )
-
-_JSON_LOCKS: dict[str, RLock] = {}
-_JSON_LOCKS_GUARD = RLock()
-
-
-def _json_lock(path: Path) -> RLock:
-    key = str(path.resolve())
-    with _JSON_LOCKS_GUARD:
-        return _JSON_LOCKS.setdefault(key, RLock())
+from app.infrastructure.file_lock import exclusive_file_lock
+from app.infrastructure.file_outputs import staged_files
 
 
 class OperationRepositoryError(RuntimeError):
@@ -61,6 +54,7 @@ class AfterSaleOperationRepository(Protocol):
         *,
         now: datetime,
         user_id: str | None = None,
+        legacy_external: bool = False,
     ) -> list[AfterSaleOperation]: ...
 
     def list(
@@ -104,6 +98,10 @@ def claim_operation(
         raise OperationConflictError("同一幂等键对应了不同的售后操作参数")
     if existing.status == OperationStatus.SUCCEEDED.value:
         return OperationClaim("replay", existing)
+    if template.provider == "external" or existing.provider == "external":
+        # Only the first claimant can submit. This also protects pre-upgrade rows
+        # inspected before a concurrent first claim was visible.
+        return OperationClaim("in_progress", existing)
     if existing.status == OperationStatus.EXHAUSTED.value:
         return OperationClaim("exhausted", existing)
     if existing.status in {"unknown", "needs_reconciliation"} or existing.provider:
@@ -137,6 +135,9 @@ class _LockedOperationRepository:
     def __init__(self) -> None:
         self._lock = RLock()
 
+    def _guard(self):
+        return self._lock
+
     def _read_all(self) -> dict[str, AfterSaleOperation]:
         raise NotImplementedError
 
@@ -148,7 +149,7 @@ class _LockedOperationRepository:
         idempotency_key: str,
         user_id: str | None = None,
     ) -> AfterSaleOperation | None:
-        with self._lock:
+        with self._guard():
             operation = self._read_all().get(idempotency_key)
         if operation and user_id is not None and operation.user_id != user_id:
             return None
@@ -161,7 +162,7 @@ class _LockedOperationRepository:
         now: datetime,
         lease_seconds: int,
     ) -> OperationClaim:
-        with self._lock:
+        with self._guard():
             operations = self._read_all()
             existing = operations.get(template.idempotency_key)
             claim = claim_operation(
@@ -181,7 +182,7 @@ class _LockedOperationRepository:
         *,
         expected_version: int,
     ) -> AfterSaleOperation:
-        with self._lock:
+        with self._guard():
             operations = self._read_all()
             current = operations.get(operation.idempotency_key)
             if current is None:
@@ -200,11 +201,12 @@ class _LockedOperationRepository:
         *,
         now: datetime,
         user_id: str | None = None,
+        legacy_external: bool = False,
     ) -> list[AfterSaleOperation]:
         return [
             operation
             for operation in self.list(user_id=user_id, limit=10_000)
-            if operation.recoverable(now)
+            if operation.recoverable(now, legacy_external=legacy_external)
         ]
 
     def list(
@@ -213,7 +215,7 @@ class _LockedOperationRepository:
         user_id: str | None = None,
         limit: int = 50,
     ) -> list[AfterSaleOperation]:
-        with self._lock:
+        with self._guard():
             operations = list(self._read_all().values())
         items = [
             operation
@@ -250,7 +252,9 @@ class JsonAfterSaleOperationRepository(_LockedOperationRepository):
     def __init__(self, path: str | Path) -> None:
         super().__init__()
         self.path = Path(path)
-        self._lock = _json_lock(self.path)
+
+    def _guard(self):
+        return exclusive_file_lock(self.path)
 
     def _read_all(self) -> dict[str, AfterSaleOperation]:
         if not self.path.is_file():
@@ -269,18 +273,16 @@ class JsonAfterSaleOperationRepository(_LockedOperationRepository):
 
     def _write_all(self, operations: dict[str, AfterSaleOperation]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(f"{self.path.suffix}.tmp")
-        temporary.write_text(
-            json.dumps(
-                {
-                    "version": 1,
-                    "operations": [
-                        operation.to_dict() for operation in operations.values()
-                    ],
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
-        os.replace(temporary, self.path)
+        with staged_files([self.path], replace=True) as (stage,):
+            with stage.open("w", encoding="utf-8") as handle:
+                json.dump(
+                    {
+                        "version": 1,
+                        "operations": [op.to_dict() for op in operations.values()],
+                    },
+                    handle,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                handle.flush()
+                os.fsync(handle.fileno())

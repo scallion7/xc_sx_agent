@@ -296,11 +296,9 @@ class ToolExecutionService:
                 name, parsed, replace(context, action_id=row["action_id"])
             )
             result = json.loads(raw)
-            unknown = result.get("error_code") in {
-                "TOOL_EXECUTION_FAILED",
-                "PROVIDER_TIMEOUT",
-                "PROVIDER_FAILURE",
-            }
+            from app.services.refund_contracts import uncertain_tool_result
+
+            unknown = uncertain_tool_result(result)
             self.actions.finish(row["action_id"], result, unknown=unknown)
         except ActionError as exc:
             result = {"success": False, "error_code": exc.code, "error": str(exc)}

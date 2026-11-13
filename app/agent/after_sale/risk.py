@@ -48,9 +48,12 @@ class RiskRouter:
         high_risk_amount: float = 2000.0,
         rules_path: str | Path | None = None,
         rules_loader: Callable[[], Mapping | None] | None = None,
+        *,
+        require_manual_review: bool = False,
     ):
         self.auto_approve_max_amount = auto_approve_max_amount
         self.high_risk_amount = high_risk_amount
+        self.require_manual_review = require_manual_review
         self.rule_version = "builtin"
         self.critical_signals = set(self.CRITICAL_SIGNALS)
         self.complaint_signals = set(self.COMPLAINT_SIGNALS)
@@ -177,6 +180,12 @@ class RiskRouter:
             return RiskDecision(RiskLevel.HIGH.value, "human_escalation", reasons)
         if score >= self.manual_review_score:
             return RiskDecision(RiskLevel.MEDIUM.value, "manual_review", reasons)
+        if self.require_manual_review:
+            return RiskDecision(
+                RiskLevel.MEDIUM.value,
+                "manual_review",
+                ["历史发布未固定金额阈值，需人工审批"],
+            )
         return RiskDecision(
             RiskLevel.LOW.value,
             "auto_process",
